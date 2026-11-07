@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/api/auth/login",        "destination": "/api/auth" },
+    { "source": "/api/auth/trocar-senha", "destination": "/api/auth" }
+  ]
+}
