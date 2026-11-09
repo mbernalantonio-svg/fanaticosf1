@@ -45,7 +45,6 @@ def sao_iguais(p1, p2):
     n1 = normalizar_nome(p1)
     n2 = normalizar_nome(p2)
     if n1 == n2: return True
-    # Apelidos e sinonimos frequentes
     sinonimos = [
         ("alex albon", "alexander albon"),
         ("nico hulkenberg", "nico hülkenberg"),
@@ -99,17 +98,14 @@ def calcular_tudo(temporada_id=1, verbose=True):
         mult       = etapa["multiplicador"]
         is_primeira = (etapa["round"] == 1)
 
-        # Busca zebra_ref (líder do campeonato antes da corrida)
         cur.execute("SELECT piloto FROM resultados WHERE etapa_id = ? AND tipo = 'zebra'", (etapa_id,))
         row = cur.fetchone()
         zebra_ref = row[0] if row and row[0] else (campeao_anterior if is_primeira else "Max Verstappen")
 
-        # Vencedor real (corrida_p1)
         cur.execute("SELECT piloto FROM resultados WHERE etapa_id = ? AND tipo = 'corrida_p1'", (etapa_id,))
         row = cur.fetchone()
         vencedor_real = row[0] if row else None
 
-        # Todos os resultados oficiais
         cur.execute("SELECT tipo, piloto FROM resultados WHERE etapa_id = ?", (etapa_id,))
         resultados = {row[0]: row[1] for row in cur.fetchall()}
 
@@ -160,20 +156,17 @@ def calcular_tudo(temporada_id=1, verbose=True):
 
             subtotal = pts_grid + pts_corrida + pts_pd + pts_vr
 
-            # Multiplicador da Reta Final
             pts_grid    *= mult
             pts_corrida *= mult
             pts_pd      *= mult
             pts_vr      *= mult
 
-            # Zebra (+10 se acertou o vencedor e não era o líder anterior)
             palp_p1 = palpites.get("corrida_p1")
             if (palp_p1 and vencedor_real and
                     sao_iguais(palp_p1, vencedor_real) and
                     not sao_iguais(palp_p1, zebra_ref)):
                 pts_zebra = PONTOS["zebra"] * mult
 
-            # Penalidades
             if penalidades.get("treino") == 1:
                 pts_penalidade += PONTOS["bp_treino"] * mult
             if penalidades.get("corrida") == 1:
@@ -215,10 +208,11 @@ def calcular_capsula(temporada_id=1, verbose=True):
     row = cur.fetchone()
     ultimo_round = row[0] if row and row[0] else None
 
+    # Fallback seguro com binding correto
     if not ultimo_round:
-        cur.execute("SELECT MAX(round) FROM etapas WHERE temporada_id = ?")
+        cur.execute("SELECT MAX(round) FROM etapas WHERE temporada_id = ?", (temporada_id,))
         r = cur.fetchone()
-        ultimo_round = r[0] if r else 20
+        ultimo_round = r[0] if r and r[0] else 20
 
     cur.execute("""
         SELECT posicao, piloto FROM standings_pilotos
