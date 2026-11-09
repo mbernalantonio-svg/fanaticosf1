@@ -3,7 +3,7 @@ F1 Agent V2 — Coleta de Resultados, Piloto do Dia e Standings (Mundial)
 Compatível com Linux (GitHub Actions) e Windows:
   - Coleta Starting Grid, Corrida e Volta Mais Rápida via Ergast/Jolpica
   - Web scraping oficial para Piloto do Dia (formula1.com)
-  - Coleta dinâmica dos Standings de Pilotos e Construtores (API + Scraping Fallback)
+  - Coleta dinâmica dos Standings de Pilotos e Construtores (API + Scraping Fallback com separador de texto)
   - Grava diretamente em resultados, standings_pilotos e standings_construtores no bolao.db
 """
 
@@ -56,6 +56,23 @@ PILOTOS_NORM = {
     "pierre gasly": "Pierre Gasly"
 }
 
+EQUIPES_NORM = {
+    "mclaren": "McLaren",
+    "ferrari": "Ferrari",
+    "red bull": "Red Bull",
+    "red bull racing": "Red Bull",
+    "mercedes": "Mercedes",
+    "aston martin": "Aston Martin",
+    "alpine": "Alpine",
+    "haas": "Haas",
+    "haas f1 team": "Haas",
+    "rb": "RB",
+    "racing bulls": "RB",
+    "williams": "Williams",
+    "sauber": "Sauber",
+    "audi": "Audi"
+}
+
 HEADERS_SCRAPING = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -79,6 +96,19 @@ def formatar_nome_piloto(nome):
     if norm in PILOTOS_NORM:
         return PILOTOS_NORM[norm]
     return " ".join(p.capitalize() for p in norm.split())
+
+def formatar_nome_equipe(equipe):
+    if not equipe: return ""
+    norm = normalizar(equipe)
+    if norm in EQUIPES_NORM:
+        return EQUIPES_NORM[norm]
+    return " ".join(p.capitalize() for p in norm.split())
+
+def limpar_nome_piloto_scraping(raw):
+    """Separa tags HTML aglutinadas e remove a sigla final de 3 letras da FIA (ex: VER, HAM, ANT)."""
+    t = re.sub(r'\s+', ' ', str(raw)).strip()
+    t = re.sub(r'\s+[A-Z]{3}$', '', t).strip()
+    return formatar_nome_piloto(t)
 
 def conectar_banco():
     if not os.path.exists(DB_PATH):
@@ -141,15 +171,16 @@ def obter_piloto_do_dia_scraping(etapa_slug):
             soup = BeautifulSoup(r.text, "html.parser")
             h1 = soup.find("h1")
             if h1:
+                texto_h1 = normalizar(h1.get_text(separator=" ", strip=True))
                 for k, v in PILOTOS_NORM.items():
-                    if k in normalizar(h1.get_text()):
+                    if k in texto_h1:
                         print(f"  ✅ Piloto do Dia identificado: {v}")
                         return v
     except Exception as e:
         print(f"  ⚠️ Falha no scraping do PD: {e}")
     return None
 
-# ── 2. Coleta Dinâmica de Standings (API + Scraping Oficial) ───────────────────
+# ── 2. Coleta Dinâmica de Standings (API + Scraping Oficial com Espaços) ───────
 
 def coletar_standings_dinamico(temporada=TEMPORADA):
     standings_pilotos = []
@@ -160,26 +191,26 @@ def coletar_standings_dinamico(temporada=TEMPORADA):
         print("📡 Buscando Standings oficiais via API...")
         url_p = f"https://api.jolpica.com/ergast/f1/{temporada}/driverStandings.json"
         rp = requests.get(url_p, timeout=12).json()
-        driver_lists = rp["MRData"]["StandingsTable"]["StandingsLists"]
+        driver_lists = rp.get("MRData", {}).get("StandingsTable", {}).get("StandingsLists", [])
         if driver_lists:
-            for item in driver_lists[0]["DriverStandings"]:
+            for item in driver_lists[0].get("DriverStandings", []):
                 nome = f"{item['Driver']['givenName']} {item['Driver']['familyName']}"
                 equipe = item["Constructors"][0]["name"] if item.get("Constructors") else ""
                 standings_pilotos.append({
                     "pos": int(item["position"]),
                     "nome": formatar_nome_piloto(nome),
-                    "equipe": equipe,
+                    "equipe": formatar_nome_equipe(equipe),
                     "pts": float(item["points"])
                 })
 
         url_c = f"https://api.jolpica.com/ergast/f1/{temporada}/constructorStandings.json"
         rc = requests.get(url_c, timeout=12).json()
-        const_lists = rc["MRData"]["StandingsTable"]["StandingsLists"]
+        const_lists = rc.get("MRData", {}).get("StandingsTable", {}).get("StandingsLists", [])
         if const_lists:
-            for item in const_lists[0]["ConstructorStandings"]:
+            for item in const_lists[0].get("ConstructorStandings", []):
                 standings_construtores.append({
                     "pos": int(item["position"]),
-                    "equipe": item["Constructor"]["name"],
+                    "equipe": formatar_nome_equipe(item["Constructor"]["name"]),
                     "pts": float(item["points"])
                 })
 
@@ -189,38 +220,38 @@ def coletar_standings_dinamico(temporada=TEMPORADA):
     except Exception as e:
         print(f"  ⚠️ API indisponível ou em processamento ({e}).")
 
-    # Camada 2: Fallback Dinâmico via Scraping no site oficial da Formula 1
+    # Camada 2: Fallback Dinâmico via Scraping Oficial da F1 (formula1.com)
     print("🕷️ Acionando Fallback: Scraping oficial no formula1.com...")
     try:
+        # Drivers Standings com separator=" " para não aglutinar primeiro nome e sobrenome
         r_p = requests.get(f"https://www.formula1.com/en/results/{temporada}/drivers", headers=HEADERS_SCRAPING, timeout=15)
         soup_p = BeautifulSoup(r_p.text, "html.parser")
         tabela_p = soup_p.find("table")
         if tabela_p and tabela_p.tbody:
             for tr in tabela_p.tbody.find_all("tr"):
-                cols = [td.get_text(strip=True) for td in tr.find_all("td")]
+                cols = [td.get_text(separator=" ", strip=True) for td in tr.find_all("td")]
                 if len(cols) >= 5:
                     pos = int(cols[0])
-                    nome_raw = cols[1]
-                    if len(nome_raw) > 3 and nome_raw[-3:].isupper():
-                        nome_raw = nome_raw[:-3].strip()
-                    equipe = cols[3]
+                    nome_formatado = limpar_nome_piloto_scraping(cols[1])
+                    equipe_formatada = formatar_nome_equipe(cols[3])
                     pts = float(cols[4].replace(",", "."))
                     standings_pilotos.append({
                         "pos": pos,
-                        "nome": formatar_nome_piloto(nome_raw),
-                        "equipe": equipe,
+                        "nome": nome_formatado,
+                        "equipe": equipe_formatada,
                         "pts": pts
                     })
 
+        # Teams Standings
         r_c = requests.get(f"https://www.formula1.com/en/results/{temporada}/team", headers=HEADERS_SCRAPING, timeout=15)
         soup_c = BeautifulSoup(r_c.text, "html.parser")
         tabela_c = soup_c.find("table")
         if tabela_c and tabela_c.tbody:
             for tr in tabela_c.tbody.find_all("tr"):
-                cols = [td.get_text(strip=True) for td in tr.find_all("td")]
+                cols = [td.get_text(separator=" ", strip=True) for td in tr.find_all("td")]
                 if len(cols) >= 3:
                     pos = int(cols[0])
-                    equipe = cols[1]
+                    equipe = formatar_nome_equipe(cols[1])
                     pts = float(cols[2].replace(",", "."))
                     standings_construtores.append({
                         "pos": pos,
@@ -228,7 +259,7 @@ def coletar_standings_dinamico(temporada=TEMPORADA):
                         "pts": pts
                     })
 
-        print(f"  ✅ Standings extraídos com sucesso via Scraping ({len(standings_pilotos)} pilotos, {len(standings_construtores)} equipes)")
+        print(f"  ✅ Standings extraídos via Scraping Oficial ({len(standings_pilotos)} pilotos, {len(standings_construtores)} equipes)")
     except Exception as e:
         print(f"  ❌ Falha no scraping oficial de standings: {e}")
 
@@ -276,7 +307,7 @@ def salvar_standings_no_banco(standings_pilotos, standings_construtores, round_n
 
     conn.commit()
     conn.close()
-    print(f"  💾 Classificação oficial (Standings) persistida no bolao.db para o Round {round_num}!")
+    print(f"  💾 Standings oficiais persistidos no bolao.db para o Round {round_num}!")
 
 # ── Execução Principal ────────────────────────────────────────────────────────
 
@@ -288,7 +319,6 @@ def run():
     conn = conectar_banco()
     cur = conn.cursor()
 
-    # Identifica última etapa válida
     cur.execute("""
         SELECT e.id, e.nome, e.round, t.id
         FROM etapas e
@@ -303,7 +333,6 @@ def run():
         print("❌ Nenhuma etapa configurada no banco.")
         return False
 
-    # Define o round alvo (etapa atual pós-fim de semana)
     etapa_alvo = etapas[-1]
     for e in etapas:
         if normalizar(e[1]) == "brasil":
@@ -318,15 +347,15 @@ def run():
     grid = obter_starting_grid_ergast(TEMPORADA, round_num)
     res.update(grid)
 
-    # 2. Piloto do Dia
+    # 2. Piloto do Dia via Scraping
     pd = obter_piloto_do_dia_scraping(normalizar(etapa_nome))
     if pd:
         res["pd"] = pd
 
-    # Salva no banco de dados local
+    # Salva resultados da corrida
     salvar_resultados_no_banco(etapa_id, res)
 
-    # 3. Coleta e Persistência dos Standings Dinâmicos
+    # 3. Coleta e Persistência Dinâmica dos Standings
     pilotos_st, construtores_st = coletar_standings_dinamico(TEMPORADA)
     salvar_standings_no_banco(pilotos_st, construtores_st, round_num, temporada_id)
 
