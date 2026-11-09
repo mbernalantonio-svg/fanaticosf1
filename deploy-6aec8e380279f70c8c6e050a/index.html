@@ -1,328 +1,1608 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Fanáticos por F1 — Bolão 2026</title>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<meta content="#E10600" name="theme-color"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
+<meta content="Fanáticos por F1" name="apple-mobile-web-app-title"/>
 
-  <!-- Proteção contra falsos positivos do Google Safe Browsing -->
-  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
-  <meta name="googlebot" content="noindex, nofollow">
-  <meta name="description" content="Aplicação privada e recreativa para bolão amador de automobilismo entre amigos.">
+<!-- Proteção contra falsos positivos do Google Safe Browsing -->
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet"/>
+<meta name="googlebot" content="noindex, nofollow"/>
+<meta name="description" content="Aplicação privada e recreativa para bolão amador entre amigos sobre automobilismo."/>
 
-  <!-- Configurações PWA -->
-  <meta name="theme-color" content="#d90429">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/png" href="icon.png">
+<link href="manifest.json" rel="manifest"/>
+<title>Fanáticos por F1</title>
+<style>
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-  <!-- Folha de Estilos Base -->
-  <style>
-    :root {
-      --bg-color: #0b0f19;
-      --card-bg: #151c2c;
-      --primary: #e10600;
-      --text: #ffffff;
-      --text-muted: #8e9aaf;
-      --accent: #ffd166;
-      --border: #232d42;
-    }
+        :root {
+            --red:    #E10600;
+            --dark:   #15151E;
+            --card:   #1F2937;
+            --input:  #374151;
+            --border: #4B5563;
+            --text:   #F9FAFB;
+            --muted:  #9CA3AF;
+            --green:  #16A34A;
+            --gold:   #F59E0B;
+            --stripe: #F9FAFB;
+            --badge-space: max(64px, env(safe-area-inset-bottom));
+        }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--dark);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: calc(80px + var(--badge-space));
+        }
 
-    body {
-      background-color: var(--bg-color);
-      color: var(--text);
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
-    }
+        /* Header */
+        .header {
+            background: var(--red);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+        .header img { width: 32px; height: 32px; }
+        .header-title { font-size: 1rem; font-weight: 700; letter-spacing: 1px; }
+        .header-sub { font-size: 0.68rem; opacity: 0.85; }
+        .header-right { margin-left: auto; font-size: 0.68rem; opacity: 0.8; text-align: right; }
+        .btn-sair {
+            background: rgba(0,0,0,0.25);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.45);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-sair:hover { background: rgba(0,0,0,0.4); }
+        .btn-sair.ativo { background: #fff; color: var(--red); }
+        @media (max-width: 400px) { .header-right { display: none; } #btn-regulamento { margin-left: auto; } .btn-sair { padding: 6px 8px; } }
 
-    header {
-      background-color: var(--primary);
-      padding: 12px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-    }
+        /* Regulamento */
+        .reg-hero { text-align: center; padding: 22px 16px; background: linear-gradient(135deg, #E10600, #7F1D1D); border-radius: 12px; margin-bottom: 12px; }
+        .reg-hero .emoji { font-size: 2.4rem; }
+        .reg-hero h2 { font-size: 1.15rem; letter-spacing: 1px; margin: 6px 0 4px; }
+        .reg-hero p { font-size: 0.78rem; opacity: 0.9; }
+        .reg-num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--red); color: #fff; font-size: 0.7rem; margin-right: 6px; }
+        .reg-txt { font-size: 0.84rem; line-height: 1.5; color: var(--text); }
+        .reg-txt p + p { margin-top: 8px; }
+        .reg-txt b { color: #fff; }
+        .reg-pts { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--input); font-size: 0.84rem; gap: 10px; }
+        .reg-pts:last-child { border-bottom: none; }
+        .reg-pts .v { background: #064E3B; color: #6EE7B7; font-weight: 700; border-radius: 999px; padding: 3px 10px; font-size: 0.75rem; white-space: nowrap; }
+        .reg-pts .v.neg { background: #7F1D1D; color: #FCA5A5; }
+        .reg-novo { display: inline-block; background: #FACC15; color: #111; font-size: 0.6rem; font-weight: 800; border-radius: 4px; padding: 2px 6px; margin-left: 6px; vertical-align: middle; letter-spacing: 0.5px; }
+        .reg-destaque { background: rgba(225,6,0,0.12); border-left: 3px solid var(--red); border-radius: 6px; padding: 10px 12px; font-size: 0.8rem; margin-top: 10px; line-height: 1.45; }
+        .reg-sub { font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 12px 0 2px; }
+        .reg-premio { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .reg-premio div { background: var(--dark); border-radius: 10px; padding: 12px; text-align: center; font-size: 0.75rem; color: var(--muted); }
+        .reg-premio b { display: block; font-size: 1.3rem; color: #fff; margin: 4px 0 2px; }
+        .ou-sep { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; margin: 18px 0 14px; }
+        .ou-sep::before, .ou-sep::after { content: ""; flex: 1; height: 1px; background: var(--input); }
+        .visitante-info { color: var(--muted); font-size: 0.72rem; text-align: center; margin-top: 8px; line-height: 1.4; }
+        .link-btn {
+            background: none; border: none; color: var(--muted);
+            font-size: 0.78rem; text-decoration: underline; cursor: pointer;
+            display: block; margin: 14px auto 0; padding: 4px;
+        }
 
-    header h1 {
-      font-size: 1.1rem;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
+        /* Nav bottom */
+        .nav-bottom {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: var(--card);
+            display: flex;
+            border-top: 2px solid var(--red);
+            padding-bottom: var(--badge-space);
+            z-index: 100;
+        }
+        .nav-bottom a {
+            flex: 1;
+            text-align: center;
+            padding: 8px 4px;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.65rem;
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+        }
+        .nav-bottom a.active { color: var(--red); }
+        .nav-bottom a .icon { font-size: 1.2rem; }
 
-    .header-actions {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
+        /* Container */
+        .container { padding: 14px; max-width: 520px; margin: 0 auto; }
 
-    .btn-header {
-      background: rgba(0,0,0,0.25);
-      border: 1px solid rgba(255,255,255,0.3);
-      color: #fff;
-      padding: 5px 10px;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
+        /* Cards */
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+        .card-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: var(--red);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--input);
+        }
 
-    main {
-      flex: 1;
-      padding: 16px;
-      max-width: 600px;
-      width: 100%;
-      margin: 0 auto;
-    }
+        /* Login */
+        .login-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 85vh;
+            padding: 24px;
+        }
+        .login-screen img { width: 72px; margin-bottom: 20px; }
+        .login-screen h2 { font-size: 1.3rem; margin-bottom: 6px; }
+        .login-screen p { color: var(--muted); font-size: 0.82rem; margin-bottom: 28px; text-align: center; }
 
-    .banner-aviso {
-      background: rgba(255, 209, 102, 0.1);
-      border-left: 4px solid var(--accent);
-      padding: 10px 14px;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      color: #ffe8a3;
-      margin-bottom: 16px;
-    }
+        /* Form */
+        .form-group { margin-bottom: 14px; }
+        .form-group label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+        select, input {
+            width: 100%;
+            padding: 11px 13px;
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.9rem;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        select:focus, input:focus { outline: none; border-color: var(--red); }
+        select:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    /* Container do Conteúdo Dinâmico (Tabs) */
-    #tab-content {
-      margin-bottom: 24px;
-    }
+        /* Botoes */
+        .btn {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn:active { opacity: 0.8; }
+        .btn-red  { background: var(--red); color: #fff; }
+        .btn-gray { background: var(--input); color: var(--text); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    /* Rodapé Institucional e Legal (Elimina sinalização de Phishing) */
-    footer.legal-footer {
-      background: #070a10;
-      border-top: 1px solid var(--border);
-      padding: 24px 16px 80px 16px; /* espaçamento inferior para a barra de navegação */
-      text-align: center;
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
+        /* Ranking */
+        .rank-row {
+            display: flex;
+            align-items: center;
+            padding: 9px 0;
+            border-bottom: 1px solid var(--input);
+        }
+        .rank-row:last-child { border-bottom: none; }
+        .rank-pos { width: 28px; font-size: 1rem; text-align: center; }
+        .rank-name { flex: 1; font-size: 0.9rem; font-weight: 600; padding: 0 8px; }
+        .rank-pts { font-size: 1rem; font-weight: 700; color: var(--red); }
+        .rank-pts span { font-size: 0.65rem; color: var(--muted); font-weight: 400; }
+        .descarte-badge {
+            font-size: 0.62rem;
+            background: #FEE2E2;
+            color: #991B1B;
+            padding: 1px 5px;
+            border-radius: 4px;
+            margin-left: 5px;
+        }
 
-    footer.legal-footer strong {
-      color: #cbd5e1;
-      display: block;
-      margin-bottom: 4px;
-    }
+        /* Heatmap */
+        .heatmap { overflow-x: auto; }
+        .heatmap table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+        .heatmap th {
+            background: var(--input);
+            padding: 5px 3px;
+            text-align: center;
+            font-size: 0.62rem;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+        .heatmap td { padding: 4px 3px; text-align: center; border: 1px solid var(--input); }
+        .heatmap td.nome { text-align: left; font-weight: 600; padding-left: 6px; white-space: nowrap; }
+        .pts-0    { background: #1F2937; color: #4B5563; }
+        .pts-low  { background: #064E3B; color: #6EE7B7; }
+        .pts-med  { background: #065F46; color: #A7F3D0; }
+        .pts-high { background: #047857; color: #fff; font-weight: 700; }
+        .pts-top  { background: #059669; color: #fff; font-weight: 700; }
+        .pts-desc { background: #7F1D1D; color: #FCA5A5; font-style: italic; }
 
-    footer.legal-footer p {
-      margin-bottom: 8px;
-    }
+        /* Etapas */
+        .etapa-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px;
+            background: var(--input);
+            border-radius: 8px;
+            margin-bottom: 7px;
+            text-decoration: none;
+            color: var(--text);
+            cursor: pointer;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+        .etapa-btn:active { opacity: 0.8; }
+        .etapa-btn .nome { font-weight: 600; font-size: 0.88rem; }
+        .etapa-btn .info { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+        .etapa-btn .arrow { color: var(--red); font-size: 1.1rem; }
+        .etapa-mult {
+            font-size: 0.62rem;
+            background: #7C2D12;
+            color: #FED7AA;
+            padding: 1px 5px;
+            border-radius: 4px;
+            margin-left: 5px;
+        }
 
-    footer.legal-footer a {
-      color: var(--text-muted);
-      text-decoration: underline;
-      margin: 0 8px;
-      cursor: pointer;
-    }
+        /* Palpites table */
+        .palpites-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+        .palpites-table th {
+            background: var(--input);
+            padding: 6px 4px;
+            text-align: center;
+            font-size: 0.65rem;
+            color: var(--muted);
+        }
+        .palpites-table td { padding: 6px 4px; border-bottom: 1px solid var(--input); text-align: center; }
+        .palpites-table td.label { text-align: left; color: var(--muted); font-size: 0.68rem; white-space: nowrap; }
+        .acerto   { background: #064E3B; color: #6EE7B7; border-radius: 3px; font-weight: 700; }
+        .erro     { color: #4B5563; }
+        .sem-palp { color: #374151; font-style: italic; }
 
-    /* Barra de Navegação Inferior PWA */
-    nav.bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 60px;
-      background: #111625;
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      z-index: 100;
-    }
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 700;
+        }
+        .badge-green { background: #D1FAE5; color: #065F46; }
+        .badge-red   { background: #FEE2E2; color: #991B1B; }
+        .badge-gold  { background: #FEF3C7; color: #92400E; }
+        .badge-gray  { background: var(--input); color: var(--muted); }
 
-    .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.7rem;
-      font-weight: 600;
-      cursor: pointer;
-      background: none;
-      border: none;
-    }
+        /* Info bar */
+        .info-bar {
+            background: var(--input);
+            border-radius: 8px;
+            padding: 9px 12px;
+            font-size: 0.72rem;
+            color: var(--muted);
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .info-bar strong { color: var(--text); }
 
-    .nav-item.active {
-      color: var(--primary);
-    }
+        /* Nota */
+        .lider-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 1000;
+            display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .lider-box { background: var(--card, #1F1F2B); border: 2px solid #F59E0B; border-radius: 14px;
+            max-width: 360px; width: 100%; padding: 22px 18px; text-align: center; }
+        .lider-box .emoji { font-size: 2.6rem; margin-bottom: 8px; }
+        .lider-box h3 { color: #F59E0B; margin: 0 0 10px; font-size: 1.1rem; }
+        .lider-box p { font-size: 0.85rem; line-height: 1.45; margin: 0 0 10px; }
+        .penalidade { background: rgba(220,38,38,0.12); border: 1px solid #DC2626; color: #FCA5A5;
+            border-radius: 10px; padding: 12px; font-size: 0.82rem; margin: 0 0 16px; line-height: 1.45; }
+        .nota {
+            background: var(--input);
+            border-left: 3px solid var(--gold);
+            padding: 9px 12px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.72rem;
+            color: #FCD34D;
+            margin-bottom: 14px;
+        }
 
-    .nav-item span.icon {
-      font-size: 1.2rem;
-      margin-bottom: 2px;
-    }
+        /* Section header */
+        .section-header {
+            background: var(--input);
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin: 14px 0 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--red);
+        }
 
-    /* Modal Simples de Termos e Privacidade */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.8);
-      z-index: 200;
-      padding: 20px;
-      align-items: center;
-      justify-content: center;
-    }
+        /* Pos label */
+        .pos-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--red);
+            margin: 12px 0 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .pos-badge {
+            background: var(--red);
+            color: #fff;
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-size: 0.65rem;
+        }
 
-    .modal-box {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 20px;
-      max-width: 480px;
-      width: 100%;
-      max-height: 80vh;
-      overflow-y: auto;
-      font-size: 0.85rem;
-      line-height: 1.6;
-    }
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: calc(76px + var(--badge-space));
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--green);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            z-index: 200;
+            opacity: 0;
+            transition: opacity 0.3s;
+            white-space: nowrap;
+        }
+        .toast.error { background: #DC2626; }
+        .toast.show  { opacity: 1; }
 
-    .modal-box h2 {
-      font-size: 1.1rem;
-      color: #fff;
-      margin-bottom: 12px;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 8px;
-    }
+        /* Loading */
+        .loading { text-align: center; padding: 40px; color: var(--muted); font-size: 0.82rem; }
+        .spinner {
+            width: 28px; height: 28px;
+            border: 3px solid var(--input);
+            border-top-color: var(--red);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-    .modal-box button {
-      background: var(--primary);
-      border: none;
-      color: #fff;
-      padding: 8px 16px;
-      border-radius: 6px;
-      margin-top: 16px;
-      cursor: pointer;
-      width: 100%;
-      font-weight: bold;
-    }
-  </style>
+        /* Success */
+        .success-screen { text-align: center; padding: 36px 16px; }
+        .success-icon  { font-size: 3.5rem; margin-bottom: 14px; }
+        .success-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; }
+        .success-sub   { color: var(--muted); font-size: 0.82rem; margin-bottom: 20px; }
+
+        /* Back btn */
+        select.campo-erro { border: 2px solid #DC2626 !important; }
+        .back-btn {
+            color: var(--muted);
+            font-size: 0.78rem;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 12px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        /* Capsula pontuacao */
+        .cap-pts-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid var(--input);
+            font-size: 0.8rem;
+        }
+        .cap-pts-row:last-child { border-bottom: none; }
+
+        /* Rodapé de conformidade e transparência anti-phishing */
+        .legal-footer {
+            margin-top: 30px;
+            padding: 20px 14px 40px;
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--muted);
+            border-top: 1px solid var(--input);
+            line-height: 1.45;
+        }
+        .legal-footer p + p { margin-top: 5px; }
+        .legal-footer a { color: var(--muted); text-decoration: underline; margin: 0 8px; cursor: pointer; }
+    </style>
 </head>
 <body>
+<div class="toast" id="toast"></div>
+<!-- ── LOGIN ── -->
+<div id="screen-login" style="display:none;">
+<div class="login-screen">
+<img alt="F1" src="https://upload.wikimedia.org/wikipedia/commons/3/33/F1.svg"/>
+<h2>Fanáticos por F1</h2>
+<p>Fanáticos por F1<br/>Selecione seu nome e digite sua senha</p>
+<div style="width:100%; max-width:320px;">
+<div class="form-group">
+<label>Quem é você?</label>
+<select id="login-select">
+<option value="">Selecione seu nome</option>
+</select>
+</div>
+<div class="form-group">
+<label for="login-senha">Senha</label>
+<input type="password" id="login-senha" placeholder="Digite sua senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')fazerLogin()"/>
+</div>
+<div id="login-erro" style="display:none;color:#F87171;font-size:0.8rem;margin-bottom:12px;text-align:center;"></div>
+<button class="btn btn-red" onclick="fazerLogin()">ENTRAR 🏎️</button>
+<button type="button" class="link-btn" onclick="iniciarTrocaSenha()">🔑 Trocar minha senha</button>
+<div class="ou-sep"><span>ou</span></div>
+<button type="button" class="btn btn-gray" onclick="entrarVisitante()">👀 SOU VISITANTE</button>
+<div class="visitante-info">Navegue pelo bolão sem login. Os nomes dos participantes ficam ocultos e não é possível enviar palpites.</div>
 
-  <!-- Cabeçalho -->
-  <header>
-    <div>
-      <h1>Fanáticos por F1</h1>
-      <span style="font-size: 0.7rem; opacity: 0.9;">Temporada 2026</span>
-    </div>
-    <div class="header-actions">
-      <button class="btn-header" onclick="abrirModal('regras')">📖 Regras</button>
-      <button class="btn-header" onclick="fazerLogout()">Sair ⎋</button>
-    </div>
-  </header>
-
-  <!-- Conteúdo Central -->
-  <main>
-    <div class="banner-aviso">
-      ⚠️ <strong>Resultado parcial:</strong> apuração automatizada e pontuação consolidada após cada etapa.
-    </div>
-
-    <!-- Ponto de Injeção das Telas da Aplicação (App.js) -->
-    <div id="tab-content">
-      <!-- As tabelas de Palpites, Ranking, Etapas e Cápsula são renderizadas aqui via app.js -->
-      <div id="loading" style="text-align: center; padding: 40px; color: var(--text-muted);">
-        A carregar dados do bolão...
-      </div>
-    </div>
-  </main>
-
-  <!-- Rodapé Institucional Anti-Phishing -->
-  <footer class="legal-footer">
-    <strong>Fanáticos por F1 — Projeto Recreativo Amador</strong>
-    <p>
-      Aplicação de entretenimento privado gerida entre amigos para acompanhamento do campeonato mundial de automobilismo.
-    </p>
-    <p>
-      <strong>Aviso de Isenção:</strong> Este website é independente e não é afiliado, associado, autorizado, homologado ou de qualquer forma conectado oficialmente à Formula One Licensing B.V., FIA ou qualquer uma das suas subsidiárias.
-    </p>
-    <p>
-      Não realizamos cobranças financeiras, apostas monetárias nem solicitamos palavras-passe ou números de cartões bancários.
-    </p>
-    <div>
-      <a onclick="abrirModal('termos')">Termos de Utilização</a>
-      <span>•</span>
-      <a onclick="abrirModal('privacidade')">Privacidade</a>
-    </div>
-  </footer>
-
-  <!-- Barra de Navegação Inferior -->
-  <nav class="bottom-nav">
-    <button class="nav-item" onclick="trocarAba('palpites')">
-      <span class="icon">📝</span>
-      <span>Palpites</span>
-    </button>
-    <button class="nav-item active" onclick="trocarAba('ranking')">
-      <span class="icon">🏆</span>
-      <span>Ranking</span>
-    </button>
-    <button class="nav-item" onclick="trocarAba('etapas')">
-      <span class="icon">📋</span>
-      <span>Etapas</span>
-    </button>
-    <button class="nav-item" onclick="trocarAba('capsula')">
-      <span class="icon">⏳</span>
-      <span>Cápsula</span>
-    </button>
-  </nav>
-
-  <!-- Modais de Conformidade -->
-  <div id="modal-container" class="modal">
-    <div class="modal-box">
-      <h2 id="modal-titulo">Título</h2>
-      <div id="modal-corpo">Conteúdo</div>
-      <button onclick="fecharModal()">Compreendido</button>
-    </div>
+<!-- Bloco de conformidade na tela de login -->
+<div style="margin-top:22px;padding-top:14px;border-top:1px solid var(--input);font-size:0.68rem;color:var(--muted);text-align:center;line-height:1.4;">
+  <p><strong>Aplicação Amadora e Privada</strong></p>
+  <p>Uso estritamente recreativo entre amigos. Sem vínculo com a Formula One Licensing B.V. ou FIA.</p>
+  <p>Não solicitamos dados bancários, cartões ou senhas de serviços externos.</p>
+  <div style="margin-top:6px;">
+    <a href="javascript:void(0)" onclick="alert('Termos de Uso:\nAcesso fechado entre amigos para entretenimento no campeonato 2026. Sem apostas financeiras.');" style="color:var(--muted);text-decoration:underline;margin-right:10px;">Termos</a>
+    <a href="javascript:void(0)" onclick="alert('Privacidade:\nNenhum dado financeiro ou confidencial é coletado. Apenas os palpites para o ranking esportivo.');" style="color:var(--muted);text-decoration:underline;">Privacidade</a>
   </div>
+</div>
 
-  <!-- Scripts do PWA e Carregamento de Dados -->
-  <script src="app.js"></script>
-  <script>
-    function abrirModal(tipo) {
-      const modal = document.getElementById('modal-container');
-      const titulo = document.getElementById('modal-titulo');
-      const corpo = document.getElementById('modal-corpo');
+</div>
+</div>
+</div>
+<!-- ── TROCAR SENHA (primeiro acesso) ── -->
+<div id="screen-senha" style="display:none;">
+<div class="login-screen">
+<img alt="F1" src="https://upload.wikimedia.org/wikipedia/commons/3/33/F1.svg"/>
+<h2 id="senha-titulo">Crie sua senha</h2>
+<p id="senha-texto">Este é seu primeiro acesso, <span id="senha-nome"></span>.<br/>Escolha uma senha só sua.</p>
+<div style="width:100%; max-width:320px;">
+<div class="form-group">
+<label for="nova-senha">Nova senha</label>
+<input type="password" id="nova-senha" placeholder="Mínimo 4 caracteres" autocomplete="new-password"/>
+</div>
+<div class="form-group">
+<label for="nova-senha2">Confirme a nova senha</label>
+<input type="password" id="nova-senha2" placeholder="Digite de novo" autocomplete="new-password" onkeydown="if(event.key==='Enter')trocarSenha()"/>
+</div>
+<div id="senha-erro" style="display:none;color:#F87171;font-size:0.8rem;margin-bottom:12px;text-align:center;"></div>
+<button class="btn btn-red" id="btn-trocar" onclick="trocarSenha()">SALVAR SENHA 🔒</button>
+<button type="button" class="link-btn" id="btn-cancelar-troca" style="display:none;" onclick="voltarLogin()">Cancelar</button>
+</div>
+</div>
+</div>
+<!-- ── APP ── -->
+<div id="screen-app" style="display:none;">
+<div class="header">
+<img alt="F1" src="https://upload.wikimedia.org/wikipedia/commons/3/33/F1.svg"/>
+<div>
+<div class="header-title">F1 BOLÃO 2026</div>
+<div class="header-sub">Olá, <span id="header-nome">--</span> 👋</div>
+</div>
+<div class="header-right" id="header-atualizado"></div>
+<button type="button" class="btn-sair" id="btn-regulamento" onclick="showTab('regulamento')" title="Regulamento do bolão">📖 Regras</button>
+<button type="button" class="btn-sair" onclick="sair()" title="Sair da conta">Sair ⏻</button>
+</div>
+<!-- Tabs -->
+<div class="container" id="tab-palpites" style="display:none;"></div>
+<div class="container" id="tab-ranking" style="display:none;"></div>
+<div class="container" id="tab-etapas" style="display:none;"></div>
+<div class="container" id="tab-capsula" style="display:none;"></div>
+<div class="container" id="tab-regulamento" style="display:none;"></div>
 
-      if (tipo === 'termos') {
-        titulo.innerText = 'Termos de Utilização';
-        corpo.innerHTML = '<p>Acesso restrito e recreativo para amigos e convidados acompanharem palpites amadores de automobilismo na temporada 2026. A pontuação não confere direito a prémios monetários de qualquer natureza.</p>';
-      } else if (tipo === 'privacidade') {
-        titulo.innerText = 'Política de Privacidade';
-        corpo.innerHTML = '<p>Os nomes e palpites registados destinam-se exclusivamente à ordenação da tabela de pontuação da temporada desportiva. Não partilhamos quaisquer dados nem solicitamos credenciais externas.</p>';
-      } else if (tipo === 'regras') {
-        titulo.innerText = 'Regras do Bolão 2026';
-        corpo.innerHTML = '<p>• Palpites encerram rigorosamente antes do início de cada sessão (Qualificação e Corrida).<br>• Pontuação por posições exatas e trocadas conforme o regulamento acordado.<br>• Cápsula do Tempo pontua posições finais do mundial.</p>';
-      }
-      modal.style.display = 'flex';
+<!-- Rodapé de Conformidade Geral -->
+<div class="legal-footer">
+  <p><strong>Fanáticos por F1 — Bolão Amador</strong></p>
+  <p>Projeto independente sem fins lucrativos ou afiliação oficial com a Formula One Licensing B.V. ou FIA.</p>
+</div>
+
+<nav class="nav-bottom">
+<a class="active" id="nav-palpites" onclick="showTab('palpites')">
+<span class="icon">📝</span>Palpites
+        </a>
+<a id="nav-ranking" onclick="showTab('ranking')">
+<span class="icon">🏆</span>Ranking
+        </a>
+<a id="nav-etapas" onclick="showTab('etapas')">
+<span class="icon">📋</span>Etapas
+        </a>
+<a id="nav-capsula" onclick="showTab('capsula')">
+<span class="icon">⏳</span>Cápsula
+        </a>
+</nav>
+</div>
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+const API_URL = "https://mbernalantonio.pythonanywhere.com";
+const API_KEY = "f1bolao2027secretkey";
+
+// ── Estado ────────────────────────────────────────────────────────────────────
+let usuario      = null;
+let pilotos      = [];
+let etapasAbertas = [];
+let rankingCache  = null;
+let etapaDetalhe  = null; // etapa selecionada para ver palpites
+let visitante     = false; // modo visitante: nomes anonimizados e sem envio de palpites
+let apelidos      = null;  // nome real -> apelido (só no modo visitante)
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+// ── Modo de teste do líder ───────────────────────────────────────────────────
+// Abra o app com ?teste=lider para simular os avisos do líder sem entrar na conta dele.
+// Nesse modo você é tratado como líder, aparece uma etapa fictícia "🧪 Teste" e NADA é gravado.
+(function () {
+    const q = new URLSearchParams(location.search).get("teste");
+    if (q === "lider") sessionStorage.setItem("f1bolao_teste", "lider");
+    if (q === "sair") sessionStorage.removeItem("f1bolao_teste");
+})();
+const TESTE = sessionStorage.getItem("f1bolao_teste") === "lider";
+const ETAPA_TESTE = "🧪 Teste";
+function sairDoTeste() {
+    sessionStorage.removeItem("f1bolao_teste");
+    location.href = location.pathname;
+}
+function fmtBRT(d) {
+    const b = new Date(d.getTime() - 3 * 3600000).toISOString();
+    return b.slice(0, 10) + " " + b.slice(11, 19);
+}
+
+async function init() {
+    // Sessão só dura enquanto a aba estiver aberta: ao fechar, é preciso logar de novo.
+    localStorage.removeItem("f1bolao_usuario");
+    localStorage.removeItem("f1bolao_senha_ok");
+    const saved = sessionStorage.getItem("f1bolao_usuario");
+    if (sessionStorage.getItem("f1bolao_visitante")) {
+        visitante = true;
+        usuario = "Visitante";
+        mostrarApp();
+    } else if (saved) {
+        usuario = saved;
+        mostrarApp();
+    } else {
+        await carregarNomes();
+        document.getElementById("screen-login").style.display = "block";
+    }
+}
+
+async function carregarNomes() {
+    try {
+        const r = await apiFetch("/api/ranking");
+        const sel = document.getElementById("login-select");
+        (r.ranking || []).forEach(n => {
+            const o = document.createElement("option");
+            o.value = n; o.textContent = n;
+            sel.appendChild(o);
+        });
+    } catch(e) {}
+}
+
+// Login e troca de senha são verificados no servidor (/api/auth/*)
+let senhaAtual = ""; // guardada só em memória até a troca de senha
+let modoTroca  = "primeiro"; // "primeiro" (primeiro acesso) ou "voluntario" (pela tela de login)
+
+async function authPost(acao, body) {
+    const r = await fetch(`/api/auth/${acao}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+    });
+    let data = {};
+    try { data = await r.json(); } catch(e) {}
+    if (!r.ok || !data.ok) throw new Error(data.erro || "Erro de conexão. Tente novamente.");
+    return data;
+}
+
+function mostrarErro(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.style.display = msg ? "block" : "none";
+}
+
+async function fazerLogin() {
+    const sel   = document.getElementById("login-select");
+    const senha = document.getElementById("login-senha").value;
+    mostrarErro("login-erro", "");
+
+    if (!sel.value) { showToast("Selecione seu nome!", true); return; }
+    if (!senha)     { showToast("Digite sua senha!", true); return; }
+
+    try {
+        const r = await authPost("login", { nome: sel.value, senha });
+        usuario = sel.value;
+        if (r.primeiroAcesso) {
+            senhaAtual = senha;
+            abrirTelaSenha("primeiro");
+            return;
+        }
+        entrar();
+    } catch(e) {
+        mostrarErro("login-erro", e.message);
+        document.getElementById("login-senha").value = "";
+    }
+}
+
+function abrirTelaSenha(modo) {
+    modoTroca = modo;
+    const voluntario = modo === "voluntario";
+    document.getElementById("senha-titulo").textContent = voluntario ? "Trocar senha" : "Crie sua senha";
+    const txt = document.getElementById("senha-texto");
+    txt.innerHTML = "";
+    const nome = document.createElement("span");
+    nome.id = "senha-nome"; nome.textContent = usuario;
+    if (voluntario) {
+        txt.append(nome, document.createElement("br"), "Escolha sua nova senha.");
+    } else {
+        txt.append("Este é seu primeiro acesso, ", nome, ".", document.createElement("br"), "Escolha uma senha só sua.");
+    }
+    document.getElementById("btn-cancelar-troca").style.display = voluntario ? "block" : "none";
+    document.getElementById("nova-senha").value  = "";
+    document.getElementById("nova-senha2").value = "";
+    mostrarErro("senha-erro", "");
+    document.getElementById("screen-login").style.display = "none";
+    document.getElementById("screen-senha").style.display = "block";
+    document.getElementById("nova-senha").focus();
+}
+
+// Troca de senha a pedido do usuário, a partir da tela de login
+async function iniciarTrocaSenha() {
+    const sel   = document.getElementById("login-select");
+    const senha = document.getElementById("login-senha").value;
+    mostrarErro("login-erro", "");
+    if (!sel.value) { mostrarErro("login-erro", "Selecione seu nome e digite sua senha atual para trocá-la."); return; }
+    if (!senha)     { mostrarErro("login-erro", "Digite sua senha atual para poder trocá-la."); document.getElementById("login-senha").focus(); return; }
+    try {
+        await authPost("login", { nome: sel.value, senha });
+        usuario = sel.value;
+        senhaAtual = senha;
+        abrirTelaSenha("voluntario");
+    } catch(e) {
+        mostrarErro("login-erro", e.message);
+        document.getElementById("login-senha").value = "";
+    }
+}
+
+// ── Modo visitante ───────────────────────────────────────────────────────────
+function entrarVisitante() {
+    mostrarErro("login-erro", "");
+    visitante = true;
+    apelidos = null;
+    usuario = "Visitante";
+    sessionStorage.removeItem("f1bolao_usuario");
+    sessionStorage.setItem("f1bolao_visitante", "1");
+    mostrarApp();
+}
+
+// Cria apelidos (Fã A, Fã B, ...) em ordem embaralhada, para não revelar quem é quem
+async function garantirApelidos() {
+    if (apelidos) return;
+    const r = await fetch(API_URL + "/api/ranking", { headers: { "X-API-Key": API_KEY } });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const nomes = [...new Set(((await r.json()).ranking) || [])];
+    for (let i = nomes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [nomes[i], nomes[j]] = [nomes[j], nomes[i]];
+    }
+    const letra = i => (i >= 26 ? letra(Math.floor(i / 26) - 1) : "") + String.fromCharCode(65 + (i % 26));
+    apelidos = new Map(nomes.map((n, i) => [n, `Fã ${letra(i)}`]));
+}
+
+// Troca, em toda a resposta, os nomes dos participantes (chaves e valores) pelos apelidos
+function anonimizar(v) {
+    if (typeof v === "string") return apelidos.get(v) ?? v;
+    if (Array.isArray(v)) return v.map(anonimizar);
+    if (v && typeof v === "object") {
+        const o = {};
+        for (const [k, x] of Object.entries(v)) o[apelidos.get(k) ?? k] = anonimizar(x);
+        return o;
+    }
+    return v;
+}
+
+function voltarLogin() {
+    senhaAtual = "";
+    usuario = null;
+    document.getElementById("login-senha").value = "";
+    document.getElementById("screen-senha").style.display = "none";
+    document.getElementById("screen-app").style.display   = "none";
+    document.getElementById("screen-login").style.display = "block";
+}
+
+async function sair() {
+    sessionStorage.removeItem("f1bolao_usuario");
+    sessionStorage.removeItem("f1bolao_visitante");
+    const eraVisitante = visitante;
+    visitante = false;
+    apelidos = null;
+    document.getElementById("header-atualizado").textContent = "";
+    voltarLogin();
+    tabAtual = null;
+    rankingCache = null;
+    lideresCache = null;
+    etapaDetalhe = null;
+    TABS.forEach(t => { document.getElementById(`tab-${t}`).innerHTML = ""; });
+    history.replaceState(null, "", location.pathname + location.search);
+    if (document.getElementById("login-select").options.length <= 1) await carregarNomes();
+    showToast(eraVisitante ? "Você saiu do modo visitante 👋" : "Você saiu da conta 👋");
+}
+
+async function trocarSenha() {
+    const nova  = document.getElementById("nova-senha").value;
+    const nova2 = document.getElementById("nova-senha2").value;
+    mostrarErro("senha-erro", "");
+
+    if (nova.length < 4)  { mostrarErro("senha-erro", "A senha precisa ter pelo menos 4 caracteres."); return; }
+    if (nova !== nova2)   { mostrarErro("senha-erro", "As senhas não são iguais."); return; }
+    if (nova === senhaAtual) { mostrarErro("senha-erro", modoTroca === "voluntario" ? "Escolha uma senha diferente da atual." : "Escolha uma senha diferente da inicial."); return; }
+
+    const btn = document.getElementById("btn-trocar");
+    btn.disabled = true;
+    try {
+        await authPost("trocar-senha", { nome: usuario, senha: senhaAtual, novaSenha: nova });
+        senhaAtual = "";
+        showToast(modoTroca === "voluntario" ? "Senha alterada! ✅" : "Senha criada! ✅");
+        entrar();
+    } catch(e) {
+        mostrarErro("senha-erro", e.message);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+function entrar() {
+    visitante = false;
+    apelidos = null;
+    sessionStorage.removeItem("f1bolao_visitante");
+    sessionStorage.setItem("f1bolao_usuario", usuario);
+    mostrarApp();
+    if (!TESTE) avisoLider();
+}
+
+// ── Líder do bolão ───────────────────────────────────────────────────────────
+// Antecedência mínima exigida do líder (regulamento: 10 minutos antes do início)
+const ANTECEDENCIA_LIDER_MIN = 10;
+let lideresCache = null;
+
+// Líder(es) pelo ranking atual (resultado da última etapa disputada). Empate no topo conta como líder.
+async function lideresAtuais() {
+    if (lideresCache) return lideresCache;
+    try {
+        const d = await apiFetch("/api/ranking");
+        const pts = n => Number(d.dados?.[n]?.total_com_descarte ?? d.dados?.[n]?.total ?? 0);
+        const nomes = d.ranking || [];
+        lideresCache = nomes.length && pts(nomes[0]) > 0 ? nomes.filter(n => pts(n) === pts(nomes[0])) : [];
+    } catch(e) { return []; }
+    return lideresCache;
+}
+async function souLider() {
+    if (TESTE) return true;
+    return !visitante && !!usuario && (await lideresAtuais()).includes(usuario);
+}
+
+// Aviso mostrado ao logar quando o participante é o líder do bolão
+async function avisoLider() {
+    if (!(await souLider())) return;
+    const m = document.createElement("div");
+    m.className = "lider-modal";
+    m.innerHTML = `
+        <div class="lider-box" role="dialog" aria-modal="true">
+            <div class="emoji">👑</div>
+            <h3>Você é o líder do bolão!</h3>
+            <p>Parabéns, <b></b>! Pelo regulamento, o líder deve enviar seus palpites até
+               <b>${ANTECEDENCIA_LIDER_MIN} minutos antes</b> do horário oficial de início de cada atividade.</p>
+            <p style="color:#FCA5A5;">Envio fora desse prazo gera punição:<br><b>−2 pts</b> na classificação e <b>−10 pts</b> na corrida.</p>
+            <button class="btn btn-red" style="margin-top:6px;">ENTENDI 👍</button>
+        </div>`;
+    m.querySelector("p b").textContent = usuario;
+    m.querySelector("button").onclick = () => m.remove();
+    document.body.appendChild(m);
+}
+
+// Horário limite do líder (10 min antes do início, menos 1s)
+function horaLimiteLider(s) {
+    const d = new Date(inicioSessao(s).getTime() - ANTECEDENCIA_LIDER_MIN * 60000 - 1000);
+    const tz = { timeZone: "America/Sao_Paulo" };
+    return d.toLocaleTimeString("pt-BR", { ...tz, hour12: false });
+}
+
+function mostrarApp() {
+    document.getElementById("screen-login").style.display = "none";
+    document.getElementById("screen-senha").style.display = "none";
+    document.getElementById("screen-app").style.display   = "block";
+    document.getElementById("header-nome").textContent = usuario;
+    document.querySelector(".header-sub").lastChild.textContent = visitante ? " 👀" : " 👋";
+    document.querySelector(".btn-sair").title = visitante ? "Sair do modo visitante" : "Sair da conta";
+    if (TESTE && !document.getElementById("faixa-teste")) {
+        const f = document.createElement("div");
+        f.id = "faixa-teste";
+        f.style.cssText = "background:#F59E0B;color:#111;font-size:0.75rem;font-weight:700;text-align:center;padding:6px 10px;";
+        f.innerHTML = `🧪 MODO TESTE DO LÍDER — você é tratado como líder e nada é gravado.
+            <a href="#" style="color:#111;text-decoration:underline;margin-left:6px;" onclick="sairDoTeste();return false;">Sair do teste</a>`;
+        document.getElementById("screen-app").prepend(f);
+        avisoLider();
+    }
+    tabAtual = null;
+    rotear();
+}
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function apiFetch(endpoint, opts={}) {
+    const headers = { "X-API-Key": API_KEY, ...opts.headers };
+    const r = await fetch(API_URL + endpoint, { ...opts, headers });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    if (!visitante) return data;
+    await garantirApelidos();
+    return anonimizar(data);
+}
+
+// Horários do servidor estão em horário de Brasília (UTC-3)
+function dataBRT(str) {
+    return new Date(str.replace(" ","T") + (str.length <= 16 ? ":00" : "") + "-03:00");
+}
+// Palpite aceito até 1s antes do início oficial (início 14:00:00 → até 13:59:59)
+function inicioSessao(s) { return dataBRT(s.inicio || s.corte); }
+function horaLimite(s) {
+    const d = new Date(inicioSessao(s).getTime() - 1000);
+    const tz = { timeZone: "America/Sao_Paulo" };
+    const dia  = d.toLocaleDateString("pt-BR", { ...tz, weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" });
+    const hora = d.toLocaleTimeString("pt-BR", { ...tz, hour12: false });
+    return `${dia} às ${hora}`;
+}
+
+async function apiPost(endpoint, body) {
+    return apiFetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+    });
+}
+
+// ── Nav ───────────────────────────────────────────────────────────────────────
+// Cada tela tem um endereço (#palpites, #ranking, #etapas, #etapas/Brasil...),
+// assim o botão "voltar" do celular volta para a tela anterior dentro do app.
+const TABS = ["palpites","ranking","etapas","capsula","regulamento"];
+let tabAtual = null;
+
+function irPara(hash) {
+    if (location.hash === hash) rotear();
+    else location.hash = hash;
+}
+function showTab(tab) { irPara("#" + tab); }
+
+async function rotear() {
+    if (!usuario || document.getElementById("screen-app").style.display === "none") return;
+    const [t0, ...resto] = location.hash.replace(/^#/, "").split("/");
+    const tab   = TABS.includes(t0) ? t0 : "palpites";
+    const param = resto.length ? decodeURIComponent(resto.join("/")) : null;
+    const mesmaTab = tabAtual === tab;
+    ativarTab(tab);
+    tabAtual = tab;
+    window.scrollTo(0, 0);
+
+    if (tab === "palpites") {
+        let sel = document.getElementById("sel-sessao");
+        if (!param || !mesmaTab || !sel) { await renderPalpites(); sel = document.getElementById("sel-sessao"); }
+        if (param && sel && [...sel.options].some(o => o.value === param)) {
+            sel.value = param;
+            onSessaoChange(param);
+        }
+    }
+    if (tab === "ranking")  renderRanking();
+    if (tab === "etapas")   { etapaDetalhe = param; renderEtapas(); }
+    if (tab === "capsula")  renderCapsula();
+    if (tab === "regulamento") renderRegulamento();
+}
+window.addEventListener("hashchange", rotear);
+
+function ativarTab(tab) {
+    TABS.forEach(t => {
+        document.getElementById(`tab-${t}`).style.display  = "none";
+        document.getElementById(`nav-${t}`)?.classList.remove("active");
+    });
+    document.getElementById(`tab-${tab}`).style.display = "block";
+    document.getElementById(`nav-${tab}`)?.classList.add("active");
+    document.getElementById("btn-regulamento").classList.toggle("ativo", tab === "regulamento");
+}
+
+function loading(id) {
+    document.getElementById(id).innerHTML =
+        '<div class="loading"><div class="spinner"></div>Carregando...</div>';
+}
+
+// ── PALPITES ──────────────────────────────────────────────────────────────────
+async function renderPalpites() {
+    loading("tab-palpites");
+    try {
+        const [rEtapas, rPilotos] = await Promise.all([
+            apiFetch("/api/etapas_abertas"),
+            apiFetch("/api/pilotos")
+        ]);
+        const agora = new Date();
+        etapasAbertas = (rEtapas.etapas_abertas || [])
+            .map(e => ({ ...e, sessoes: e.sessoes.filter(s => inicioSessao(s) > agora) }))
+            .filter(e => e.sessoes.length);
+        pilotos       = rPilotos.pilotos || [];
+        // Etapa fictícia do modo teste: classificação dentro dos 10 min do líder (com punição) e corrida fora (sem punição)
+        if (TESTE) etapasAbertas.unshift({ etapa: ETAPA_TESTE, sessoes: [
+            { sessao: "classificacao", inicio: fmtBRT(new Date(Date.now() + 5 * 60000)) },
+            { sessao: "corrida",       inicio: fmtBRT(new Date(Date.now() + 60 * 60000)) }
+        ]});
+
+        if (!etapasAbertas.length) {
+            document.getElementById("tab-palpites").innerHTML = `
+                <div class="card" style="text-align:center;padding:40px 16px;">
+                    <div style="font-size:3rem;margin-bottom:14px;">🏁</div>
+                    <div style="font-weight:700;margin-bottom:6px;">Nenhuma sessão aberta</div>
+                    <div style="color:var(--muted);font-size:0.82rem;">
+                        Os palpites estarão disponíveis antes de cada sessão.
+                    </div>
+                </div>`;
+            return;
+        }
+
+        let opts = '<option value="">Selecione a sessão</option>';
+        etapasAbertas.forEach(e => {
+            e.sessoes.forEach(s => {
+                const label = s.sessao === "classificacao" ? "Classificação" : "Corrida";
+                const diff  = Math.floor((inicioSessao(s) - new Date()) / 60000);
+                let aviso = diff < 60 && diff >= 0 ? ` ⚠️ ${diff}min` : "";
+                opts += `<option value="${e.etapa}|${s.sessao}">${e.etapa} — ${label}${aviso}</option>`;
+            });
+        });
+
+        document.getElementById("tab-palpites").innerHTML = `
+            <div class="card">
+                <div class="card-title">📝 Enviar Palpites</div>
+                <div class="form-group">
+                    <label>Sessão</label>
+                    <select id="sel-sessao" onchange="irPara(this.value ? '#palpites/' + encodeURIComponent(this.value) : '#palpites')">${opts}</select>
+                </div>
+                <div id="form-body"></div>
+            </div>`;
+    } catch(e) {
+        document.getElementById("tab-palpites").innerHTML =
+            `<div class="card" style="text-align:center;padding:30px;color:#DC2626;">
+                ❌ Erro ao conectar<br>
+                <button class="btn btn-gray" style="margin-top:14px;width:auto;padding:8px 20px;" onclick="renderPalpites()">Tentar novamente</button>
+            </div>`;
+    }
+}
+
+function onSessaoChange(val) {
+    const body = document.getElementById("form-body");
+    if (!val) { body.innerHTML = ""; return; }
+    const [etapa, sessao] = val.split("|");
+    window._etapaSel  = etapa;
+    window._sessaoSel = sessao;
+    const s = sessaoSel(etapa, sessao);
+
+    const diff    = Math.floor((inicioSessao(s) - new Date()) / 60000);
+    let aviso = `<div class="nota">⏱️ Palpites até ${horaLimite(s)} (horário de Brasília)</div>`;
+    if (diff < 30 && diff >= 0)
+        aviso = `<div class="nota">⚠️ Prazo encerra em ${diff} minutos — palpites até ${horaLimite(s)} (horário de Brasília)</div>`;
+
+    const opts = pilotosDaEtapa(etapa).map(p => `<option value="${p}">${p}</option>`).join("");
+
+    let campos = "";
+    if (sessao === "classificacao") {
+        campos = `
+            <div class="section-header">🚦 Classificação (P1-P3)</div>
+            ${posSelect(1,"grid_p1",opts)}
+            ${posSelect(2,"grid_p2",opts)}
+            ${posSelect(3,"grid_p3",opts)}
+            <div class="section-header">🏆 Piloto do Dia</div>
+            ${posSelect("PD","pd",opts)}`;
+    } else {
+        campos = `
+            <div class="section-header">🏁 Corrida (P1-P10)</div>
+            ${[1,2,3,4,5,6,7,8,9,10].map(i => posSelect(i,`corrida_p${i}`,opts)).join("")}
+            <div class="section-header">⚡ Volta Rápida</div>
+            ${posSelect("VR","vr",opts)}`;
     }
 
-    function fecharModal() {
-      document.getElementById('modal-container').style.display = 'none';
+    const enviar = visitante && !TESTE
+        ? `<div class="nota" style="margin-top:18px;">👀 Você está no modo visitante: é possível ver o formulário, mas não enviar palpites. Entre com seu nome e senha para palpitar.</div>`
+        : `<button class="btn btn-red" style="margin-top:18px;" onclick="enviarPalpites()">
+            ENVIAR PALPITES 🏎️
+        </button>`;
+    body.innerHTML = `${aviso}<div id="aviso-lider"></div>${campos}${enviar}
+        <button class="btn btn-gray" style="margin-top:10px;" onclick="irPara('#palpites')">← Voltar às sessões</button>`;
+    souLider().then(lider => {
+        const el = document.getElementById("aviso-lider");
+        if (!lider || !el || window._sessaoSel !== sessao) return;
+        const pts = sessao === "classificacao" ? 2 : 10;
+        const atrasado = inicioSessao(s) - new Date() < ANTECEDENCIA_LIDER_MIN * 60000;
+        el.innerHTML = atrasado
+            ? `<div class="penalidade">👑 Você é o líder e o prazo de ${ANTECEDENCIA_LIDER_MIN} minutos de antecedência já passou. Se enviar agora, sofrerá a punição de <b>−${pts} pts</b> prevista no regulamento.</div>`
+            : `<div class="nota">👑 Você é o líder: envie até <b>${horaLimiteLider(s)}</b> (${ANTECEDENCIA_LIDER_MIN} min antes do início) para evitar a punição de −${pts} pts.</div>`;
+    });
+}
+
+function sessaoSel(etapa, sessao) {
+    const e = etapasAbertas.find(x => x.etapa === etapa);
+    return e && e.sessoes.find(x => x.sessao === sessao);
+}
+
+// Substituições de pilotos por etapa: { etapa: { sai: "Piloto", entra: "Substituto" } }
+const SUBSTITUICOES = {
+    "Brasil": [{ sai: "Esteban Ocon", entra: "Rafael Camara" }]
+};
+function pilotosDaEtapa(etapa) {
+    let lista = [...pilotos];
+    (SUBSTITUICOES[etapa] || []).forEach(({ sai, entra }) => {
+        lista = lista.filter(p => p !== sai);
+        if (!lista.includes(entra)) lista.push(entra);
+    });
+    return lista.sort((a, b) => a.localeCompare(b, "pt-BR"));
+}
+
+// Posições que não podem repetir piloto (PD e VR ficam livres)
+function camposUnicos(sessao) {
+    return sessao === "classificacao"
+        ? ["grid_p1","grid_p2","grid_p3"]
+        : [1,2,3,4,5,6,7,8,9,10].map(i => `corrida_p${i}`);
+}
+// Desabilita, em cada posição, os pilotos já escolhidos nas outras posições
+function atualizarRepetidos() {
+    const sels = camposUnicos(window._sessaoSel)
+        .map(t => document.getElementById(`palp-${t}`)).filter(Boolean);
+    const escolhidos = sels.map(el => el.value);
+    sels.forEach((el, i) => {
+        [...el.options].forEach(o => {
+            if (!o.value) return;
+            const usado = escolhidos.some((v, j) => j !== i && v === o.value);
+            o.disabled = usado;
+            o.textContent = usado ? `${o.value} (já escolhido)` : o.value;
+        });
+    });
+}
+
+function posSelect(pos, tipo, opts) {
+    return `
+        <div class="pos-label"><span class="pos-badge">P${pos}</span></div>
+        <div class="form-group">
+            <select id="palp-${tipo}" onchange="this.classList.remove('campo-erro');atualizarRepetidos()">
+                <option value="">Selecione o piloto</option>${opts}
+            </select>
+        </div>`;
+}
+
+async function enviarPalpites() {
+    if (visitante && !TESTE) { showToast("Visitantes não podem enviar palpites.", true); return; }
+    const etapa  = window._etapaSel;
+    const sessao = window._sessaoSel;
+    if (!etapa || !sessao) { showToast("Selecione uma sessão!", true); return; }
+    const sSel = sessaoSel(etapa, sessao);
+    if (!sSel || new Date() >= inicioSessao(sSel)) {
+        showToast("Prazo encerrado: a sessão já começou.", true);
+        renderPalpites();
+        return;
     }
 
-    function fazerLogout() {
-      if (confirm('Deseja encerrar a sessão?')) {
-        localStorage.clear();
-        location.reload();
-      }
+    const tipos = sessao === "classificacao"
+        ? ["grid_p1","grid_p2","grid_p3","pd"]
+        : ["corrida_p1","corrida_p2","corrida_p3","corrida_p4","corrida_p5",
+           "corrida_p6","corrida_p7","corrida_p8","corrida_p9","corrida_p10","vr"];
+
+    const faltando = tipos.map(t => document.getElementById(`palp-${t}`)).filter(el => !el || !el.value);
+    if (faltando.length) {
+        faltando.forEach(el => el && el.classList.add("campo-erro"));
+        if (faltando[0]) faltando[0].scrollIntoView({ behavior: "smooth", block: "center" });
+        showToast(`Preencha todos os palpites (falta${faltando.length > 1 ? "m" : ""} ${faltando.length}).`, true);
+        return;
     }
-  </script>
+
+    const unicos = camposUnicos(sessao)
+        .map(t => document.getElementById(`palp-${t}`)?.value).filter(Boolean);
+    if (new Set(unicos).size !== unicos.length) {
+        showToast("O mesmo piloto não pode ser escolhido em mais de uma posição.", true);
+        return;
+    }
+
+    const palpites = {};
+    tipos.forEach(t => { palpites[t] = document.getElementById(`palp-${t}`).value; });
+
+    const btn = document.querySelector("#form-body .btn-red");
+    btn.disabled = true; btn.textContent = "ENVIANDO...";
+
+    try {
+        let r;
+        if (TESTE) {
+            await new Promise(ok => setTimeout(ok, 400));
+            const atrasado = inicioSessao(sSel) - new Date() < ANTECEDENCIA_LIDER_MIN * 60000;
+            r = { sucesso: true, dt_envio: fmtBRT(new Date()) + " (simulação — nada foi gravado)",
+                  ...(atrasado ? { penalidade_lider: { pontos: sessao === "classificacao" ? 2 : 10, sessao } } : {}) };
+        } else {
+            const resp = await fetch("/api/palpite", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
+                body: JSON.stringify({ participante: usuario, etapa, sessao, palpites })
+            });
+            r = await resp.json();
+        }
+        if (r.sucesso) {
+            const pen = r.penalidade_lider;
+            const penHtml = pen ? `<div class="penalidade">⚠️ <b>Penalidade aplicada: −${pen.pontos} pts.</b><br>
+                Como líder do bolão, você enviou o palpite com menos de ${ANTECEDENCIA_LIDER_MIN} minutos de antecedência
+                do início da ${pen.sessao === "classificacao" ? "classificação" : "corrida"}, conforme o regulamento.</div>` : "";
+            if (pen) showToast(`Penalidade de líder: −${pen.pontos} pts`, true);
+            document.getElementById("tab-palpites").innerHTML = `
+                <div class="card success-screen">
+                    <div class="success-icon">✅</div>
+                    <div class="success-title">Palpites enviados!</div>
+                    <div class="success-sub">
+                        ${Object.keys(palpites).length} palpites registrados<br>
+                        ${etapa} — ${sessao === "classificacao" ? "Classificação" : "Corrida"}<br>
+                        <small style="color:var(--muted);">${r.dt_envio}</small>
+                    </div>
+                    ${penHtml}
+                    <button class="btn btn-red" onclick="irPara('#palpites')">Enviar mais palpites</button>
+                    <button class="btn btn-gray" style="margin-top:10px;" onclick="showTab('ranking')">🏆 Ver ranking</button>
+                </div>`;
+        } else {
+            showToast(r.erro || r.mensagem || "Erro ao enviar", true);
+            btn.disabled = false; btn.textContent = "ENVIANDO PALPITES 🏎️";
+        }
+    } catch(e) {
+        showToast("Erro de conexão. Tente novamente.", true);
+        btn.disabled = false; btn.textContent = "ENVIANDO PALPITES 🏎️";
+    }
+}
+
+// ── RANKING ───────────────────────────────────────────────────────────────────
+async function renderRanking() {
+    loading("tab-ranking");
+    try {
+        const d = await apiFetch("/api/ranking");
+        rankingCache = d;
+        document.getElementById("header-atualizado").textContent = d.atualizado || "";
+
+        const medalhas = {1:"🥇",2:"🥈",3:"🥉"};
+        const rows = d.ranking.map((nome, i) => {
+            const pos  = i + 1;
+            const info = d.dados[nome] || {};
+            const pts  = Math.round(info.total_com_descarte ?? info.total ?? 0);
+            const desc = info.descarte;
+            const descBadge = desc ? `<span class="descarte-badge">↓${Math.round(desc[1])}pt</span>` : "";
+            const m = medalhas[pos] || pos;
+            const eu = nome === usuario ? " 👈" : "";
+            return `<div class="rank-row">
+                <div class="rank-pos">${m}</div>
+                <div class="rank-name">${nome}${eu}${descBadge}</div>
+                <div class="rank-pts">${pts}<span>pts</span></div>
+            </div>`;
+        }).join("");
+
+        // Heatmap
+        const etapas = d.etapas || [];
+        const heatRows = d.ranking.map(nome => {
+            const info = d.dados[nome] || {};
+            const desc_nome = info.descarte ? info.descarte[0] : "";
+            const cells = etapas.map(e => {
+                const v = Math.round(info.pts_por_etapa?.[e] || 0);
+                let cls = "pts-0";
+                if (e === desc_nome) cls = "pts-desc";
+                else if (v > 0 && v <= 8)  cls = "pts-low";
+                else if (v > 8 && v <= 16) cls = "pts-med";
+                else if (v > 16 && v <= 25) cls = "pts-high";
+                else if (v > 25) cls = "pts-top";
+                return `<td class="${cls}">${v > 0 ? v : "-"}</td>`;
+            }).join("");
+            return `<tr><td class="nome">${nome}</td>${cells}<td style="font-weight:700;color:var(--red);">${Math.round(info.total||0)}</td></tr>`;
+        }).join("");
+
+        const heatHeaders = etapas.map(e => `<th>${e.substring(0,4)}</th>`).join("");
+
+        // Acumulado
+        const accRows = d.ranking.map(nome => {
+            const info = d.dados[nome] || {};
+            const cells = (info.acumulado || []).map((v,i,arr) =>
+                `<td style="${i===arr.length-1?'font-weight:700;color:var(--red);':''}">${Math.round(v)}</td>`
+            ).join("");
+            return `<tr><td class="nome">${nome}</td>${cells}</tr>`;
+        }).join("");
+
+        document.getElementById("tab-ranking").innerHTML = `
+            <div class="info-bar">
+                <div><strong>${d.n_etapas}/23</strong> etapas • Última: <strong>${d.ultima||"--"}</strong></div>
+                <div>${d.todas_disp ? '<span class="badge badge-green">Descarte aplicado</span>' : '<span class="badge badge-gray">Descarte no final</span>'}</div>
+            </div>
+            <div class="card">
+                <div class="card-title">🏆 Ranking Atual</div>
+                ${rows}
+            </div>
+            <div class="card">
+                <div class="card-title">📊 Pontos por Etapa</div>
+                <div class="heatmap">
+                    <table>
+                        <thead><tr><th>Piloto</th>${heatHeaders}<th style="color:var(--red);">Total</th></tr></thead>
+                        <tbody>${heatRows}</tbody>
+                    </table>
+                </div>
+                <div style="margin-top:8px;font-size:0.62rem;color:#4B5563;">🔴 Itálico = pior FDS (descarte)</div>
+            </div>
+            <div class="card">
+                <div class="card-title">📈 Evolução Acumulada</div>
+                <div class="heatmap">
+                    <table>
+                        <thead><tr><th>Piloto</th>${heatHeaders}</tr></thead>
+                        <tbody>${accRows}</tbody>
+                    </table>
+                </div>
+            </div>`;
+    } catch(e) {
+        document.getElementById("tab-ranking").innerHTML =
+            `<div class="card" style="text-align:center;padding:30px;color:#DC2626;">
+                ❌ Erro ao carregar ranking
+                <button class="btn btn-gray" style="margin-top:14px;width:auto;padding:8px 20px;" onclick="renderRanking()">Tentar novamente</button>
+            </div>`;
+    }
+}
+
+// ── ETAPAS ────────────────────────────────────────────────────────────────────
+async function renderEtapas() {
+    if (etapaDetalhe) { renderPalpitesEtapa(etapaDetalhe); return; }
+    loading("tab-etapas");
+    try {
+        const d = await apiFetch("/api/etapas_lista");
+        const itens = (d.etapas || []).map(e => `
+            <button class="etapa-btn" onclick="verEtapa('${e.nome}')">
+                <div>
+                    <div class="nome">${e.nome}${e.multiplicador > 1 ? `<span class="etapa-mult">x${e.multiplicador}</span>` : ""}</div>
+                    <div class="info">Vencedor: ${e.vencedor||"—"} | VR: ${e.volta_rapida||"—"}</div>
+                </div>
+                <div class="arrow">›</div>
+            </button>`).join("");
+
+        document.getElementById("tab-etapas").innerHTML = `
+            <div class="info-bar">
+                <div><strong>${(d.etapas||[]).length}</strong> etapas disputadas</div>
+                <div><span class="badge badge-gray">Toque para ver palpites</span></div>
+            </div>
+            <div class="card">
+                <div class="card-title">📋 Etapas Disputadas</div>
+                ${itens || '<div style="color:var(--muted);text-align:center;padding:20px;">Nenhuma etapa ainda</div>'}
+            </div>`;
+    } catch(e) {
+        document.getElementById("tab-etapas").innerHTML =
+            `<div class="card" style="text-align:center;padding:30px;color:#DC2626;">
+                ❌ Erro ao carregar etapas
+                <button class="btn btn-gray" style="margin-top:14px;width:auto;padding:8px 20px;" onclick="renderEtapas()">Tentar novamente</button>
+            </div>`;
+    }
+}
+
+function verEtapa(nome) {
+    irPara("#etapas/" + encodeURIComponent(nome));
+}
+
+async function renderPalpitesEtapa(nome) {
+    loading("tab-etapas");
+    try {
+        const d = await apiFetch(`/api/etapa_detalhe/${encodeURIComponent(nome)}`);
+        const res = d.resultados || {};
+        const pal = d.palpites  || {};
+        const pts = d.pontuacao || {};
+        const participantes = Object.keys(pal).sort();
+
+        // Resultado badges
+        const gridBadges = [1,2,3].map(i => {
+            const p = res[`grid_p${i}`];
+            return p ? `<span class="badge badge-gray">Grid P${i}: ${p}</span>` : "";
+        }).join(" ");
+
+        const corridaBadges = Array.from({length:10},(_,i) => {
+            const p = res[`corrida_p${i+1}`];
+            return p ? `<span class="badge ${i<3?'badge-gold':'badge-gray'}">P${i+1}: ${p}</span>` : "";
+        }).join(" ");
+
+        // Pontuacao
+        const ptsRows = Object.entries(pts).sort((a,b)=>b[1]-a[1]).map(([n,v],i) => `
+            <div class="rank-row">
+                <div class="rank-pos">${i+1}</div>
+                <div class="rank-name">${n}</div>
+                <div class="rank-pts">${Math.round(v)}<span>pts</span></div>
+            </div>`).join("");
+
+        // Tabela palpites grid
+        const gridTipos = ["grid_p1","grid_p2","grid_p3","pd"];
+        const gridLabels = ["P1","P2","P3","🏆 PD"];
+        const gridTable = gridTipos.map((tipo, idx) => {
+            const real = res[tipo] || "";
+            const cells = participantes.map(p => {
+                const v = pal[p]?.[tipo] || "";
+                const cls = v && v === real ? "acerto" : (!v ? "sem-palp" : "erro");
+                return `<td class="${cls}">${v || "—"}</td>`;
+            }).join("");
+            return `<tr><td class="label">${gridLabels[idx]}</td>${cells}<td style="font-weight:700;color:#fff;">${real||"—"}</td></tr>`;
+        }).join("");
+
+        // Tabela palpites corrida
+        const corridaTipos = Array.from({length:10},(_,i)=>`corrida_p${i+1}`).concat(["vr"]);
+        const corridaLabels = Array.from({length:10},(_,i)=>`P${i+1}`).concat(["⚡ VR"]);
+        const corridaTable = corridaTipos.map((tipo, idx) => {
+            const real = res[tipo] || "";
+            const cells = participantes.map(p => {
+                const v = pal[p]?.[tipo] || "";
+                const cls = v && v === real ? "acerto" : (!v ? "sem-palp" : "erro");
+                return `<td class="${cls}">${v || "—"}</td>`;
+            }).join("");
+            return `<tr><td class="label">${corridaLabels[idx]}</td>${cells}<td style="font-weight:700;color:#fff;">${real||"—"}</td></tr>`;
+        }).join("");
+
+        const thParts = participantes.map(p => `<th>${p.substring(0,4)}</th>`).join("");
+
+        document.getElementById("tab-etapas").innerHTML = `
+            <button class="back-btn" onclick="irPara('#etapas')">← Voltar às etapas</button>
+            <div class="card">
+                <div class="card-title">🏁 ${nome}${d.mult>1?`<span class="etapa-mult">x${d.mult}</span>`:""}</div>
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:0.65rem;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Resultado Oficial</div>
+                    <div style="display:flex;gap:5px;flex-wrap:wrap;">${gridBadges}</div>
+                    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;">${corridaBadges}</div>
+                    <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap;">
+                        ${res.pd  ? `<span class="badge badge-green">🏆 PD: ${res.pd}</span>` : ""}
+                        ${res.vr  ? `<span class="badge badge-green">⚡ VR: ${res.vr}</span>` : ""}
+                        ${res.zebra ? `<span class="badge badge-gray">🦓 Zebra: ${res.zebra}</span>` : ""}
+                    </div>
+                </div>
+                <div style="font-size:0.65rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;">Pontuação</div>
+                ${ptsRows}
+            </div>
+            <div class="card">
+                <div class="card-title">📝 Classificação</div>
+                <div style="overflow-x:auto;">
+                    <table class="palpites-table">
+                        <thead><tr><th>Pos</th>${thParts}<th style="color:var(--red);">Real</th></tr></thead>
+                        <tbody>${gridTable}</tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">📝 Corrida</div>
+                <div style="overflow-x:auto;">
+                    <table class="palpites-table">
+                        <thead><tr><th>Pos</th>${thParts}<th style="color:var(--red);">Real</th></tr></thead>
+                        <tbody>${corridaTable}</tbody>
+                    </table>
+                </div>
+            </div>`;
+    } catch(e) {
+        document.getElementById("tab-etapas").innerHTML =
+            `<button class="back-btn" onclick="irPara('#etapas')">← Voltar às etapas</button>
+            <div class="card" style="text-align:center;padding:30px;color:#DC2626;">❌ Erro ao carregar etapa</div>`;
+    }
+}
+
+// ── REGULAMENTO ──────────────────────────────────────────────────────────────
+function renderRegulamento() {
+    const novo = '<span class="reg-novo">NOVIDADE</span>';
+    const item = (txt, v, neg) => `<div class="reg-pts"><span>${txt}</span><span class="v${neg ? " neg" : ""}">${v}</span></div>`;
+    const secao = (n, titulo, corpo) => `<div class="card"><div class="card-title"><span class="reg-num">${n}</span>${titulo}</div>${corpo}</div>`;
+    document.getElementById("tab-regulamento").innerHTML = `
+        <div class="reg-hero">
+            <div class="emoji">📖🏁</div>
+            <h2>REGULAMENTO 2026</h2>
+            <p>Tudo o que você precisa saber para fazer seus palpites</p>
+        </div>
+        ${secao(1, "🚦 Classificação", `
+            <div class="reg-txt"><p>Aposte do <b>P1 ao P3</b> do grid.</p></div>
+            ${item("Cada acerto (P1 a P3)", "+2 pts")}`)}
+        ${secao(2, "🏁 Corrida", `
+            <div class="reg-txt"><p>Aposte do <b>P1 ao P10</b> da corrida.</p></div>
+            ${item("Acerto do P1 ao P5", "+3 pts")}
+            ${item("Acerto do P6 ao P10", "+4 pts")}
+            ${item("⚡ Volta Rápida", "+5 pts")}
+            <div class="reg-destaque">${novo} Este ano <b>não</b> teremos palpites para a corrida <b>Sprint</b>.</div>`)}
+        ${secao(3, "🏆 Piloto do Dia", `
+            <div class="reg-txt"><p>Envie junto com o palpite da <b>classificação</b> do fim de semana.</p></div>
+            ${item("Acerto do Piloto do Dia", "+5 pts")}`)}
+        ${secao(4, "🦓 Zebra", `
+            <div class="reg-txt">
+                <p>Na corrida, se você apostar no P1 em alguém <b>diferente do líder do campeonato</b> e acertar, ganha um bônus, além dos pontos normais do acerto.</p>
+            </div>
+            ${item("Bônus Zebra 🦓", "+10 pts")}
+            <div class="reg-destaque">Na primeira corrida, a zebra vale para quem acertar um vencedor <b>diferente do Norris</b> (atual campeão).</div>`)}
+        ${secao(5, "⏱️ Punições", `
+            <div class="reg-txt"><p>O <b>líder</b> do bolão deve enviar seus palpites até <b>10 minutos antes</b> do horário oficial de início da atividade. Se não cumprir:</p></div>
+            ${item("No treino (classificação)", "−2 pts", true)}
+            ${item("Na corrida", "−10 pts", true)}`)}
+        ${secao(6, "🗑️ Descarte", `
+            <div class="reg-txt"><p>A pontuação do seu <b>pior fim de semana</b> é descartada no total. Um tropeço não define o campeonato!</p></div>`)}
+        ${secao(7, "🔥 Reta Final", `
+            <div class="reg-txt"><p>${novo}</p><p>Chance extra para quem ficou pra trás ao longo do ano!</p></div>
+            ${item("Penúltima etapa", "Pontos x2")}
+            ${item("Última etapa", "Pontos x3")}`)}
+        ${secao(8, "⏳ Cápsula do Tempo", `
+            <div class="reg-txt"><p>Palpites para a <b>classificação final</b> do campeonato.</p></div>
+            <div class="reg-sub">a) 6 primeiros pilotos</div>
+            ${item("Posição exata", "+10 pts")}
+            ${item("Piloto certo, posição trocada", "+5 pts")}
+            <div class="reg-sub">b) 3 primeiras equipes</div>
+            ${item("Posição exata", "+10 pts")}
+            ${item("Equipe certa, posição trocada", "+5 pts")}
+            <div class="reg-sub">c) Melhor do Resto ${novo}</div>
+            ${item("Piloto fora das 4 grandes com mais pontos no fim do ano", "+10 pts")}
+            <div class="reg-sub">d) Piloto GP2 — o pior! ${novo}</div>
+            ${item("Piloto pior classificado no fim do campeonato", "+10 pts")}
+            <div class="reg-destaque">Em caso de empate em pontos, o pior piloto é aquele com a pior performance nas posições de chegada.</div>`)}
+        ${secao(9, "💰 Valor e Premiação", `
+            <div class="reg-txt"><p>Inscrição: <b>R$ 120,00</b> por participante.</p></div>
+            <div class="reg-premio">
+                <div>🥇 Campeão<b>75%</b>do prêmio</div>
+                <div>🥈 Vice<b>25%</b>do prêmio</div>
+            </div>`)}
+        <div style="text-align:center;color:var(--muted);font-size:0.75rem;margin:16px 0 8px;">Boa sorte e bons palpites! 🏎️💨</div>`;
+}
+
+// ── CAPSULA ───────────────────────────────────────────────────────────────────
+async function renderCapsula() {
+    loading("tab-capsula");
+    try {
+        const d = await apiFetch("/api/capsula");
+        const res = d.resultado || {};
+        const pal = d.palpites  || {};
+        const pts = d.pontuacao || {};
+        const participantes = Object.keys(pal).sort();
+
+        // Ranking capsula
+        const rankCap = Object.entries(pts)
+            .sort((a,b) => (b[1].pts_total||0) - (a[1].pts_total||0));
+        const medalhas = {0:"🥇",1:"🥈",2:"🥉"};
+        const rankRows = rankCap.map(([nome, p], i) => `
+            <div class="rank-row">
+                <div class="rank-pos">${medalhas[i]||i+1}</div>
+                <div class="rank-name">${nome}</div>
+                <div class="rank-pts">${Math.round(p.pts_total||0)}<span>pts</span></div>
+            </div>`).join("");
+
+        // Resultado parcial
+        const pilotosRes = (res.pilotos||[]).map((p,i) =>
+            p ? `<div style="padding:4px 0;border-bottom:1px solid var(--input);font-size:0.82rem;">
+                <span style="color:var(--muted);margin-right:6px;">P${i+1}</span><strong>${p}</strong>
+            </div>` : ""
+        ).join("");
+
+        const equipesRes = (res.equipes||[]).map((e,i) =>
+            e ? `<div style="padding:4px 0;border-bottom:1px solid var(--input);font-size:0.82rem;">
+                <span style="color:var(--muted);margin-right:6px;">P${i+1}</span><strong>${e}</strong>
+            </div>` : ""
+        ).join("");
+
+        // Tabela pilotos
+        const thParts = participantes.map(p => `<th>${p.substring(0,4)}</th>`).join("");
+        const pilotosRows = Array.from({length:6},(_,i) => {
+            const cat  = `piloto_p${i+1}`;
+            const real = (res.pilotos||[])[i] || "";
+            const cells = participantes.map(p => {
+                const v = pal[p]?.[cat] || "";
+                const cls = v && v === real ? "acerto" : (!v ? "sem-palp" : "erro");
+                return `<td class="${cls}">${v ? v.split(" ").pop() : "—"}</td>`;
+            }).join("");
+            return `<tr><td class="label">P${i+1}</td>${cells}<td style="font-weight:700;color:#fff;">${real ? real.split(" ").pop() : "—"}</td></tr>`;
+        }).join("");
+
+        const equipesRows = Array.from({length:3},(_,i) => {
+            const cat  = `equipe_p${i+1}`;
+            const real = (res.equipes||[])[i] || "";
+            const cells = participantes.map(p => {
+                const v = pal[p]?.[cat] || "";
+                const cls = v && v === real ? "acerto" : (!v ? "sem-palp" : "erro");
+                return `<td class="${cls}">${v||"—"}</td>`;
+            }).join("");
+            return `<tr><td class="label">P${i+1}</td>${cells}<td style="font-weight:700;color:#fff;">${real||"—"}</td></tr>`;
+        }).join("");
+
+        const realMR  = res.melhor_resto || "";
+        const realGP2 = res.gp2 || "";
+        const mrCells = participantes.map(p => {
+            const v = pal[p]?.melhor_resto || "";
+            const cls = v && v === realMR ? "acerto" : (!v ? "sem-palp" : "erro");
+            return `<td class="${cls}">${v ? v.split(" ").pop() : "—"}</td>`;
+        }).join("");
+        const gp2Cells = participantes.map(p => {
+            const v = pal[p]?.gp2 || "";
+            const cls = v && v === realGP2 ? "acerto" : (!v ? "sem-palp" : "erro");
+            return `<td class="${cls}">${v ? v.split(" ").pop() : "—"}</td>`;
+        }).join("");
+
+        document.getElementById("tab-capsula").innerHTML = `
+            <div class="nota">⚠️ Resultado parcial — pontuação definitiva ao final do campeonato.</div>
+            <div class="card">
+                <div class="card-title">⏳ Pontuação — Cápsula do Tempo</div>
+                ${rankRows}
+            </div>
+            <div class="card">
+                <div class="card-title">📊 Resultado Parcial (F1.com)</div>
+                <div style="font-size:0.65rem;color:var(--red);font-weight:700;margin-bottom:6px;text-transform:uppercase;">🏎️ Top 6 Pilotos</div>
+                ${pilotosRes}
+                <div style="font-size:0.65rem;color:var(--red);font-weight:700;margin:12px 0 6px;text-transform:uppercase;">🏗️ Top 3 Construtores</div>
+                ${equipesRes}
+                <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+                    ${realMR  ? `<div><div style="font-size:0.62rem;color:var(--muted);margin-bottom:3px;">MELHOR DO RESTO</div><span class="badge badge-green">${realMR}</span></div>` : ""}
+                    ${realGP2 ? `<div><div style="font-size:0.62rem;color:var(--muted);margin-bottom:3px;">PILOTO GP2</div><span class="badge badge-red">${realGP2}</span></div>` : ""}
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">📝 Palpites — Pilotos</div>
+                <div style="overflow-x:auto;">
+                    <table class="palpites-table">
+                        <thead><tr><th>Pos</th>${thParts}<th style="color:var(--red);">Real</th></tr></thead>
+                        <tbody>${pilotosRows}</tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">📝 Palpites — Construtores</div>
+                <div style="overflow-x:auto;">
+                    <table class="palpites-table">
+                        <thead><tr><th>Pos</th>${thParts}<th style="color:var(--red);">Real</th></tr></thead>
+                        <tbody>${equipesRows}</tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">📝 Melhor do Resto & GP2</div>
+                <div style="overflow-x:auto;">
+                    <table class="palpites-table">
+                        <thead><tr><th>Item</th>${thParts}<th style="color:var(--red);">Real</th></tr></thead>
+                        <tbody>
+                            <tr><td class="label">Melhor Resto</td>${mrCells}<td style="font-weight:700;color:#fff;">${realMR ? realMR.split(" ").pop() : "—"}</td></tr>
+                            <tr><td class="label">GP2</td>${gp2Cells}<td style="font-weight:700;color:#fff;">${realGP2 ? realGP2.split(" ").pop() : "—"}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+    } catch(e) {
+        document.getElementById("tab-capsula").innerHTML =
+            `<div class="card" style="text-align:center;padding:30px;color:#DC2626;">
+                ❌ Erro ao carregar cápsula
+                <button class="btn btn-gray" style="margin-top:14px;width:auto;padding:8px 20px;" onclick="renderCapsula()">Tentar novamente</button>
+            </div>`;
+    }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, error=false) {
+    const el = document.getElementById("toast");
+    el.textContent = msg;
+    el.className = `toast ${error?"error":""} show`;
+    setTimeout(() => el.classList.remove("show"), 3000);
+}
+
+// ── Start ─────────────────────────────────────────────────────────────────────
+init();
+</script>
 </body>
 </html>
