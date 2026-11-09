@@ -1,14 +1,10 @@
 name: Apuracao e Sincronizacao Bolao F1 V2
 
 on:
-  # Permite executar manualmente no botão "Run workflow"
   workflow_dispatch:
-
-  # Agendamento automático aos domingos às 23:05 UTC (20:05 Horário de Brasília)
   schedule:
     - cron: '5 23 * * 0'
 
-# Permissão para o bot gravar e atualizar o bolao.db no repositório
 permissions:
   contents: write
 
@@ -43,7 +39,11 @@ jobs:
         run: |
           python scripts_v2/db_calcular.py
 
-      - name: 4. Persistir Banco Atualizado no GitHub e Disparar Vercel
+      - name: 4. Sincronizar Banco com o PythonAnywhere
+        run: |
+          python scripts_v2/sync_pythonanywhere.py
+
+      - name: 5. Persistir Banco Atualizado no GitHub
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
