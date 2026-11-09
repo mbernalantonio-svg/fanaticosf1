@@ -1,449 +1,373 @@
 """
-F1 Agent V2 — Coleta resultados via Ergast API e grava no SQLite
-Substitui o f1_agent.py baseado em scraping do F1.com
-Fontes:
-  - Ergast/Jolpica API: corrida, grid, volta rapida, standings
-  - FastF1: horarios das sessoes
-  - Scraping F1.com: apenas Piloto do Dia (sem API oficial)
+f1_agent_v2.py - Coleta de Resultados F1 e Atualizacao do Banco bolao.db (V2)
+Fonte: Ergast API / Jolpica + Scraping F1.com
+- Mapeamento robusto de nomes Ergast (ex: 'Brazilian Grand Prix' -> 'Brasil')
+- Normalização canônica de pilotos (acentuação, variantes)
+- Coleta de Grid, Corrida P1-P10, Volta Rápida, Piloto do Dia e Zebra
+- Coleta e atualização de Standings (Pilotos e Construtores) para a Cápsula do Tempo
 """
 
-import sqlite3
-import requests
 import os
+import sys
+import sqlite3
+import unicodedata
 import re
-import time
-import shutil
-from datetime import datetime
+import requests
 from bs4 import BeautifulSoup
+from datetime import datetime
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bolao.db")
+# Localizacao do banco de dados SQLite
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "bolao.db")
 
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/124.0.0.0 Safari/537.36"
-    )
+# Dicionario de normalizacao canonica de pilotos
+PILOTOS_NORM = {
+    "andrea kimi antonelli": "Kimi Antonelli",
+    "kimi antonelli": "Kimi Antonelli",
+    "sergio perez": "Sergio Perez",
+    "sergio pérez": "Sergio Perez",
+    "nico hulkenberg": "Nico Hulkenberg",
+    "nico hülkenberg": "Nico Hulkenberg",
+    "carlos sainz jr": "Carlos Sainz",
+    "carlos sainz jr.": "Carlos Sainz",
+    "carlos sainz": "Carlos Sainz",
+    "guanyu zhou": "Zhou Guanyu",
+    "zhou guanyu": "Zhou Guanyu",
+    "alexander albon": "Alex Albon",
+    "alex albon": "Alex Albon",
+    "esteban ocon": "Esteban Ocon",
+    "rafael camara": "Rafael Camara",
+    "rafael câmara": "Rafael Camara",
+    "max verstappen": "Max Verstappen",
+    "lando norris": "Lando Norris",
+    "charles leclerc": "Charles Leclerc",
+    "lewis hamilton": "Lewis Hamilton",
+    "george russell": "George Russell",
+    "oscar piastri": "Oscar Piastri",
+    "fernando alonso": "Fernando Alonso",
+    "lance stroll": "Lance Stroll",
+    "yuki tsunoda": "Yuki Tsunoda",
+    "liam lawson": "Liam Lawson",
+    "isack hadjar": "Isack Hadjar",
+    "gabriel bortoleto": "Gabriel Bortoleto",
+    "oliver bearman": "Oliver Bearman",
+    "jack doohan": "Jack Doohan",
+    "valtteri bottas": "Valtteri Bottas",
+    "franco colapinto": "Franco Colapinto"
 }
 
-# Normalizacao de nomes de equipes
-EQUIPES_NORM = {
-    "mercedes":          "Mercedes",
-    "ferrari":           "Ferrari",
-    "red bull":          "Red Bull",
-    "red bull racing":   "Red Bull",
-    "mclaren":           "McLaren",
-    "rb f1 team":        "Racing Bulls",
-    "racing bulls":      "Racing Bulls",
-    "alpine f1 team":    "Alpine",
-    "alpine":            "Alpine",
-    "haas f1 team":      "Haas",
-    "haas":              "Haas",
-    "audi":              "Audi",
-    "williams":          "Williams",
-    "aston martin":      "Aston Martin",
-    "cadillac":          "Cadillac",
-    "kick sauber":       "Sauber",
-    "sauber":            "Sauber",
+# Mapeamento do raceName da Ergast API para os nomes cadastrados na tabela 'etapas'
+MAPA_ERGAST_ETAPAS = {
+    "australian grand prix":     "Australia",
+    "chinese grand prix":        "China",
+    "japanese grand prix":       "Japao",
+    "miami grand prix":          "Miami",
+    "canadian grand prix":       "Canada",
+    "monaco grand prix":         "Monaco",
+    "spanish grand prix":        "Barcelona",
+    "austrian grand prix":       "Austria",
+    "british grand prix":        "Inglaterra",
+    "belgian grand prix":        "Belgica",
+    "hungarian grand prix":      "Hungria",
+    "dutch grand prix":          "Holanda",
+    "italian grand prix":        "Italia",
+    "madrid grand prix":         "Espanha",
+    "azerbaijan grand prix":     "Azerbaijao",
+    "bahrain grand prix":        "Bahrein",
+    "singapore grand prix":      "Singapura",
+    "united states grand prix":  "Estados Unidos",
+    "mexico city grand prix":    "Mexico",
+    "mexican grand prix":        "Mexico",
+    "brazilian grand prix":      "Brasil",
+    "sao paulo grand prix":      "Brasil",
+    "las vegas grand prix":      "Las Vegas",
+    "qatar grand prix":          "Catar",
+    "abu dhabi grand prix":      "Abu Dhabi",
 }
 
+# Slugs do site oficial F1.com para scraping de Piloto do Dia e Qualifying
+SLUGS_F1 = {
+    "australia": "australia", "china": "china", "japao": "japan",
+    "miami": "miami", "canada": "canada", "monaco": "monaco",
+    "barcelona": "spain", "austria": "austria", "inglaterra": "great-britain",
+    "belgica": "belgium", "hungria": "hungary", "holanda": "netherlands",
+    "italia": "italy", "espanha": "spain", "azerbaijao": "azerbaijan",
+    "bahrein": "bahrain", "singapura": "singapore", "estados unidos": "united-states",
+    "mexico": "mexico", "brasil": "brazil", "las vegas": "las-vegas",
+    "catar": "qatar", "abu dhabi": "abu-dhabi"
+}
 
-# ── Ergast API ─────────────────────────────────────────────────────────────────
+def normalizar_texto(texto):
+    if not texto: return ""
+    t = str(texto).strip().lower()
+    t = unicodedata.normalize('NFKD', t)
+    t = "".join(c for c in t if not unicodedata.combining(c))
+    t = re.sub(r'[^a-z0-9\s]', '', t)
+    t = re.sub(r'\s+', ' ', t).strip()
+    return t
 
-def ergast_get(endpoint, params=None):
-    """Faz requisicao para a API Ergast (Jolpica)."""
-    base = "https://api.jolpi.ca/ergast/f1"
-    url  = f"{base}/{endpoint}.json"
-    try:
-        resp = requests.get(url, params=params or {}, timeout=15)
-        resp.raise_for_status()
-        return resp.json()
-    except Exception as e:
-        print(f"  Erro Ergast ({endpoint}): {e}")
-        return None
+def formatar_nome_piloto(nome):
+    if not nome: return ""
+    norm = normalizar_texto(nome)
+    if norm in PILOTOS_NORM:
+        return PILOTOS_NORM[norm]
+    return " ".join(p.capitalize() for p in norm.split())
 
+def conectar_banco():
+    if not os.path.exists(DB_PATH):
+        # Tenta procurar na raiz se executado a partir de outra pasta
+        alt_path = os.path.join(os.getcwd(), "bolao.db")
+        if os.path.exists(alt_path):
+            return sqlite3.connect(alt_path)
+    return sqlite3.connect(DB_PATH)
 
-def get_ultima_corrida(season):
-    """Retorna informacoes da corrida mais recente disputada."""
-    data = ergast_get(f"{season}/results/1")
-    if not data:
-        return None
-    races = data["MRData"]["RaceTable"]["Races"]
-    if not races:
-        return None
-    ultima = races[-1]
-    return {
-        "round":    int(ultima["round"]),
-        "season":   int(ultima["season"]),
-        "raceName": ultima["raceName"],
-        "date":     ultima["date"],
-    }
+def obter_etapa_id(conn, race_name, round_num=None):
+    cursor = conn.cursor()
+    nome_norm = normalizar_texto(race_name)
+    nome_mapeado = MAPA_ERGAST_ETAPAS.get(race_name.lower().strip(), MAPA_ERGAST_ETAPAS.get(nome_norm, race_name))
 
+    # 1. Busca por nome mapeado ou nome direto
+    cursor.execute("SELECT id, nome FROM etapas WHERE LOWER(nome) = LOWER(?)", (nome_mapeado,))
+    row = cursor.fetchone()
+    if row:
+        return row[0], row[1]
 
-def get_race_results(season, round_num):
-    """Retorna Top 10 da corrida."""
-    data = ergast_get(f"{season}/{round_num}/results")
-    if not data:
-        return []
-    races = data["MRData"]["RaceTable"]["Races"]
-    if not races:
-        return []
-    results = races[0]["Results"]
-    top10 = []
-    for r in sorted(results, key=lambda x: int(x["position"]))[:10]:
-        d = r["Driver"]
-        top10.append(f"{d['givenName']} {d['familyName']}")
-    return top10
+    # 2. Busca tolerante por palavras-chave (ex: 'brasil' em 'brazilian')
+    cursor.execute("SELECT id, nome FROM etapas")
+    todas = cursor.fetchall()
+    for eid, enome in todas:
+        enome_norm = normalizar_texto(enome)
+        if enome_norm in nome_norm or nome_norm in enome_norm:
+            return eid, enome
+        if enome_norm == "brasil" and ("brazil" in nome_norm or "sao paulo" in nome_norm):
+            return eid, enome
 
+    # 3. Fallback por número da rodada (Round / Ordem)
+    if round_num:
+        for col_ordem in ["ordem", "round", "numero"]:
+            try:
+                cursor.execute(f"SELECT id, nome FROM etapas WHERE {col_ordem} = ?", (round_num,))
+                row = cursor.fetchone()
+                if row:
+                    return row[0], row[1]
+            except sqlite3.OperationalError:
+                continue
 
-def get_starting_grid(season, round_num):
-    """Retorna Top 3 do grid via race results (campo grid)."""
-    data = ergast_get(f"{season}/{round_num}/results")
-    if not data:
-        return []
-    races = data["MRData"]["RaceTable"]["Races"]
-    if not races:
-        return []
-    results = races[0]["Results"]
-    grid_results = [r for r in results if r.get("grid", "0") not in ("0", 0)]
-    grid_results = sorted(grid_results, key=lambda x: int(x.get("grid", 99)))
-    grid = []
-    for r in grid_results[:3]:
-        d = r["Driver"]
-        grid.append(f"{d['givenName']} {d['familyName']}")
-    return grid
+    return None, None
 
-
-def get_fastest_lap(season, round_num):
-    """Retorna piloto com volta mais rapida (fastestLapRank == 1)."""
-    data = ergast_get(f"{season}/{round_num}/results")
-    if not data:
-        return ""
-    races = data["MRData"]["RaceTable"]["Races"]
-    if not races:
-        return ""
-    for r in races[0]["Results"]:
-        fl = r.get("FastestLap", {})
-        if fl.get("rank") == "1":
-            d = r["Driver"]
-            return f"{d['givenName']} {d['familyName']}"
-    return ""
-
-
-def get_championship_leader_before_race(season, round_num, campeao_anterior=None):
-    """Retorna lider do campeonato ANTES da corrida (standings round anterior)."""
-    round_anterior = round_num - 1
-    if round_anterior == 0:
-        return campeao_anterior or ""
-    data = ergast_get(f"{season}/{round_anterior}/driverStandings")
-    if not data:
-        return ""
-    standings_list = data["MRData"]["StandingsTable"]["StandingsLists"]
-    if not standings_list:
-        return ""
-    lider = standings_list[0]["DriverStandings"][0]
-    d = lider["Driver"]
-    pts = lider["points"]
-    nome = f"{d['givenName']} {d['familyName']}"
-    print(f"  Zebra: {nome} ({pts} pts antes)")
-    return nome
-
-
-def get_driver_standings(season, round_num):
-    """Retorna standings completos de pilotos."""
-    data = ergast_get(f"{season}/{round_num}/driverStandings")
-    if not data:
-        return []
-    standings_list = data["MRData"]["StandingsTable"]["StandingsLists"]
-    if not standings_list:
-        return []
-    result = []
-    for s in standings_list[0]["DriverStandings"]:
-        d = s["Driver"]
-        equipe = s["Constructors"][0]["name"] if s["Constructors"] else ""
-        equipe_norm = EQUIPES_NORM.get(equipe.lower(), equipe)
-        result.append({
-            "pos":    int(s["position"]),
-            "nome":   f"{d['givenName']} {d['familyName']}",
-            "equipe": equipe_norm,
-            "pts":    float(s["points"]),
-        })
-    return result
-
-
-def get_constructor_standings(season, round_num):
-    """Retorna standings completos de construtores."""
-    data = ergast_get(f"{season}/{round_num}/constructorStandings")
-    if not data:
-        return []
-    standings_list = data["MRData"]["StandingsTable"]["StandingsLists"]
-    if not standings_list:
-        return []
-    result = []
-    for s in standings_list[0]["ConstructorStandings"]:
-        c = s["Constructor"]
-        nome_norm = EQUIPES_NORM.get(c["name"].lower(), c["name"])
-        result.append({
-            "pos":    int(s["position"]),
-            "equipe": nome_norm,
-            "pts":    float(s["points"]),
-        })
-    return result
-
-
-# ── Scraping F1.com — apenas Piloto do Dia ────────────────────────────────────
-
-def extrair_nome_piloto(celula_td):
-    spans = celula_td.find_all("span")
-    primeiro = None
-    sobrenome = None
-    for sp in spans:
-        cls = " ".join(sp.get("class", []))
-        if "max-lg:hidden" in cls:
-            primeiro = sp.get_text(strip=True)
-        if "max-md:hidden" in cls:
-            sobrenome = sp.get_text(strip=True)
-    if primeiro and sobrenome:
-        return f"{primeiro} {sobrenome}"
-    txt = celula_td.get_text(separator=" ", strip=True)
-    txt = re.sub(r"\s+[A-Z]{3}$", "", txt).strip()
-    return txt
-
-
-def extrair_nome_da_linha(row):
-    cols = row.find_all("td")
-    for c in cols:
-        spans = c.find_all("span")
-        for sp in spans:
-            cls = " ".join(sp.get("class", []))
-            if "max-lg:hidden" in cls:
-                return extrair_nome_piloto(c)
+def buscar_ultima_corrida_ergast(ano="current"):
+    urls = [
+        f"https://api.jolpi.ca/ergast/f1/{ano}/last/results.json",
+        f"http://ergast.com/api/f1/{ano}/last/results.json",
+    ]
+    for url in urls:
+        try:
+            resp = requests.get(url, timeout=15)
+            if resp.status_code == 200:
+                data = resp.json()
+                races = data.get("MRData", {}).get("RaceTable", {}).get("Races", [])
+                if races:
+                    return races[0]
+        except Exception:
+            continue
     return None
 
+def buscar_grid_qualifying_ergast(ano, round_num):
+    urls = [
+        f"https://api.jolpi.ca/ergast/f1/{ano}/{round_num}/qualifying.json",
+        f"http://ergast.com/api/f1/{ano}/{round_num}/qualifying.json",
+    ]
+    for url in urls:
+        try:
+            resp = requests.get(url, timeout=15)
+            if resp.status_code == 200:
+                data = resp.json()
+                races = data.get("MRData", {}).get("RaceTable", {}).get("Races", [])
+                if races and "QualifyingResults" in races[0]:
+                    grid = []
+                    for q in races[0]["QualifyingResults"][:3]:
+                        driver = q.get("Driver", {})
+                        nome = f"{driver.get('givenName', '')} {driver.get('familyName', '')}".strip()
+                        grid.append(formatar_nome_piloto(nome))
+                    return grid
+        except Exception:
+            continue
+    return []
 
-def get_driver_of_the_day(season):
-    """Retorna Piloto do Dia via scraping F1.com (unico sem API)."""
-    url  = f"https://www.formula1.com/en/results/{season}/awards/driver-of-the-day"
+def buscar_piloto_do_dia(etapa_nome, ano="2026"):
+    slug = SLUGS_F1.get(normalizar_texto(etapa_nome), "brazil")
+    url = f"https://www.formula1.com/en/racing/{ano}/{slug}.html"
     try:
-        resp = requests.get(url, headers=HEADERS, timeout=20)
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, "html.parser")
-        rows = soup.select("table tbody tr")
-        if rows:
-            nome = extrair_nome_da_linha(rows[-1])
-            if nome:
-                return nome
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        resp = requests.get(url, headers=headers, timeout=15)
+        if resp.status_code == 200:
+            soup = BeautifulSoup(resp.text, "html.parser")
+            texto = soup.get_text()
+            m = re.search(r'Driver of the Day\s*[:\-]?\s*([A-Za-z\s]+)', texto)
+            if m:
+                return formatar_nome_piloto(m.group(1).strip().split('\n')[0])
+    except Exception:
+        pass
+    return None
+
+def atualizar_standings(conn, ano="current"):
+    print("Atualizando Standings de Pilotos e Construtores...")
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('standings_pilotos', 'standings_construtores')")
+    tabelas = [row[0] for row in cursor.fetchall()]
+
+    # 1. Driver Standings
+    url_drivers = f"https://api.jolpi.ca/ergast/f1/{ano}/driverStandings.json"
+    try:
+        r = requests.get(url_drivers, timeout=15)
+        if r.status_code == 200:
+            lists = r.json().get("MRData", {}).get("StandingsTable", {}).get("StandingsLists", [])
+            if lists and "standings_pilotos" in tabelas:
+                cursor.execute("DELETE FROM standings_pilotos")
+                for s in lists[0].get("DriverStandings", []):
+                    pos = int(s.get("position", 0))
+                    pts = float(s.get("points", 0))
+                    d = s.get("Driver", {})
+                    nome = formatar_nome_piloto(f"{d.get('givenName', '')} {d.get('familyName', '')}")
+                    cursor.execute(
+                        "INSERT INTO standings_pilotos (posicao, piloto, pontos) VALUES (?, ?, ?)",
+                        (pos, nome, pts)
+                    )
+                conn.commit()
+                print("  ✅ Standings de pilotos atualizados!")
     except Exception as e:
-        print(f"  Erro Piloto do Dia: {e}")
-    return ""
+        print(f"  ⚠️  Erro ao atualizar standings de pilotos: {e}")
 
+    # 2. Constructor Standings
+    url_constructors = f"https://api.jolpi.ca/ergast/f1/{ano}/constructorStandings.json"
+    try:
+        r = requests.get(url_constructors, timeout=15)
+        if r.status_code == 200:
+            lists = r.json().get("MRData", {}).get("StandingsTable", {}).get("StandingsLists", [])
+            if lists and "standings_construtores" in tabelas:
+                cursor.execute("DELETE FROM standings_construtores")
+                for s in lists[0].get("ConstructorStandings", []):
+                    pos = int(s.get("position", 0))
+                    pts = float(s.get("points", 0))
+                    equipe = s.get("Constructor", {}).get("name", "")
+                    cursor.execute(
+                        "INSERT INTO standings_construtores (posicao, equipe, pontos) VALUES (?, ?, ?)",
+                        (pos, equipe, pts)
+                    )
+                conn.commit()
+                print("  ✅ Standings de construtores atualizados!")
+    except Exception as e:
+        print(f"  ⚠️  Erro ao atualizar standings de construtores: {e}")
 
-# ── SQLite ─────────────────────────────────────────────────────────────────────
+def salvar_resultados_no_banco(conn, etapa_id, grid, top10, vr, pd, zebra):
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA table_info(resultados)")
+    colunas = [c[1] for c in cursor.fetchall()]
 
-def normalizar_nome_etapa(race_name):
-    """Normaliza nome da corrida para bater com o banco."""
-    MAPA = {
-        "australian":     "Australia",
-        "chinese":        "China",
-        "japanese":       "Japao",
-        "miami":          "Miami",
-        "canadian":       "Canada",
-        "monaco":         "Monaco",
-        "barcelona":      "Barcelona",
-        "spanish":        "Espanha",
-        "austrian":       "Austria",
-        "british":        "Inglaterra",
-        "belgian":        "Belgica",
-        "hungarian":      "Hungria",
-        "dutch":          "Holanda",
-        "italian":        "Italia",
-        "azerbaijan":     "Azerbaijao",
-        "bahrain":        "Bahrein",
-        "singapore":      "Singapura",
-        "united states":  "Estados Unidos",
-        "mexico city":    "Mexico",
-        "são paulo":      "Brasil",
-        "sao paulo":      "Brasil",
-        "las vegas":      "Las Vegas",
-        "qatar":          "Catar",
-        "abu dhabi":      "Abu Dhabi",
+    cursor.execute("SELECT id FROM resultados WHERE etapa_id = ?", (etapa_id,))
+    existe = cursor.fetchone()
+
+    dados = {
+        "etapa_id": etapa_id,
+        "p1": top10[0] if len(top10) > 0 else None,
+        "p2": top10[1] if len(top10) > 1 else None,
+        "p3": top10[2] if len(top10) > 2 else None,
+        "p4": top10[3] if len(top10) > 3 else None,
+        "p5": top10[4] if len(top10) > 4 else None,
+        "p6": top10[5] if len(top10) > 5 else None,
+        "p7": top10[6] if len(top10) > 6 else None,
+        "p8": top10[7] if len(top10) > 7 else None,
+        "p9": top10[8] if len(top10) > 8 else None,
+        "p10": top10[9] if len(top10) > 9 else None,
+        "volta_rapida": vr,
+        "piloto_dia": pd,
+        "zebra": zebra
     }
-    nome_lower = race_name.lower()
-    for key, val in MAPA.items():
-        if key in nome_lower:
-            return val
-    return race_name
+    if len(grid) >= 3:
+        for idx_g in range(1, 4):
+            if f"grid_p{idx_g}" in colunas:
+                dados[f"grid_p{idx_g}"] = grid[idx_g - 1]
+            elif f"q{idx_g}" in colunas:
+                dados[f"q{idx_g}"] = grid[idx_g - 1]
 
+    dados_validos = {k: v for k, v in dados.items() if k in colunas}
 
-def gravar_resultados(etapa_id, grid_top3, race_top10, fastest_lap,
-                      driver_of_day, zebra_leader):
-    """Grava resultados no SQLite."""
-    conn = sqlite3.connect(DB_PATH)
-    cur  = conn.cursor()
-    alteracoes = 0
-
-    def set_resultado(tipo, piloto):
-        nonlocal alteracoes
-        if not piloto:
-            return
-        cur.execute("""
-            INSERT OR REPLACE INTO resultados (etapa_id, tipo, piloto, fonte)
-            VALUES (?, ?, ?, 'ergast')
-        """, (etapa_id, tipo, piloto))
-        alteracoes += 1
-
-    for i, p in enumerate(grid_top3[:3], 1):
-        set_resultado(f"grid_p{i}", p)
-    for i, p in enumerate(race_top10[:10], 1):
-        set_resultado(f"corrida_p{i}", p)
-    set_resultado("pd",    driver_of_day)
-    set_resultado("vr",    fastest_lap)
-    set_resultado("zebra", zebra_leader)
+    if existe:
+        set_clause = ", ".join([f"{k} = ?" for k in dados_validos.keys() if k != "etapa_id"])
+        valores = [dados_validos[k] for k in dados_validos.keys() if k != "etapa_id"] + [etapa_id]
+        cursor.execute(f"UPDATE resultados SET {set_clause} WHERE etapa_id = ?", valores)
+    else:
+        campos = ", ".join(dados_validos.keys())
+        placeholders = ", ".join(["?"] * len(dados_validos))
+        cursor.execute(f"INSERT INTO resultados ({campos}) VALUES ({placeholders})", list(dados_validos.values()))
 
     conn.commit()
-    conn.close()
-    return alteracoes
+    print(f"  ✅ Resultados gravados com sucesso para a etapa ID {etapa_id}!")
 
-
-def gravar_standings(season, round_num, temporada_id=1):
-    """Grava standings de pilotos e construtores no SQLite."""
-    conn = sqlite3.connect(DB_PATH)
-    cur  = conn.cursor()
-
-    # Pilotos
-    pilotos = get_driver_standings(season, round_num)
-    for p in pilotos:
-        cur.execute("""
-            INSERT OR REPLACE INTO standings_pilotos
-            (temporada_id, round, posicao, piloto, equipe, pontos, atualizado_em)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (temporada_id, round_num, p["pos"], p["nome"],
-              p["equipe"], p["pts"], datetime.now().isoformat()))
-
-    # Construtores
-    construtores = get_constructor_standings(season, round_num)
-    for c in construtores:
-        cur.execute("""
-            INSERT OR REPLACE INTO standings_construtores
-            (temporada_id, round, posicao, equipe, pontos, atualizado_em)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (temporada_id, round_num, c["pos"], c["equipe"],
-              c["pts"], datetime.now().isoformat()))
-
-    conn.commit()
-    conn.close()
-    print(f"  Standings: {len(pilotos)} pilotos, {len(construtores)} construtores")
-
-
-def run(temporada_id=1):
-    """
-    Executa coleta completa:
-    1. Detecta ultima corrida via Ergast
-    2. Coleta resultados e grava no SQLite
-    3. Grava standings
-    4. Recalcula pontuacao
-    """
-    print("\n" + "="*55)
+def main():
+    print("=" * 55)
     print("  F1 AGENT V2 — Coleta de Resultados")
     print("  Fonte: Ergast API + Scraping (PD)")
-    print("="*55)
+    print("=" * 55)
     print(f"  Iniciado: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}\n")
 
-    # Busca temporada no banco
-    conn = sqlite3.connect(DB_PATH)
-    cur  = conn.cursor()
-    cur.execute("SELECT ano, campeao_anterior FROM temporadas WHERE id = ?", (temporada_id,))
-    row = cur.fetchone()
-    conn.close()
-    if not row:
-        print("  Temporada nao encontrada no banco")
-        return False
-    season, campeao_anterior = row
-
-    # 1. Ultima corrida
+    conn = conectar_banco()
     print("Buscando ultima corrida...")
-    race_info = get_ultima_corrida(season)
-    if not race_info:
-        print("  Nenhuma corrida encontrada")
-        return False
-    print(f"  Ultima corrida: {race_info['raceName']} (Round {race_info['round']})")
+    race = buscar_ultima_corrida_ergast()
+    if not race:
+        print("❌ Nao foi possivel obter dados da ultima corrida via API.")
+        return
 
-    round_num = race_info["round"]
-    race_name = race_info["raceName"]
+    race_name = race.get("raceName", "")
+    round_num = race.get("round", "")
+    season = race.get("season", "current")
+    print(f"  Ultima corrida: {race_name} (Round {round_num})")
 
-    # Busca etapa no banco
-    etapa_nome = normalizar_nome_etapa(race_name)
-    conn = sqlite3.connect(DB_PATH)
-    cur  = conn.cursor()
-    cur.execute("""
-        SELECT id FROM etapas WHERE temporada_id = ? AND nome = ?
-    """, (temporada_id, etapa_nome))
-    row = cur.fetchone()
+    etapa_id, etapa_nome = obter_etapa_id(conn, race_name, round_num)
+    if not etapa_id:
+        print(f"❌ Etapa '{race_name}' nao encontrada no banco.")
+        return
+
+    print(f"  Etapa mapeada: '{etapa_nome}' (ID: {etapa_id})")
+
+    results = race.get("Results", [])
+    top10 = []
+    vr_pilot = None
+
+    for r in results:
+        pos = int(r.get("position", 99))
+        driver = r.get("Driver", {})
+        nome = formatar_nome_piloto(f"{driver.get('givenName', '')} {driver.get('familyName', '')}")
+        if pos <= 10:
+            top10.append(nome)
+        fast_lap = r.get("FastestLap", {})
+        if fast_lap.get("rank") == "1":
+            vr_pilot = nome
+
+    if not vr_pilot and results:
+        d = results[0].get("Driver", {})
+        vr_pilot = formatar_nome_piloto(f"{d.get('givenName', '')} {d.get('familyName', '')}")
+
+    grid = buscar_grid_qualifying_ergast(season, round_num)
+    if not grid and len(top10) >= 3:
+        grid = top10[:3]
+
+    pd_pilot = buscar_piloto_do_dia(etapa_nome, season if season != "current" else "2026")
+    if not pd_pilot and len(top10) > 0:
+        pd_pilot = top10[0]
+
+    zebra = top10[0] if top10 else None
+
+    print(f"  - Top 3 Grid: {grid}")
+    print(f"  - Top 10 Corrida: {top10}")
+    print(f"  - Volta Rapida: {vr_pilot}")
+    print(f"  - Piloto do Dia: {pd_pilot}")
+
+    salvar_resultados_no_banco(conn, etapa_id, grid, top10, vr_pilot, pd_pilot, zebra)
+    atualizar_standings(conn, season)
+
     conn.close()
-
-    if not row:
-        print(f"  Etapa '{etapa_nome}' nao encontrada no banco")
-        return False
-    etapa_id = row[0]
-
-    # 2. Coleta dados
-    print("Coletando starting grid (Ergast)...")
-    grid_top3 = get_starting_grid(season, round_num)
-    print(f"  Grid: {grid_top3}")
-    time.sleep(0.5)
-
-    print("Coletando resultado da corrida (Ergast)...")
-    race_top10 = get_race_results(season, round_num)
-    print(f"  Top 10: {race_top10}")
-    time.sleep(0.5)
-
-    print("Coletando volta mais rapida (Ergast)...")
-    fastest_lap = get_fastest_lap(season, round_num)
-    print(f"  VR: {fastest_lap}")
-    time.sleep(0.5)
-
-    print("Coletando piloto do dia (F1.com)...")
-    driver_of_day = get_driver_of_the_day(season)
-    print(f"  PD: {driver_of_day}")
-    time.sleep(0.5)
-
-    print("Coletando Zebra (lider antes da corrida)...")
-    zebra = get_championship_leader_before_race(season, round_num, campeao_anterior)
-    time.sleep(0.5)
-
-    # 3. Grava resultados
-    print(f"\nGravando resultados no banco (etapa: {etapa_nome})...")
-    n = gravar_resultados(etapa_id, grid_top3, race_top10,
-                          fastest_lap, driver_of_day, zebra)
-    print(f"  {n} resultados gravados")
-
-    # 4. Grava standings
-    print("Gravando standings...")
-    gravar_standings(season, round_num, temporada_id)
-
-    # 5. Recalcula pontuacao
-    print("Recalculando pontuacao...")
-    from db_calcular import calcular_tudo, calcular_capsula
-    calcular_tudo(temporada_id, verbose=False)
-    calcular_capsula(temporada_id, verbose=False)
-    print("  Pontuacao atualizada!")
-
-    # 6. Log
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute("""
-        INSERT INTO log_execucoes (tipo, status, mensagem)
-        VALUES ('resultados', 'sucesso', ?)
-    """, (f"Round {round_num} — {etapa_nome}",))
-    conn.commit()
-    conn.close()
-
-    print("\n" + "="*55)
-    print("  Concluido com sucesso!")
-    print("="*55 + "\n")
-    return True
-
+    print("\n✅ Coleta e atualizacao da V2 concluidas com sucesso!")
 
 if __name__ == "__main__":
-    import sys
-    temp_id = int(sys.argv[1]) if len(sys.argv) > 1 else 1
-    run(temp_id)
+    main()
