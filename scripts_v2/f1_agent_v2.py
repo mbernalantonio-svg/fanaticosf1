@@ -1,10 +1,12 @@
 """
 f1_agent_v2.py - Coleta de Resultados F1 e Atualizacao do Banco bolao.db (V2)
 Fonte: Ergast API / Jolpica + Scraping F1.com
-- Mapeamento robusto de nomes Ergast (ex: 'Brazilian Grand Prix' -> 'Brasil')
-- Normalização canônica de pilotos (acentuação, variantes)
-- Coleta de Grid, Corrida P1-P10, Volta Rápida, Piloto do Dia e Zebra
-- Coleta e atualização de Standings (Pilotos e Construtores) para a Cápsula do Tempo
+Versão Corrigida:
+  - Mapeamento robusto de nomes Ergast (ex: 'Brazilian Grand Prix' -> 'Brasil')
+  - Normalização canônica de pilotos (sem acentos/divergências)
+  - Identificação e preenchimento automático da coluna obrigatória 'tipo' (NOT NULL)
+  - Coleta de Grid, Corrida P1-P10, Volta Rápida, Piloto do Dia e Zebra
+  - Atualização de Standings (Pilotos e Construtores) para a Cápsula do Tempo
 """
 
 import os
@@ -16,11 +18,11 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 
-# Localizacao do banco de dados SQLite
+# Localização do banco de dados SQLite
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "bolao.db")
 
-# Dicionario de normalizacao canonica de pilotos
+# Dicionário de normalização canônica de pilotos
 PILOTOS_NORM = {
     "andrea kimi antonelli": "Kimi Antonelli",
     "kimi antonelli": "Kimi Antonelli",
@@ -85,7 +87,7 @@ MAPA_ERGAST_ETAPAS = {
     "abu dhabi grand prix":      "Abu Dhabi",
 }
 
-# Slugs do site oficial F1.com para scraping de Piloto do Dia e Qualifying
+# Slugs do site oficial F1.com para scraping
 SLUGS_F1 = {
     "australia": "australia", "china": "china", "japao": "japan",
     "miami": "miami", "canada": "canada", "monaco": "monaco",
@@ -115,7 +117,6 @@ def formatar_nome_piloto(nome):
 
 def conectar_banco():
     if not os.path.exists(DB_PATH):
-        # Tenta procurar na raiz se executado a partir de outra pasta
         alt_path = os.path.join(os.getcwd(), "bolao.db")
         if os.path.exists(alt_path):
             return sqlite3.connect(alt_path)
@@ -264,42 +265,101 @@ def salvar_resultados_no_banco(conn, etapa_id, grid, top10, vr, pd, zebra):
     cursor.execute("PRAGMA table_info(resultados)")
     colunas = [c[1] for c in cursor.fetchall()]
 
-    cursor.execute("SELECT id FROM resultados WHERE etapa_id = ?", (etapa_id,))
-    existe = cursor.fetchone()
+    # Inspeciona os valores existentes na coluna 'tipo' para seguir o padrão das etapas 1 a 19
+    cursor.execute("SELECT DISTINCT tipo FROM resultados WHERE tipo IS NOT NULL")
+    tipos_existentes = [r[0] for r in cursor.fetchall()]
+    print(f"  ℹ️  Valores de 'tipo' existentes no banco: {tipos_existentes}")
 
-    dados = {
-        "etapa_id": etapa_id,
-        "p1": top10[0] if len(top10) > 0 else None,
-        "p2": top10[1] if len(top10) > 1 else None,
-        "p3": top10[2] if len(top10) > 2 else None,
-        "p4": top10[3] if len(top10) > 3 else None,
-        "p5": top10[4] if len(top10) > 4 else None,
-        "p6": top10[5] if len(top10) > 5 else None,
-        "p7": top10[6] if len(top10) > 6 else None,
-        "p8": top10[7] if len(top10) > 7 else None,
-        "p9": top10[8] if len(top10) > 8 else None,
-        "p10": top10[9] if len(top10) > 9 else None,
-        "volta_rapida": vr,
-        "piloto_dia": pd,
-        "zebra": zebra
-    }
-    if len(grid) >= 3:
-        for idx_g in range(1, 4):
-            if f"grid_p{idx_g}" in colunas:
-                dados[f"grid_p{idx_g}"] = grid[idx_g - 1]
-            elif f"q{idx_g}" in colunas:
-                dados[f"q{idx_g}"] = grid[idx_g - 1]
+    tem_tipo = "tipo" in colunas
 
-    dados_validos = {k: v for k, v in dados.items() if k in colunas}
+    if tem_tipo and "classificacao" in tipos_existentes and "corrida" in tipos_existentes:
+        # Padrão A: Linha de Classificação + Linha de Corrida
+        dados_quali = {
+            "etapa_id": etapa_id,
+            "tipo": "classificacao",
+            "p1": grid[0] if len(grid) > 0 else None,
+            "p2": grid[1] if len(grid) > 1 else None,
+            "p3": grid[2] if len(grid) > 2 else None,
+        }
+        dados_q_validos = {k: v for k, v in dados_quali.items() if k in colunas}
+        cursor.execute("SELECT id FROM resultados WHERE etapa_id = ? AND tipo = 'classificacao'", (etapa_id,))
+        if cursor.fetchone():
+            sets = ", ".join([f"{k} = ?" for k in dados_q_validos if k not in ('etapa_id', 'tipo')])
+            vals = [dados_q_validos[k] for k in dados_q_validos if k not in ('etapa_id', 'tipo')] + [etapa_id]
+            cursor.execute(f"UPDATE resultados SET {sets} WHERE etapa_id = ? AND tipo = 'classificacao'", vals)
+        else:
+            cols = ", ".join(dados_q_validos.keys())
+            plhs = ", ".join(["?"] * len(dados_q_validos))
+            cursor.execute(f"INSERT INTO resultados ({cols}) VALUES ({plhs})", list(dados_q_validos.values()))
 
-    if existe:
-        set_clause = ", ".join([f"{k} = ?" for k in dados_validos.keys() if k != "etapa_id"])
-        valores = [dados_validos[k] for k in dados_validos.keys() if k != "etapa_id"] + [etapa_id]
-        cursor.execute(f"UPDATE resultados SET {set_clause} WHERE etapa_id = ?", valores)
+        dados_corrida = {
+            "etapa_id": etapa_id,
+            "tipo": "corrida",
+            "p1": top10[0] if len(top10) > 0 else None,
+            "p2": top10[1] if len(top10) > 1 else None,
+            "p3": top10[2] if len(top10) > 2 else None,
+            "p4": top10[3] if len(top10) > 3 else None,
+            "p5": top10[4] if len(top10) > 4 else None,
+            "p6": top10[5] if len(top10) > 5 else None,
+            "p7": top10[6] if len(top10) > 6 else None,
+            "p8": top10[7] if len(top10) > 7 else None,
+            "p9": top10[8] if len(top10) > 8 else None,
+            "p10": top10[9] if len(top10) > 9 else None,
+            "volta_rapida": vr,
+            "piloto_dia": pd,
+            "zebra": zebra
+        }
+        dados_c_validos = {k: v for k, v in dados_corrida.items() if k in colunas}
+        cursor.execute("SELECT id FROM resultados WHERE etapa_id = ? AND tipo = 'corrida'", (etapa_id,))
+        if cursor.fetchone():
+            sets = ", ".join([f"{k} = ?" for k in dados_c_validos if k not in ('etapa_id', 'tipo')])
+            vals = [dados_c_validos[k] for k in dados_c_validos if k not in ('etapa_id', 'tipo')] + [etapa_id]
+            cursor.execute(f"UPDATE resultados SET {sets} WHERE etapa_id = ? AND tipo = 'corrida'", vals)
+        else:
+            cols = ", ".join(dados_c_validos.keys())
+            plhs = ", ".join(["?"] * len(dados_c_validos))
+            cursor.execute(f"INSERT INTO resultados ({cols}) VALUES ({plhs})", list(dados_c_validos.values()))
+
     else:
-        campos = ", ".join(dados_validos.keys())
-        placeholders = ", ".join(["?"] * len(dados_validos))
-        cursor.execute(f"INSERT INTO resultados ({campos}) VALUES ({placeholders})", list(dados_validos.values()))
+        # Padrão B: Linha única com coluna 'tipo' preenchida com o valor padrão do banco
+        tipo_padrao = tipos_existentes[0] if tipos_existentes else "corrida"
+        dados = {
+            "etapa_id": etapa_id,
+            "p1": top10[0] if len(top10) > 0 else None,
+            "p2": top10[1] if len(top10) > 1 else None,
+            "p3": top10[2] if len(top10) > 2 else None,
+            "p4": top10[3] if len(top10) > 3 else None,
+            "p5": top10[4] if len(top10) > 4 else None,
+            "p6": top10[5] if len(top10) > 5 else None,
+            "p7": top10[6] if len(top10) > 6 else None,
+            "p8": top10[7] if len(top10) > 7 else None,
+            "p9": top10[8] if len(top10) > 8 else None,
+            "p10": top10[9] if len(top10) > 9 else None,
+            "volta_rapida": vr,
+            "piloto_dia": pd,
+            "zebra": zebra
+        }
+        if tem_tipo:
+            dados["tipo"] = tipo_padrao
+
+        if len(grid) >= 3:
+            for idx_g in range(1, 4):
+                if f"grid_p{idx_g}" in colunas:
+                    dados[f"grid_p{idx_g}"] = grid[idx_g - 1]
+                elif f"q{idx_g}" in colunas:
+                    dados[f"q{idx_g}"] = grid[idx_g - 1]
+
+        dados_validos = {k: v for k, v in dados.items() if k in colunas}
+
+        cursor.execute("SELECT id FROM resultados WHERE etapa_id = ?", (etapa_id,))
+        if cursor.fetchone():
+            sets = ", ".join([f"{k} = ?" for k in dados_validos if k != 'etapa_id'])
+            vals = [dados_validos[k] for k in dados_validos if k != 'etapa_id'] + [etapa_id]
+            cursor.execute(f"UPDATE resultados SET {sets} WHERE etapa_id = ?", vals)
+        else:
+            cols = ", ".join(dados_validos.keys())
+            plhs = ", ".join(["?"] * len(dados_validos))
+            cursor.execute(f"INSERT INTO resultados ({cols}) VALUES ({plhs})", list(dados_validos.values()))
 
     conn.commit()
     print(f"  ✅ Resultados gravados com sucesso para a etapa ID {etapa_id}!")
