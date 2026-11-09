@@ -491,7 +491,7 @@
 <div style="margin-top:20px;padding-top:12px;border-top:1px solid var(--input);font-size:0.68rem;color:var(--muted);text-align:center;line-height:1.4;">
   <p><strong>Aplicação Amadora e Recreativa</strong></p>
   <p>Uso estritamente privado entre amigos. Sem vínculo oficial com a Formula One Licensing B.V. ou FIA.</p>
-  <p>Não solicitamos cartões bancários, dados financeiros ou palavras-passe externas.</p>
+  <p>Não solicitamos cartões bancários, dados financeiros ou senhas externas.</p>
 </div>
 </div>
 </div>
@@ -564,11 +564,10 @@ let usuario      = null;
 let pilotos      = [];
 let etapasAbertas = [];
 let rankingCache  = null;
-let etapaDetalhe  = null; // etapa selecionada para ver palpites
-let visitante     = false; // modo visitante: nomes anonimizados e sem envio de palpites
-let apelidos      = null;  // nome real -> apelido (só no modo visitante)
+let etapaDetalhe  = null;
+let visitante     = false;
+let apelidos      = null;
 
-// ── Init ──────────────────────────────────────────────────────────────────────
 // ── Modo de teste do líder ───────────────────────────────────────────────────
 (function () {
     const q = new URLSearchParams(location.search).get("teste");
@@ -863,10 +862,21 @@ async function apiFetch(endpoint, opts={}) {
     return anonimizar(data);
 }
 
+// Tratamento unificado de data com tolerância a formatos e offset BRT
 function dataBRT(str) {
-    return new Date(str.replace(" ","T") + (str.length <= 16 ? ":00" : "") + "-03:00");
+    if (!str) return new Date();
+    if (str.includes("Z") || (str.includes("+") && str.length > 18)) {
+        return new Date(str);
+    }
+    const limpo = str.replace(" ", "T");
+    const comSegundos = limpo.length <= 16 ? limpo + ":00" : limpo;
+    return new Date(comSegundos.endsWith("-03:00") ? comSegundos : comSegundos + "-03:00");
 }
-function inicioSessao(s) { return dataBRT(s.inicio || s.corte); }
+
+function inicioSessao(s) { 
+    return dataBRT(s.inicio || s.corte); 
+}
+
 function horaLimite(s) {
     const d = new Date(inicioSessao(s).getTime() - 1000);
     const tz = { timeZone: "America/Sao_Paulo" };
@@ -932,6 +942,7 @@ function loading(id) {
         '<div class="loading"><div class="spinner"></div>Carregando...</div>';
 }
 
+// ── PALPITES ──────────────────────────────────────────────────────────────────
 async function renderPalpites() {
     loading("tab-palpites");
     try {
@@ -939,9 +950,9 @@ async function renderPalpites() {
             apiFetch("/api/etapas_abertas"),
             apiFetch("/api/pilotos")
         ]);
-        const agora = new Date();
+        const agoraMs = Date.now();
         etapasAbertas = (rEtapas.etapas_abertas || [])
-            .map(e => ({ ...e, sessoes: e.sessoes.filter(s => inicioSessao(s) > agora) }))
+            .map(e => ({ ...e, sessoes: e.sessoes.filter(s => inicioSessao(s).getTime() > agoraMs) }))
             .filter(e => e.sessoes.length);
         pilotos       = rPilotos.pilotos || [];
         if (TESTE) etapasAbertas.unshift({ etapa: ETAPA_TESTE, sessoes: [
@@ -965,7 +976,7 @@ async function renderPalpites() {
         etapasAbertas.forEach(e => {
             e.sessoes.forEach(s => {
                 const label = s.sessao === "classificacao" ? "Classificação" : "Corrida";
-                const diff  = Math.floor((inicioSessao(s) - new Date()) / 60000);
+                const diff  = Math.floor((inicioSessao(s).getTime() - Date.now()) / 60000);
                 let aviso = diff < 60 && diff >= 0 ? ` ⚠️ ${diff}min` : "";
                 opts += `<option value="${e.etapa}|${s.sessao}">${e.etapa} — ${label}${aviso}</option>`;
             });
@@ -997,7 +1008,7 @@ function onSessaoChange(val) {
     window._sessaoSel = sessao;
     const s = sessaoSel(etapa, sessao);
 
-    const diff    = Math.floor((inicioSessao(s) - new Date()) / 60000);
+    const diff = Math.floor((inicioSessao(s).getTime() - Date.now()) / 60000);
     let aviso = `<div class="nota">⏱️ Palpites até ${horaLimite(s)} (horário de Brasília)</div>`;
     if (diff < 30 && diff >= 0)
         aviso = `<div class="nota">⚠️ Prazo encerra em ${diff} minutos — palpites até ${horaLimite(s)} (horário de Brasília)</div>`;
@@ -1032,7 +1043,7 @@ function onSessaoChange(val) {
         const el = document.getElementById("aviso-lider");
         if (!lider || !el || window._sessaoSel !== sessao) return;
         const pts = sessao === "classificacao" ? 2 : 10;
-        const atrasado = inicioSessao(s) - new Date() < ANTECEDENCIA_LIDER_MIN * 60000;
+        const atrasado = inicioSessao(s).getTime() - Date.now() < ANTECEDENCIA_LIDER_MIN * 60000;
         el.innerHTML = atrasado
             ? `<div class="penalidade">👑 Você é o líder e o prazo de ${ANTECEDENCIA_LIDER_MIN} minutos de antecedência já passou. Se enviar agora, sofrerá a punição de <b>−${pts} pts</b> prevista no regulamento.</div>`
             : `<div class="nota">👑 Você é o líder: envie até <b>${horaLimiteLider(s)}</b> (${ANTECEDENCIA_LIDER_MIN} min antes do início) para evitar a punição de −${pts} pts.</div>`;
@@ -1091,7 +1102,7 @@ async function enviarPalpites() {
     const sessao = window._sessaoSel;
     if (!etapa || !sessao) { showToast("Selecione uma sessão!", true); return; }
     const sSel = sessaoSel(etapa, sessao);
-    if (!sSel || new Date() >= inicioSessao(sSel)) {
+    if (!sSel || Date.now() >= inicioSessao(sSel).getTime()) {
         showToast("Prazo encerrado: a sessão já começou.", true);
         renderPalpites();
         return;
@@ -1127,7 +1138,7 @@ async function enviarPalpites() {
         let r;
         if (TESTE) {
             await new Promise(ok => setTimeout(ok, 400));
-            const atrasado = inicioSessao(sSel) - new Date() < ANTECEDENCIA_LIDER_MIN * 60000;
+            const atrasado = inicioSessao(sSel).getTime() - Date.now() < ANTECEDENCIA_LIDER_MIN * 60000;
             r = { sucesso: true, dt_envio: fmtBRT(new Date()) + " (simulação — nada foi gravado)",
                   ...(atrasado ? { penalidade_lider: { pontos: sessao === "classificacao" ? 2 : 10, sessao } } : {}) };
         } else {
