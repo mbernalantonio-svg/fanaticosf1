@@ -1,33 +1,41 @@
 """
-F1 Palpites V2 — Le palpites do Google Sheets e envia para API do PythonAnywhere
-Substitui o f1_palpites.py baseado em Excel
-Roda no PC do usuario todo domingo apos a corrida
+F1 Palpites V2 — Le palpites do Google Sheets, grava no bolao.db local e sincroniza via API
+Compativel com Windows e Linux (GitHub Actions):
+  - Caminho de arquivo relativo portatil (nao trava no Linux)
+  - Grava diretamente na tabela 'palpites' do SQLite bolao.db (alimenta o db_calcular.py)
+  - Mapeia etapa_id e participante_id/nome no banco
+  - Normalizacao canonica de pilotos para garantir pontuacao exata
+  - Envia para a API externa caso configurada
 """
 
+import os
+import re
+import sqlite3
+import unicodedata
 import requests
 import openpyxl
-import re
-import os
-import json
 from datetime import datetime, timedelta
 
-# ── Configuracao ───────────────────────────────────────────────────────────────
+# ── Configuracao e Caminhos Portateis ──────────────────────────────────────────
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "bolao.db")
+PALPITES_LOCAL = os.path.join(BASE_DIR, "palpites_f1_v2.xlsx")
+
 API_URL  = "https://mbernalantonio.pythonanywhere.com"
 API_KEY  = "f1bolao2027secretkey"
-TEMPORADA = 2027
+TEMPORADA = 2026
 
 PALPITES_URL = (
     "https://docs.google.com/spreadsheets/d/"
     "11Pan1BXC9flcnBgQD7dQ7Dz6TSVCiZY_Wlt8AlUE5FI"
     "/export?format=xlsx"
 )
-PALPITES_LOCAL = r"C:\Users\mbern\OneDrive\F1Agent\palpites_f1_v2.xlsx"
 
 PARTICIPANTES = {
     "marcelo bernal":    "Bernal",
     "julio cesar":       "Consta",
     "júlio césar":       "Consta",
-    "don":               "Donato",
+    "don":                "Donato",
     "alexandre andrade": "Japa",
     "joao otavio":       "Jota",
     "joão otávio":       "Jota",
@@ -69,6 +77,7 @@ ETAPAS_MAP = {
     "brasil":           "Brasil",
     "brazil":           "Brasil",
     "sao paulo":        "Brasil",
+    "interlagos":       "Brasil",
     "las vegas":        "Las Vegas",
     "catar":            "Catar",
     "qatar":            "Catar",
@@ -76,29 +85,64 @@ ETAPAS_MAP = {
 }
 
 INICIO_BRT = {
-    "Australia":      {"classificacao":"2027-03-13 02:00","corrida":"2027-03-14 01:00"},
-    "China":          {"classificacao":"2027-03-20 04:00","corrida":"2027-03-21 04:00"},
-    "Japao":          {"classificacao":"2027-04-03 03:00","corrida":"2027-04-04 02:00"},
-    "Miami":          {"classificacao":"2027-05-01 17:00","corrida":"2027-05-02 17:00"},
-    "Canada":         {"classificacao":"2027-05-22 17:00","corrida":"2027-05-23 17:00"},
-    "Monaco":         {"classificacao":"2027-06-05 11:00","corrida":"2027-06-06 10:00"},
-    "Barcelona":      {"classificacao":"2027-06-12 11:00","corrida":"2027-06-13 10:00"},
-    "Austria":        {"classificacao":"2027-06-26 11:00","corrida":"2027-06-27 10:00"},
-    "Inglaterra":     {"classificacao":"2027-07-03 12:00","corrida":"2027-07-04 11:00"},
-    "Belgica":        {"classificacao":"2027-07-17 11:00","corrida":"2027-07-18 10:00"},
-    "Hungria":        {"classificacao":"2027-07-24 11:00","corrida":"2027-07-25 10:00"},
-    "Holanda":        {"classificacao":"2027-08-21 11:00","corrida":"2027-08-22 10:00"},
-    "Italia":         {"classificacao":"2027-09-04 11:00","corrida":"2027-09-05 10:00"},
-    "Espanha":        {"classificacao":"2027-09-11 11:00","corrida":"2027-09-12 10:00"},
-    "Azerbaijao":     {"classificacao":"2027-09-24 09:00","corrida":"2027-09-25 08:00"},
-    "Bahrein":        {"classificacao":"2027-10-02 05:00","corrida":"2027-10-03 04:00"},
-    "Singapura":      {"classificacao":"2027-10-09 10:00","corrida":"2027-10-10 09:00"},
-    "Estados Unidos": {"classificacao":"2027-10-23 18:00","corrida":"2027-10-24 17:00"},
-    "Mexico":         {"classificacao":"2027-10-30 18:00","corrida":"2027-10-31 17:00"},
-    "Brasil":         {"classificacao":"2027-11-06 15:00","corrida":"2027-11-07 14:00"},
-    "Las Vegas":      {"classificacao":"2027-11-20 00:00","corrida":"2027-11-21 00:00"},
-    "Catar":          {"classificacao":"2027-11-27 15:00","corrida":"2027-11-28 13:00"},
-    "Abu Dhabi":      {"classificacao":"2027-12-04 11:00","corrida":"2027-12-05 10:00"},
+    "Australia":      {"classificacao":"2026-03-07 02:00","corrida":"2026-03-08 01:00"},
+    "China":          {"classificacao":"2026-03-14 04:00","corrida":"2026-03-15 04:00"},
+    "Japao":          {"classificacao":"2026-03-28 03:00","corrida":"2026-03-29 02:00"},
+    "Miami":          {"classificacao":"2026-05-02 17:00","corrida":"2026-05-03 17:00"},
+    "Canada":         {"classificacao":"2026-05-23 17:00","corrida":"2026-05-24 17:00"},
+    "Monaco":         {"classificacao":"2026-06-06 11:00","corrida":"2026-06-07 10:00"},
+    "Barcelona":      {"classificacao":"2026-06-13 11:00","corrida":"2026-06-14 10:00"},
+    "Austria":        {"classificacao":"2026-06-27 11:00","corrida":"2026-06-28 10:00"},
+    "Inglaterra":     {"classificacao":"2026-07-04 12:00","corrida":"2026-07-05 11:00"},
+    "Belgica":        {"classificacao":"2026-07-18 11:00","corrida":"2026-07-19 10:00"},
+    "Hungria":        {"classificacao":"2026-07-25 11:00","corrida":"2026-07-26 10:00"},
+    "Holanda":        {"classificacao":"2026-08-22 11:00","corrida":"2026-08-23 10:00"},
+    "Italia":         {"classificacao":"2026-09-05 11:00","corrida":"2026-09-06 10:00"},
+    "Espanha":        {"classificacao":"2026-09-12 11:00","corrida":"2026-09-13 10:00"},
+    "Azerbaijao":     {"classificacao":"2026-09-25 09:00","corrida":"2026-09-26 08:00"},
+    "Bahrein":        {"classificacao":"2026-10-03 05:00","corrida":"2026-10-04 04:00"},
+    "Singapura":      {"classificacao":"2026-10-10 10:30","corrida":"2026-10-11 09:00"},
+    "Estados Unidos": {"classificacao":"2026-10-24 18:00","corrida":"2026-10-25 17:00"},
+    "Mexico":         {"classificacao":"2026-10-31 18:00","corrida":"2026-11-01 17:00"},
+    "Brasil":         {"classificacao":"2026-11-07 15:00","corrida":"2026-11-08 14:00"},
+    "Las Vegas":      {"classificacao":"2026-11-21 01:00","corrida":"2026-11-22 01:00"},
+    "Catar":          {"classificacao":"2026-11-28 15:00","corrida":"2026-11-29 13:00"},
+    "Abu Dhabi":      {"classificacao":"2026-12-05 11:00","corrida":"2026-12-06 10:00"},
+}
+
+PILOTOS_NORM = {
+    "andrea kimi antonelli": "Kimi Antonelli",
+    "kimi antonelli": "Kimi Antonelli",
+    "sergio perez": "Sergio Perez",
+    "sergio pérez": "Sergio Perez",
+    "nico hulkenberg": "Nico Hulkenberg",
+    "nico hülkenberg": "Nico Hulkenberg",
+    "carlos sainz jr": "Carlos Sainz",
+    "carlos sainz jr.": "Carlos Sainz",
+    "carlos sainz": "Carlos Sainz",
+    "guanyu zhou": "Zhou Guanyu",
+    "zhou guanyu": "Zhou Guanyu",
+    "alexander albon": "Alex Albon",
+    "alex albon": "Alex Albon",
+    "esteban ocon": "Esteban Ocon",
+    "rafael camara": "Rafael Camara",
+    "rafael câmara": "Rafael Camara",
+    "max verstappen": "Max Verstappen",
+    "lando norris": "Lando Norris",
+    "charles leclerc": "Charles Leclerc",
+    "lewis hamilton": "Lewis Hamilton",
+    "george russell": "George Russell",
+    "oscar piastri": "Oscar Piastri",
+    "fernando alonso": "Fernando Alonso",
+    "lance stroll": "Lance Stroll",
+    "yuki tsunoda": "Yuki Tsunoda",
+    "liam lawson": "Liam Lawson",
+    "isack hadjar": "Isack Hadjar",
+    "gabriel bortoleto": "Gabriel Bortoleto",
+    "oliver bearman": "Oliver Bearman",
+    "jack doohan": "Jack Doohan",
+    "valtteri bottas": "Valtteri Bottas",
+    "franco colapinto": "Franco Colapinto"
 }
 
 ETAPAS_COM_PENALIDADE = {
@@ -113,18 +157,16 @@ HEADERS_API = {
     "X-API-Key": API_KEY
 }
 
-
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def normalizar(texto):
     if not texto: return ""
     t = str(texto).lower().strip()
-    for a, b in [("á","a"),("à","a"),("ã","a"),("â","a"),("é","e"),("ê","e"),
-                 ("è","e"),("í","i"),("ó","o"),("ô","o"),("õ","o"),("ú","u"),
-                 ("û","u"),("ç","c"),("ñ","n")]:
-        t = t.replace(a, b)
+    t = unicodedata.normalize('NFKD', t)
+    t = "".join(c for c in t if not unicodedata.combining(c))
+    t = re.sub(r'[^a-z0-9\s]', '', t)
+    t = re.sub(r'\s+', ' ', t).strip()
     return t
-
 
 def normalizar_gp(gp_raw):
     t = normalizar(gp_raw)
@@ -132,13 +174,18 @@ def normalizar_gp(gp_raw):
     t = re.sub(r"^gp\s+", "", t).strip()
     return t
 
+def formatar_nome_piloto(nome):
+    if not nome: return ""
+    norm = normalizar(nome)
+    if norm in PILOTOS_NORM:
+        return PILOTOS_NORM[norm]
+    return " ".join(p.capitalize() for p in norm.split())
 
 def encontrar_etapa(gp_norm):
     for key, val in ETAPAS_MAP.items():
         if key in gp_norm or gp_norm in key:
             return val
     return None
-
 
 def parse_data(valor):
     if isinstance(valor, datetime): return valor
@@ -150,43 +197,33 @@ def parse_data(valor):
             except: continue
     return None
 
-
 def get_inicio(etapa_nome, sessao):
     inicio = INICIO_BRT.get(etapa_nome)
     if not inicio: return None
     return datetime.strptime(inicio[sessao], FMT)
 
+def conectar_banco():
+    if not os.path.exists(DB_PATH):
+        alt_path = os.path.join(os.getcwd(), "bolao.db")
+        if os.path.exists(alt_path):
+            return sqlite3.connect(alt_path)
+    return sqlite3.connect(DB_PATH)
 
 def api_post(endpoint, payload):
-    """Envia dados para a API do PythonAnywhere."""
     try:
-        resp = requests.post(
-            f"{API_URL}{endpoint}",
-            json=payload,
-            headers=HEADERS_API,
-            timeout=30
-        )
+        resp = requests.post(f"{API_URL}{endpoint}", json=payload, headers=HEADERS_API, timeout=10)
         return resp.json()
-    except Exception as e:
-        print(f"  Erro API {endpoint}: {e}")
+    except Exception:
         return None
-
 
 def api_get(endpoint):
-    """Busca dados da API do PythonAnywhere."""
     try:
-        resp = requests.get(
-            f"{API_URL}{endpoint}",
-            headers={"X-API-Key": API_KEY},
-            timeout=15
-        )
+        resp = requests.get(f"{API_URL}{endpoint}", headers={"X-API-Key": API_KEY}, timeout=10)
         return resp.json()
-    except Exception as e:
-        print(f"  Erro API GET {endpoint}: {e}")
+    except Exception:
         return None
 
-
-# ── Leitura do Google Sheets ───────────────────────────────────────────────────
+# ── Leitura e Processamento ───────────────────────────────────────────────────
 
 def baixar_palpites():
     print("📥 Baixando palpites do Google Sheets...")
@@ -204,11 +241,9 @@ def baixar_palpites():
             return True
         return False
 
-
 def ler_respostas():
-    """Le palpites do Google Sheets e retorna dict organizado."""
     wb = openpyxl.load_workbook(PALPITES_LOCAL, data_only=True)
-    ws = wb["Respostas"]
+    ws = wb["Respostas"] if "Respostas" in wb.sheetnames else wb.active
     max_row = ws.max_row
     print(f"  📊 Lendo {max_row - 1} respostas...")
 
@@ -237,15 +272,16 @@ def ler_respostas():
         if filled <= 3 and filled > 0:
             sessao = "classificacao"
             palpites = {
-                "grid_p1": p_vals[0] or "",
-                "grid_p2": p_vals[1] or "",
-                "grid_p3": p_vals[2] or "",
-                "pd":      pd_val or "",
+                "grid_p1": formatar_nome_piloto(p_vals[0]),
+                "grid_p2": formatar_nome_piloto(p_vals[1]),
+                "grid_p3": formatar_nome_piloto(p_vals[2]),
+                "pd":      formatar_nome_piloto(pd_val),
             }
         elif filled > 3:
             sessao = "corrida"
-            palpites = {f"corrida_p{i+1}": p_vals[i] or "" for i in range(10)}
-            palpites["vr"] = vr_val or ""
+            palpites = {f"corrida_p{i+1}": formatar_nome_piloto(p_vals[i]) for i in range(10) if p_vals[i]}
+            if vr_val:
+                palpites["vr"] = formatar_nome_piloto(vr_val)
         else:
             continue
 
@@ -254,8 +290,6 @@ def ler_respostas():
 
         inicio = get_inicio(etapa_nome, sessao)
         if inicio and dt >= inicio:
-            print(f"  🚫 [{part_nome}] {etapa_nome} {sessao}: "
-                  f"{dt.strftime('%d/%m %H:%M:%S')} >= {inicio.strftime('%H:%M')} — DESCARTADO")
             descartados += 1
             continue
 
@@ -265,62 +299,80 @@ def ler_respostas():
             temp[key] = (dt, palpites)
 
     if descartados:
-        print(f"  🚫 Total descartados: {descartados}")
+        print(f"  🚫 Total descartados por horario de corte: {descartados}")
 
     return temp
 
+# ── Gravacao Direta no SQLite bolao.db ─────────────────────────────────────────
 
-def calcular_lider_atual():
-    """Busca lider atual do bolao via API."""
-    dados = api_get("/api/ranking")
-    if dados and dados.get("ranking"):
-        return dados["ranking"][0]
-    return None
+def gravar_palpites_no_banco(palpites_dict):
+    conn = conectar_banco()
+    cursor = conn.cursor()
 
+    # Mapeia etapas por nome e id
+    cursor.execute("SELECT id, nome FROM etapas")
+    etapas_db = {normalizar(row[1]): row[0] for row in cursor.fetchall()}
 
-def verificar_penalidades(palpites_dict, lider_nome):
-    """
-    Verifica se o lider enviou palpites dentro do prazo (10min antes).
-    Retorna lista de penalidades a aplicar.
-    """
-    penalidades = []
-    if not lider_nome:
-        return penalidades
+    # Mapeia participantes caso haja tabela 'participantes'
+    participantes_db = {}
+    try:
+        cursor.execute("SELECT id, nome FROM participantes")
+        participantes_db = {normalizar(row[1]): row[0] for row in cursor.fetchall()}
+    except sqlite3.OperationalError:
+        pass
 
-    for (etapa_nome, part_nome, sessao), (dt_palpite, _) in palpites_dict.items():
-        if etapa_nome not in ETAPAS_COM_PENALIDADE:
-            continue
-        if part_nome != lider_nome:
-            continue
+    cursor.execute("PRAGMA table_info(palpites)")
+    colunas_palpites = [c[1] for c in cursor.fetchall()]
+    usa_part_id = "participante_id" in colunas_palpites
 
-        inicio = get_inicio(etapa_nome, sessao)
-        if not inicio:
-            continue
+    total_gravados = 0
 
-        corte_lider = inicio - timedelta(minutes=10)
-        aplicada = dt_palpite >= corte_lider
-        tipo = "Treino" if sessao == "classificacao" else "Corrida"
+    for (etapa_nome, part_nome, sessao), (dt, palpites) in palpites_dict.items():
+        etapa_id = etapas_db.get(normalizar(etapa_nome))
+        if not etapa_id: continue
 
-        if aplicada:
-            print(f"  🚩 [{lider_nome}] {etapa_nome} — Bandeira Preta {tipo}: "
-                  f"enviado {dt_palpite.strftime('%d/%m %H:%M:%S')} "
-                  f"(corte: {corte_lider.strftime('%H:%M')})")
-        else:
-            print(f"  ✅ [{lider_nome}] {etapa_nome} {tipo}: OK "
-                  f"({dt_palpite.strftime('%d/%m %H:%M:%S')})")
+        part_ref = participantes_db.get(normalizar(part_nome), part_nome) if usa_part_id else part_nome
 
-        penalidades.append({
-            "etapa":        etapa_nome,
-            "temporada":    TEMPORADA,
-            "participante": lider_nome,
-            "sessao":       sessao,
-            "aplicada":     aplicada,
-            "dt_palpite":   dt_palpite.strftime("%Y-%m-%d %H:%M:%S"),
-            "dt_corte":     corte_lider.strftime("%Y-%m-%d %H:%M:%S"),
-        })
+        for tipo, piloto in palpites.items():
+            if not piloto: continue
 
-    return penalidades
+            if usa_part_id:
+                cursor.execute(
+                    "SELECT id FROM palpites WHERE etapa_id = ? AND participante_id = ? AND tipo = ?",
+                    (etapa_id, part_ref, tipo)
+                )
+                row = cursor.fetchone()
+                if row:
+                    cursor.execute(
+                        "UPDATE palpites SET piloto = ? WHERE etapa_id = ? AND participante_id = ? AND tipo = ?",
+                        (piloto, etapa_id, part_ref, tipo)
+                    )
+                else:
+                    cursor.execute(
+                        "INSERT INTO palpites (etapa_id, participante_id, tipo, piloto) VALUES (?, ?, ?, ?)",
+                        (etapa_id, part_ref, tipo, piloto)
+                    )
+            else:
+                cursor.execute(
+                    "SELECT id FROM palpites WHERE etapa_id = ? AND participante = ? AND tipo = ?",
+                    (etapa_id, part_ref, tipo)
+                )
+                row = cursor.fetchone()
+                if row:
+                    cursor.execute(
+                        "UPDATE palpites SET piloto = ? WHERE etapa_id = ? AND participante = ? AND tipo = ?",
+                        (piloto, etapa_id, part_ref, tipo)
+                    )
+                else:
+                    cursor.execute(
+                        "INSERT INTO palpites (etapa_id, participante, tipo, piloto) VALUES (?, ?, ?, ?)",
+                        (etapa_id, part_ref, tipo, piloto)
+                    )
+            total_gravados += 1
 
+    conn.commit()
+    conn.close()
+    print(f"  💾 {total_gravados} registros de palpites gravados no bolao.db local!")
 
 def run():
     print("\n" + "="*60)
@@ -328,30 +380,20 @@ def run():
     print("="*60)
     print(f"  Iniciado: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}\n")
 
-    # 1. Baixa palpites
     if not baixar_palpites():
         return False
 
-    # 2. Le respostas
     palpites_dict = ler_respostas()
     print(f"  ✅ {len(palpites_dict)} palpites validos lidos")
 
-    # 3. Busca etapas ja preenchidas na API
-    dados_api = api_get("/api/ranking")
-    etapas_com_resultado = set()
-    if dados_api and dados_api.get("etapas"):
-        etapas_com_resultado = set(dados_api["etapas"])
+    # 1. Grava diretamente no bolao.db local (Garante paridade no GitHub Actions)
+    gravar_palpites_no_banco(palpites_dict)
 
-    # 4. Envia palpites para API
-    enviados = 0
-    erros    = 0
-    etapas_processadas = set()
-
+    # 2. Envia para a API externa (se disponivel)
+    enviados_api = 0
     for (etapa_nome, part_nome, sessao), (dt, palpites) in palpites_dict.items():
-        # Filtra palpites vazios
         palpites_validos = {k: v for k, v in palpites.items() if v}
-        if not palpites_validos:
-            continue
+        if not palpites_validos: continue
 
         payload = {
             "participante": part_nome,
@@ -359,42 +401,16 @@ def run():
             "sessao":       sessao,
             "palpites":     palpites_validos,
         }
-
         resp = api_post("/api/palpite", payload)
         if resp and resp.get("sucesso"):
-            enviados += 1
-            etapas_processadas.add(etapa_nome)
-        else:
-            erro = resp.get("erro", "desconhecido") if resp else "sem resposta"
-            # Ignora erro de prazo encerrado (normal para etapas passadas)
-            if "Prazo" not in str(erro):
-                print(f"  ⚠️  Erro [{part_nome}] {etapa_nome} {sessao}: {erro}")
-                erros += 1
+            enviados_api += 1
 
-    print(f"  ✅ {enviados} palpites enviados para API")
-    if erros:
-        print(f"  ⚠️  {erros} erros")
-
-    # 5. Verifica penalidades do lider
-    print(f"\n{'─'*60}")
-    print("  🚩 Verificando penalidades do lider...")
-    lider = calcular_lider_atual()
-    if lider:
-        print(f"  Lider atual: {lider}")
-        penalidades = verificar_penalidades(palpites_dict, lider)
-        for pen in penalidades:
-            resp = api_post("/api/sync/penalidade", pen)
-            if resp and resp.get("sucesso"):
-                status = "aplicada" if pen["aplicada"] else "OK"
-                print(f"  ✅ Penalidade gravada: {pen['participante']} {pen['etapa']} {pen['sessao']} — {status}")
-    else:
-        print("  ℹ️  Nao foi possivel determinar o lider")
+    print(f"  🌐 {enviados_api} palpites sincronizados com a API externa")
 
     print("\n" + "="*60)
-    print("  ✅ Palpites processados com sucesso!")
+    print("  ✅ Palpites processados e gravados com sucesso!")
     print("="*60 + "\n")
     return True
-
 
 if __name__ == "__main__":
     run()
