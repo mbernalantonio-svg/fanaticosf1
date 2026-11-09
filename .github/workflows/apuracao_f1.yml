@@ -1,37 +1,51 @@
-name: Apuracao e Sincronizacao F1 Bolao V2
+name: Apuracao e Sincronizacao Bolao F1 V2
 
 on:
-  # Permite disparar manualmente pelo botão "Run workflow" (igual ao automacao-web)
+  # Permite executar manualmente no botão "Run workflow"
   workflow_dispatch:
 
-  # Agendamento automático todo domingo às 23:00 UTC (20:00 Horário de Brasília)
+  # Agendamento automático aos domingos às 23:05 UTC (20:05 Horário de Brasília)
   schedule:
-    - cron: '0 23 * * 0'
+    - cron: '5 23 * * 0'
+
+# Permissão para o bot gravar e atualizar o bolao.db no repositório
+permissions:
+  contents: write
 
 jobs:
-  apuracao:
+  executar-v2:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout do Repositório
         uses: actions/checkout@v4
 
-      - name: Configurar Node.js
-        uses: actions/setup-node@v4
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
         with:
-          node-version: 20
-          cache: 'npm'
-          cache-dependency-path: 'deploy-6aec8e380279f70c8c6e050a/package-lock.json'
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'scripts_v2/requirements.txt'
 
       - name: Instalar Dependências
-        working-directory: ./deploy-6aec8e380279f70c8c6e050a
-        run: npm ci
-
-      - name: Executar Apuração / Sincronização V2
-        working-directory: ./deploy-6aec8e380279f70c8c6e050a
-        env:
-          # Se sua V2 usar banco Neon/Postgres ou variáveis de ambiente, configure em Secrets
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          npm run build
-          # Se houver script de processamento dedicado no package.json, ex: npm run processar
+          pip install -r scripts_v2/requirements.txt
+
+      - name: 1. Coletar Palpites (V2)
+        run: |
+          python scripts_v2/f1_palpites_v2.py
+
+      - name: 2. Coletar Resultados F1 (V2)
+        run: |
+          python scripts_v2/f1_agent_v2.py
+
+      - name: 3. Calcular Pontuacao e Atualizar Banco
+        run: |
+          python scripts_v2/db_calcular.py
+
+      - name: 4. Persistir Banco Atualizado no GitHub
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add scripts_v2/bolao.db
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: atualizar bolao.db pos-corrida [skip ci]" && git push)
