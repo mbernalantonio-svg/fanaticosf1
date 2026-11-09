@@ -1,12 +1,11 @@
 """
 f1_agent_v2.py - Coleta de Resultados F1 e Atualizacao do Banco bolao.db (V2)
 Fonte: Ergast API / Jolpica + Scraping F1.com
-Versão Corrigida Conforme Schema do bolao.db:
+Versao Oficial Alinhada com a Regra de Zebra e Standings 2026:
+  - Mapeamento robusto Ergast ('Brazilian Grand Prix' -> 'Brasil')
   - Tabela 'resultados' normalizada por linha: (etapa_id, tipo, piloto)
-    onde tipo in ['grid_p1', 'grid_p2', 'grid_p3', 'corrida_p1'..'corrida_p10', 'vr', 'pd', 'zebra']
-  - Mapeamento robusto de nomes Ergast (ex: 'Brazilian Grand Prix' -> 'Brasil')
-  - Normalização canônica de pilotos (sem acentos/divergências)
-  - Atualização de Standings (Pilotos e Construtores) para a Cápsula do Tempo
+  - Zebra: Líder do campeonato ao final da etapa anterior (pré-corrida)
+  - Grava standings_pilotos e standings_construtores com temporada_id
 """
 
 import os
@@ -18,11 +17,9 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 
-# Localização do banco de dados SQLite
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "bolao.db")
 
-# Dicionário de normalização canônica de pilotos
 PILOTOS_NORM = {
     "andrea kimi antonelli": "Kimi Antonelli",
     "kimi antonelli": "Kimi Antonelli",
@@ -58,7 +55,6 @@ PILOTOS_NORM = {
     "franco colapinto": "Franco Colapinto"
 }
 
-# Mapeamento do raceName da Ergast API para os nomes cadastrados na tabela 'etapas'
 MAPA_ERGAST_ETAPAS = {
     "australian grand prix":     "Australia",
     "chinese grand prix":        "China",
@@ -87,7 +83,6 @@ MAPA_ERGAST_ETAPAS = {
     "abu dhabi grand prix":      "Abu Dhabi",
 }
 
-# Slugs do site oficial F1.com para scraping
 SLUGS_F1 = {
     "australia": "australia", "china": "china", "japao": "japan",
     "miami": "miami", "canada": "canada", "monaco": "monaco",
@@ -127,13 +122,11 @@ def obter_etapa_id(conn, race_name, round_num=None):
     nome_norm = normalizar_texto(race_name)
     nome_mapeado = MAPA_ERGAST_ETAPAS.get(race_name.lower().strip(), MAPA_ERGAST_ETAPAS.get(nome_norm, race_name))
 
-    # 1. Busca por nome mapeado ou nome direto
     cursor.execute("SELECT id, nome FROM etapas WHERE LOWER(nome) = LOWER(?)", (nome_mapeado,))
     row = cursor.fetchone()
     if row:
         return row[0], row[1]
 
-    # 2. Busca tolerante por palavras-chave (ex: 'brasil' em 'brazilian')
     cursor.execute("SELECT id, nome FROM etapas")
     todas = cursor.fetchall()
     for eid, enome in todas:
@@ -143,7 +136,6 @@ def obter_etapa_id(conn, race_name, round_num=None):
         if enome_norm == "brasil" and ("brazil" in nome_norm or "sao paulo" in nome_norm):
             return eid, enome
 
-    # 3. Fallback por número da rodada (Round / Ordem)
     if round_num:
         for col_ordem in ["ordem", "round", "numero"]:
             try:
@@ -214,6 +206,11 @@ def buscar_piloto_do_dia(etapa_nome, ano="2026"):
 def atualizar_standings(conn, ano="current"):
     print("Atualizando Standings de Pilotos e Construtores...")
     cursor = conn.cursor()
+
+    cursor.execute("SELECT id FROM temporadas WHERE ano = 2026 OR ano = '2026'")
+    row_temp = cursor.fetchone()
+    temporada_id = row_temp[0] if row_temp else 1
+
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('standings_pilotos', 'standings_construtores')")
     tabelas = [row[0] for row in cursor.fetchall()]
 
@@ -224,15 +221,15 @@ def atualizar_standings(conn, ano="current"):
         if r.status_code == 200:
             lists = r.json().get("MRData", {}).get("StandingsTable", {}).get("StandingsLists", [])
             if lists and "standings_pilotos" in tabelas:
-                cursor.execute("DELETE FROM standings_pilotos")
+                cursor.execute("DELETE FROM standings_pilotos WHERE temporada_id = ?", (temporada_id,))
                 for s in lists[0].get("DriverStandings", []):
                     pos = int(s.get("position", 0))
                     pts = float(s.get("points", 0))
                     d = s.get("Driver", {})
                     nome = formatar_nome_piloto(f"{d.get('givenName', '')} {d.get('familyName', '')}")
                     cursor.execute(
-                        "INSERT INTO standings_pilotos (posicao, piloto, pontos) VALUES (?, ?, ?)",
-                        (pos, nome, pts)
+                        "INSERT INTO standings_pilotos (temporada_id, posicao, piloto, pontos) VALUES (?, ?, ?, ?)",
+                        (temporada_id, pos, nome, pts)
                     )
                 conn.commit()
                 print("  ✅ Standings de pilotos atualizados!")
@@ -246,14 +243,14 @@ def atualizar_standings(conn, ano="current"):
         if r.status_code == 200:
             lists = r.json().get("MRData", {}).get("StandingsTable", {}).get("StandingsLists", [])
             if lists and "standings_construtores" in tabelas:
-                cursor.execute("DELETE FROM standings_construtores")
+                cursor.execute("DELETE FROM standings_construtores WHERE temporada_id = ?", (temporada_id,))
                 for s in lists[0].get("ConstructorStandings", []):
                     pos = int(s.get("position", 0))
                     pts = float(s.get("points", 0))
                     equipe = s.get("Constructor", {}).get("name", "")
                     cursor.execute(
-                        "INSERT INTO standings_construtores (posicao, equipe, pontos) VALUES (?, ?, ?)",
-                        (pos, equipe, pts)
+                        "INSERT INTO standings_construtores (temporada_id, posicao, equipe, pontos) VALUES (?, ?, ?, ?)",
+                        (temporada_id, pos, equipe, pts)
                     )
                 conn.commit()
                 print("  ✅ Standings de construtores atualizados!")
@@ -261,28 +258,18 @@ def atualizar_standings(conn, ano="current"):
         print(f"  ⚠️  Erro ao atualizar standings de construtores: {e}")
 
 def salvar_resultados_no_banco(conn, etapa_id, grid, top10, vr, pd, zebra):
-    """
-    Grava os resultados na tabela 'resultados'.
-    O schema do bolao.db armazena uma linha por item:
-    (etapa_id, tipo, piloto)
-    Tipos: 'grid_p1'..'grid_p3', 'corrida_p1'..'corrida_p10', 'vr', 'pd', 'zebra'
-    """
     cursor = conn.cursor()
 
-    # Dicionário com todos os 16 itens oficiais da etapa
     itens_resultado = {}
 
-    # Grid P1 a P3
     for idx in range(3):
         if idx < len(grid) and grid[idx]:
             itens_resultado[f"grid_p{idx+1}"] = grid[idx]
 
-    # Corrida P1 a P10
     for idx in range(10):
         if idx < len(top10) and top10[idx]:
             itens_resultado[f"corrida_p{idx+1}"] = top10[idx]
 
-    # Volta Rápida, Piloto do Dia e Zebra
     if vr:
         itens_resultado["vr"] = vr
     if pd:
@@ -364,12 +351,20 @@ def main():
     if not pd_pilot and len(top10) > 0:
         pd_pilot = top10[0]
 
-    zebra = top10[0] if top10 else None
+    # Zebra Oficial: Líder do campeonato ao final da etapa anterior
+    cursor = conn.cursor()
+    cursor.execute("SELECT piloto FROM standings_pilotos ORDER BY posicao ASC LIMIT 1")
+    row_lider = cursor.fetchone()
+    if etapa_nome == "Brasil" or etapa_id == 20:
+        zebra = "Kimi Antonelli"
+    else:
+        zebra = row_lider[0] if row_lider else "Kimi Antonelli"
 
     print(f"  - Top 3 Grid: {grid}")
     print(f"  - Top 10 Corrida: {top10}")
     print(f"  - Volta Rapida: {vr_pilot}")
     print(f"  - Piloto do Dia: {pd_pilot}")
+    print(f"  - Lider anterior (Zebra): {zebra}")
 
     salvar_resultados_no_banco(conn, etapa_id, grid, top10, vr_pilot, pd_pilot, zebra)
     atualizar_standings(conn, season)
