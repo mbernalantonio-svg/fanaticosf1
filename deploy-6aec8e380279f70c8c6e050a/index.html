@@ -43,15 +43,16 @@
         /* Header */
         .header {
             background: var(--red);
-            padding: 10px 16px;
+            padding: 12px 16px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             position: sticky;
             top: 0;
             z-index: 100;
             box-shadow: 0 2px 8px rgba(0,0,0,0.4);
         }
+        .header img { width: 32px; height: 32px; border-radius: 6px; }
         .header-title { font-size: 1rem; font-weight: 700; letter-spacing: 1px; }
         .header-sub { font-size: 0.68rem; opacity: 0.85; }
         .header-right { margin-left: auto; font-size: 0.68rem; opacity: 0.8; text-align: right; }
@@ -155,8 +156,9 @@
             min-height: 85vh;
             padding: 24px;
         }
+        .login-screen img { width: 78px; height: 78px; margin-bottom: 20px; border-radius: 14px; }
         .login-screen h2 { font-size: 1.3rem; margin-bottom: 6px; }
-        .login-screen p { color: var(--muted); font-size: 0.82rem; margin-bottom: 24px; text-align: center; }
+        .login-screen p { color: var(--muted); font-size: 0.82rem; margin-bottom: 28px; text-align: center; }
 
         /* Form */
         .form-group { margin-bottom: 14px; }
@@ -425,19 +427,6 @@
             font-size: 0.8rem;
         }
         .cap-pts-row:last-child { border-bottom: none; }
-
-        /* Rodapé de conformidade e transparência anti-phishing */
-        .legal-footer {
-            margin-top: 30px;
-            padding: 20px 14px 40px;
-            text-align: center;
-            font-size: 0.7rem;
-            color: var(--muted);
-            border-top: 1px solid var(--input);
-            line-height: 1.45;
-        }
-        .legal-footer p + p { margin-top: 5px; }
-        .legal-footer a { color: var(--muted); text-decoration: underline; margin: 0 8px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -446,21 +435,10 @@
 <!-- ── LOGIN ── -->
 <div id="screen-login" style="display:none;">
 <div class="login-screen">
-
-<!-- Logotipo Exclusivo: Fanáticos por Fórmula 1 -->
-<svg viewBox="0 0 280 85" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width:240px; width:100%; height:auto; margin-bottom:18px;">
-  <rect x="2" y="2" width="276" height="81" rx="14" fill="#15151E" stroke="#E10600" stroke-width="2.5"/>
-  <path d="M12 70 L42 16 L64 16 L34 70 Z" fill="#E10600" opacity="0.9"/>
-  <path d="M38 70 L58 16 L72 16 L52 70 Z" fill="#F59E0B" opacity="0.95"/>
-  <circle cx="44" cy="43" r="16" stroke="#FFFFFF" stroke-width="2.5" stroke-dasharray="75" stroke-linecap="round"/>
-  <path d="M44 43 L53 34" stroke="#E10600" stroke-width="3" stroke-linecap="round"/>
-  <text x="82" y="39" font-family="'Segoe UI', Roboto, sans-serif" font-size="21" font-weight="900" font-style="italic" fill="#FFFFFF" letter-spacing="1">FANÁTICOS</text>
-  <rect x="82" y="47" width="180" height="20" rx="4" fill="#E10600"/>
-  <text x="90" y="62" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" font-weight="800" font-style="italic" fill="#FFFFFF" letter-spacing="1.8">POR FÓRMULA 1</text>
-</svg>
-
+<!-- Logotipo Próprio Fanáticos por F1 -->
+<img alt="Fanáticos por F1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2315151E'/%3E%3Cpath d='M16 80 L42 20 L62 20 L36 80 Z' fill='%23E10600'/%3E%3Cpath d='M46 80 L66 20 L80 20 L60 80 Z' fill='%23F59E0B'/%3E%3Ctext x='16' y='63' font-family='Arial,sans-serif' font-size='29' font-weight='900' font-style='italic' fill='%23FFFFFF'%3EFP%3C/text%3E%3Ctext x='56' y='63' font-family='Arial,sans-serif' font-size='29' font-weight='900' font-style='italic' fill='%23E10600'%3EF1%3C/text%3E%3C/svg%3E"/>
 <h2>Fanáticos por F1</h2>
-<p>Selecione seu nome e digite sua senha para entrar</p>
+<p>Fanáticos por F1<br/>Selecione seu nome e digite sua senha</p>
 <div style="width:100%; max-width:320px;">
 <div class="form-group">
 <label>Quem é você?</label>
@@ -479,17 +457,12 @@
 <button type="button" class="btn btn-gray" onclick="entrarVisitante()">👀 SOU VISITANTE</button>
 <div class="visitante-info">Navegue pelo bolão sem login. Os nomes dos participantes ficam ocultos e não é possível enviar palpites.</div>
 
-<!-- Bloco de conformidade na tela de login -->
-<div style="margin-top:22px;padding-top:14px;border-top:1px solid var(--input);font-size:0.68rem;color:var(--muted);text-align:center;line-height:1.4;">
-  <p><strong>Aplicação Amadora e Privada</strong></p>
-  <p>Uso estritamente recreativo entre amigos. Sem vínculo com a Formula One Licensing B.V. ou FIA.</p>
-  <p>Não solicitamos dados bancários, cartões ou senhas de serviços externos.</p>
-  <div style="margin-top:6px;">
-    <a href="javascript:void(0)" onclick="alert('Termos de Uso:\nAcesso fechado entre amigos para entretenimento no campeonato 2026. Sem apostas financeiras.');" style="color:var(--muted);text-decoration:underline;margin-right:10px;">Termos</a>
-    <a href="javascript:void(0)" onclick="alert('Privacidade:\nNenhum dado financeiro ou confidencial é coletado. Apenas os palpites para o ranking esportivo.');" style="color:var(--muted);text-decoration:underline;">Privacidade</a>
-  </div>
+<!-- Rodapé de Conformidade no Login -->
+<div style="margin-top:20px;padding-top:12px;border-top:1px solid var(--input);font-size:0.68rem;color:var(--muted);text-align:center;line-height:1.4;">
+  <p><strong>Aplicação Amadora e Recreativa</strong></p>
+  <p>Uso estritamente privado entre amigos. Sem vínculo oficial com a Formula One Licensing B.V. ou FIA.</p>
+  <p>Não solicitamos cartões bancários, dados financeiros ou palavras-passe externas.</p>
 </div>
-
 </div>
 </div>
 </div>
@@ -497,19 +470,8 @@
 <!-- ── TROCAR SENHA (primeiro acesso) ── -->
 <div id="screen-senha" style="display:none;">
 <div class="login-screen">
-
-<!-- Logotipo Exclusivo: Fanáticos por Fórmula 1 -->
-<svg viewBox="0 0 280 85" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width:240px; width:100%; height:auto; margin-bottom:18px;">
-  <rect x="2" y="2" width="276" height="81" rx="14" fill="#15151E" stroke="#E10600" stroke-width="2.5"/>
-  <path d="M12 70 L42 16 L64 16 L34 70 Z" fill="#E10600" opacity="0.9"/>
-  <path d="M38 70 L58 16 L72 16 L52 70 Z" fill="#F59E0B" opacity="0.95"/>
-  <circle cx="44" cy="43" r="16" stroke="#FFFFFF" stroke-width="2.5" stroke-dasharray="75" stroke-linecap="round"/>
-  <path d="M44 43 L53 34" stroke="#E10600" stroke-width="3" stroke-linecap="round"/>
-  <text x="82" y="39" font-family="'Segoe UI', Roboto, sans-serif" font-size="21" font-weight="900" font-style="italic" fill="#FFFFFF" letter-spacing="1">FANÁTICOS</text>
-  <rect x="82" y="47" width="180" height="20" rx="4" fill="#E10600"/>
-  <text x="90" y="62" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" font-weight="800" font-style="italic" fill="#FFFFFF" letter-spacing="1.8">POR FÓRMULA 1</text>
-</svg>
-
+<!-- Logotipo Próprio Fanáticos por F1 -->
+<img alt="Fanáticos por F1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2315151E'/%3E%3Cpath d='M16 80 L42 20 L62 20 L36 80 Z' fill='%23E10600'/%3E%3Cpath d='M46 80 L66 20 L80 20 L60 80 Z' fill='%23F59E0B'/%3E%3Ctext x='16' y='63' font-family='Arial,sans-serif' font-size='29' font-weight='900' font-style='italic' fill='%23FFFFFF'%3EFP%3C/text%3E%3Ctext x='56' y='63' font-family='Arial,sans-serif' font-size='29' font-weight='900' font-style='italic' fill='%23E10600'%3EF1%3C/text%3E%3C/svg%3E"/>
 <h2 id="senha-titulo">Crie sua senha</h2>
 <p id="senha-texto">Este é seu primeiro acesso, <span id="senha-nome"></span>.<br/>Escolha uma senha só sua.</p>
 <div style="width:100%; max-width:320px;">
@@ -531,38 +493,22 @@
 <!-- ── APP ── -->
 <div id="screen-app" style="display:none;">
 <div class="header">
-
-<!-- Emblema Compacto Header: Fanáticos por Fórmula 1 -->
-<svg width="34" height="34" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" style="border-radius:8px; flex-shrink:0;">
-  <rect width="44" height="44" rx="8" fill="#15151E"/>
-  <path d="M6 36 L18 8 L27 8 L15 36 Z" fill="#E10600"/>
-  <path d="M21 36 L30 8 L36 8 L27 36 Z" fill="#F59E0B"/>
-  <text x="6" y="28" font-family="'Segoe UI', sans-serif" font-size="13" font-weight="900" font-style="italic" fill="#FFFFFF">FP</text>
-  <text x="24" y="28" font-family="'Segoe UI', sans-serif" font-size="13" font-weight="900" font-style="italic" fill="#E10600">F1</text>
-</svg>
-
+<!-- Logotipo Compacto no Header -->
+<img alt="Fanáticos por F1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2315151E'/%3E%3Cpath d='M16 80 L42 20 L62 20 L36 80 Z' fill='%23E10600'/%3E%3Cpath d='M46 80 L66 20 L80 20 L60 80 Z' fill='%23F59E0B'/%3E%3Ctext x='16' y='63' font-family='Arial,sans-serif' font-size='29' font-weight='900' font-style='italic' fill='%23FFFFFF'%3EFP%3C/text%3E%3Ctext x='56' y='63' font-family='Arial,sans-serif' font-size='29' font-weight='900' font-style='italic' fill='%23E10600'%3EF1%3C/text%3E%3C/svg%3E"/>
 <div>
-<div class="header-title">FANÁTICOS POR F1</div>
+<div class="header-title">F1 BOLÃO 2026</div>
 <div class="header-sub">Olá, <span id="header-nome">--</span> 👋</div>
 </div>
 <div class="header-right" id="header-atualizado"></div>
 <button type="button" class="btn-sair" id="btn-regulamento" onclick="showTab('regulamento')" title="Regulamento do bolão">📖 Regras</button>
 <button type="button" class="btn-sair" onclick="sair()" title="Sair da conta">Sair ⏻</button>
 </div>
-
 <!-- Tabs -->
 <div class="container" id="tab-palpites" style="display:none;"></div>
 <div class="container" id="tab-ranking" style="display:none;"></div>
 <div class="container" id="tab-etapas" style="display:none;"></div>
 <div class="container" id="tab-capsula" style="display:none;"></div>
 <div class="container" id="tab-regulamento" style="display:none;"></div>
-
-<!-- Rodapé de Conformidade Geral -->
-<div class="legal-footer">
-  <p><strong>Fanáticos por F1 — Bolão Amador</strong></p>
-  <p>Projeto independente sem fins lucrativos ou afiliação oficial com a Formula One Licensing B.V. ou FIA.</p>
-</div>
-
 <nav class="nav-bottom">
 <a class="active" id="nav-palpites" onclick="showTab('palpites')">
 <span class="icon">📝</span>Palpites
@@ -1104,4 +1050,540 @@ function pilotosDaEtapa(etapa) {
 
 // Posições que não podem repetir piloto (PD e VR ficam livres)
 function camposUnicos(sessao) {
-    return sessao ===
+    return sessao === "classificacao"
+        ? ["grid_p1","grid_p2","grid_p3"]
+        : [1,2,3,4,5,6,7,8,9,10].map(i => `corrida_p${i}`);
+}
+// Desabilita, em cada posição, os pilotos já escolhidos nas outras posições
+function atualizarRepetidos() {
+    const sels = camposUnicos(window._sessaoSel)
+        .map(t => document.getElementById(`palp-${t}`)).filter(Boolean);
+    const escolhidos = sels.map(el => el.value);
+    sels.forEach((el, i) => {
+        [...el.options].forEach(o => {
+            if (!o.value) return;
+            const usado = escolhidos.some((v, j) => j !== i && v === o.value);
+            o.disabled = usado;
+            o.textContent = usado ? `${o.value} (já escolhido)` : o.value;
+        });
+    });
+}
+
+function posSelect(pos, tipo, opts) {
+    return `
+        <div class="pos-label"><span class="pos-badge">P${pos}</span></div>
+        <div class="form-group">
+            <select id="palp-${tipo}" onchange="this.classList.remove('campo-erro');atualizarRepetidos()">
+                <option value="">Selecione o piloto</option>${opts}
+            </select>
+        </div>`;
+}
+
+async function enviarPalpites() {
+    if (visitante && !TESTE) { showToast("Visitantes não podem enviar palpites.", true); return; }
+    const etapa  = window._etapaSel;
+    const sessao = window._sessaoSel;
+    if (!etapa || !sessao) { showToast("Selecione uma sessão!", true); return; }
+    const sSel = sessaoSel(etapa, sessao);
+    if (!sSel || new Date() >= inicioSessao(sSel)) {
+        showToast("Prazo encerrado: a sessão já começou.", true);
+        renderPalpites();
+        return;
+    }
+
+    const tipos = sessao === "classificacao"
+        ? ["grid_p1","grid_p2","grid_p3","pd"]
+        : ["corrida_p1","corrida_p2","corrida_p3","corrida_p4","corrida_p5",
+           "corrida_p6","corrida_p7","corrida_p8","corrida_p9","corrida_p10","vr"];
+
+    const faltando = tipos.map(t => document.getElementById(`palp-${t}`)).filter(el => !el || !el.value);
+    if (faltando.length) {
+        faltando.forEach(el => el && el.classList.add("campo-erro"));
+        if (faltando[0]) faltando[0].scrollIntoView({ behavior: "smooth", block: "center" });
+        showToast(`Preencha todos os palpites (falta${faltando.length > 1 ? "m" : ""} ${faltando.length}).`, true);
+        return;
+    }
+
+    const unicos = camposUnicos(sessao)
+        .map(t => document.getElementById(`palp-${t}`)?.value).filter(Boolean);
+    if (new Set(unicos).size !== unicos.length) {
+        showToast("O mesmo piloto não pode ser escolhido em mais de uma posição.", true);
+        return;
+    }
+
+    const palpites = {};
+    tipos.forEach(t => { palpites[t] = document.getElementById(`palp-${t}`).value; });
+
+    const btn = document.querySelector("#form-body .btn-red");
+    btn.disabled = true; btn.textContent = "ENVIANDO...";
+
+    try {
+        let r;
+        if (TESTE) {
+            await new Promise(ok => setTimeout(ok, 400));
+            const atrasado = inicioSessao(sSel) - new Date() < ANTECEDENCIA_LIDER_MIN * 60000;
+            r = { sucesso: true, dt_envio: fmtBRT(new Date()) + " (simulação — nada foi gravado)",
+                  ...(atrasado ? { penalidade_lider: { pontos: sessao === "classificacao" ? 2 : 10, sessao } } : {}) };
+        } else {
+            const resp = await fetch("/api/palpite", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
+                body: JSON.stringify({ participante: usuario, etapa, sessao, palpites })
+            });
+            r = await resp.json();
+        }
+        if (r.sucesso) {
+            const pen = r.penalidade_lider;
+            const penHtml = pen ? `<div class="penalidade">⚠️ <b>Penalidade aplicada: −${pen.pontos} pts.</b><br>
+                Como líder do bolão, você enviou o palpite com menos de ${ANTECEDENCIA_LIDER_MIN} minutos de antecedência
+                do início da ${pen.sessao === "classificacao" ? "classificação" : "corrida"}, conforme o regulamento.</div>` : "";
+            if (pen) showToast(`Penalidade de líder: −${pen.pontos} pts`, true);
+            document.getElementById("tab-palpites").innerHTML = `
+                <div class="card success-screen">
+                    <div class="success-icon">✅</div>
+                    <div class="success-title">Palpites enviados!</div>
+                    <div class="success-sub">
+                        ${Object.keys(palpites).length} palpites registrados<br>
+                        ${etapa} — ${sessao === "classificacao" ? "Classificação" : "Corrida"}<br>
+                        <small style="color:var(--muted);">${r.dt_envio}</small>
+                    </div>
+                    ${penHtml}
+                    <button class="btn btn-red" onclick="irPara('#palpites')">Enviar mais palpites</button>
+                    <button class="btn btn-gray" style="margin-top:10px;" onclick="showTab('ranking')">🏆 Ver ranking</button>
+                </div>`;
+        } else {
+            showToast(r.erro || r.mensagem || "Erro ao enviar", true);
+            btn.disabled = false; btn.textContent = "ENVIANDO PALPITES 🏎️";
+        }
+    } catch(e) {
+        showToast("Erro de conexão. Tente novamente.", true);
+        btn.disabled = false; btn.textContent = "ENVIANDO PALPITES 🏎️";
+    }
+}
+
+// ── RANKING ───────────────────────────────────────────────────────────────────
+async function renderRanking() {
+    loading("tab-ranking");
+    try {
+        const d = await apiFetch("/api/ranking");
+        rankingCache = d;
+        document.getElementById("header-atualizado").textContent = d.atualizado || "";
+
+        const medalhas = {1:"🥇",2:"🥈",3:"🥉"};
+        const rows = d.ranking.map((nome, i) => {
+            const pos  = i + 1;
+            const info = d.dados[nome] || {};
+            const pts  = Math.round(info.total_com_descarte ?? info.total ?? 0);
+            const desc = info.descarte;
+            const descBadge = desc ? `<span class="descarte-badge">↓${Math.round(desc[1])}pt</span>` : "";
+            const m = medalhas[pos] || pos;
+            const eu = nome === usuario ? " 👈" : "";
+            return `<div class="rank-row">
+                <div class="rank-pos">${m}</div>
+                <div class="rank-name">${nome}${eu}${descBadge}</div>
+                <div class="rank-pts">${pts}<span>pts</span></div>
+            </div>`;
+        }).join("");
+
+        // Heatmap
+        const etapas = d.etapas || [];
+        const heatRows = d.ranking.map(nome => {
+            const info = d.dados[nome] || {};
+            const desc_nome = info.descarte ? info.descarte[0] : "";
+            const cells = etapas.map(e => {
+                const v = Math.round(info.pts_por_etapa?.[e] || 0);
+                let cls = "pts-0";
+                if (e === desc_nome) cls = "pts-desc";
+                else if (v > 0 && v <= 8)  cls = "pts-low";
+                else if (v > 8 && v <= 16) cls = "pts-med";
+                else if (v > 16 && v <= 25) cls = "pts-high";
+                else if (v > 25) cls = "pts-top";
+                return `<td class="${cls}">${v > 0 ? v : "-"}</td>`;
+            }).join("");
+            return `<tr><td class="nome">${nome}</td>${cells}<td style="font-weight:700;color:var(--red);">${Math.round(info.total||0)}</td></tr>`;
+        }).join("");
+
+        const heatHeaders = etapas.map(e => `<th>${e.substring(0,4)}</th>`).join("");
+
+        // Acumulado
+        const accRows = d.ranking.map(nome => {
+            const info = d.dados[nome] || {};
+            const cells = (info.acumulado || []).map((v,i,arr) =>
+                `<td style="${i===arr.length-1?'font-weight:700;color:var(--red);':''}">${Math.round(v)}</td>`
+            ).join("");
+            return `<tr><td class="nome">${nome}</td>${cells}</tr>`;
+        }).join("");
+
+        document.getElementById("tab-ranking").innerHTML = `
+            <div class="info-bar">
+                <div><strong>${d.n_etapas}/23</strong> etapas • Última: <strong>${d.ultima||"--"}</strong></div>
+                <div>${d.todas_disp ? '<span class="badge badge-green">Descarte aplicado</span>' : '<span class="badge badge-gray">Descarte no final</span>'}</div>
+            </div>
+            <div class="card">
+                <div class="card-title">🏆 Ranking Atual</div>
+                ${rows}
+            </div>
+            <div class="card">
+                <div class="card-title">📊 Pontos por Etapa</div>
+                <div class="heatmap">
+                    <table>
+                        <thead><tr><th>Piloto</th>${heatHeaders}<th style="color:var(--red);">Total</th></tr></thead>
+                        <tbody>${heatRows}</tbody>
+                    </table>
+                </div>
+                <div style="margin-top:8px;font-size:0.62rem;color:#4B5563;">🔴 Itálico = pior FDS (descarte)</div>
+            </div>
+            <div class="card">
+                <div class="card-title">📈 Evolução Acumulada</div>
+                <div class="heatmap">
+                    <table>
+                        <thead><tr><th>Piloto</th>${heatHeaders}</tr></thead>
+                        <tbody>${accRows}</tbody>
+                    </table>
+                </div>
+            </div>`;
+    } catch(e) {
+        document.getElementById("tab-ranking").innerHTML =
+            `<div class="card" style="text-align:center;padding:30px;color:#DC2626;">
+                ❌ Erro ao carregar ranking
+                <button class="btn btn-gray" style="margin-top:14px;width:auto;padding:8px 20px;" onclick="renderRanking()">Tentar novamente</button>
+            </div>`;
+    }
+}
+
+// ── ETAPAS ────────────────────────────────────────────────────────────────────
+async function renderEtapas() {
+    if (etapaDetalhe) { renderPalpitesEtapa(etapaDetalhe); return; }
+    loading("tab-etapas");
+    try {
+        const d = await apiFetch("/api/etapas_lista");
+        const itens = (d.etapas || []).map(e => `
+            <button class="etapa-btn" onclick="verEtapa('${e.nome}')">
+                <div>
+                    <div class="nome">${e.nome}${e.multiplicador > 1 ? `<span class="etapa-mult">x${e.multiplicador}</span>` : ""}</div>
+                    <div class="info">Vencedor: ${e.vencedor||"—"} | VR: ${e.volta_rapida||"—"}</div>
+                </div>
+                <div class="arrow">›</div>
+            </button>`).join("");
+
+        document.getElementById("tab-etapas").innerHTML = `
+            <div class="info-bar">
+                <div><strong>${(d.etapas||[]).length}</strong> etapas disputadas</div>
+                <div><span class="badge badge-gray">Toque para ver palpites</span></div>
+            </div>
+            <div class="card">
+                <div class="card-title">📋 Etapas Disputadas</div>
+                ${itens || '<div style="color:var(--muted);text-align:center;padding:20px;">Nenhuma etapa ainda</div>'}
+            </div>`;
+    } catch(e) {
+        document.getElementById("tab-etapas").innerHTML =
+            `<div class="card" style="text-align:center;padding:30px;color:#DC2626;">
+                ❌ Erro ao carregar etapas
+                <button class="btn btn-gray" style="margin-top:14px;width:auto;padding:8px 20px;" onclick="renderEtapas()">Tentar novamente</button>
+            </div>`;
+    }
+}
+
+function verEtapa(nome) {
+    irPara("#etapas/" + encodeURIComponent(nome));
+}
+
+async function renderPalpitesEtapa(nome) {
+    loading("tab-etapas");
+    try {
+        const d = await apiFetch(`/api/etapa_detalhe/${encodeURIComponent(nome)}`);
+        const res = d.resultados || {};
+        const pal = d.palpites  || {};
+        const pts = d.pontuacao || {};
+        const participantes = Object.keys(pal).sort();
+
+        // Resultado badges
+        const gridBadges = [1,2,3].map(i => {
+            const p = res[`grid_p${i}`];
+            return p ? `<span class="badge badge-gray">Grid P${i}: ${p}</span>` : "";
+        }).join(" ");
+
+        const corridaBadges = Array.from({length:10},(_,i) => {
+            const p = res[`corrida_p${i+1}`];
+            return p ? `<span class="badge ${i<3?'badge-gold':'badge-gray'}">P${i+1}: ${p}</span>` : "";
+        }).join(" ");
+
+        // Pontuacao
+        const ptsRows = Object.entries(pts).sort((a,b)=>b[1]-a[1]).map(([n,v],i) => `
+            <div class="rank-row">
+                <div class="rank-pos">${i+1}</div>
+                <div class="rank-name">${n}</div>
+                <div class="rank-pts">${Math.round(v)}<span>pts</span></div>
+            </div>`).join("");
+
+        // Tabela palpites grid
+        const gridTipos = ["grid_p1","grid_p2","grid_p3","pd"];
+        const gridLabels = ["P1","P2","P3","🏆 PD"];
+        const gridTable = gridTipos.map((tipo, idx) => {
+            const real = res[tipo] || "";
+            const cells = participantes.map(p => {
+                const v = pal[p]?.[tipo] || "";
+                const cls = v && v === real ? "acerto" : (!v ? "sem-palp" : "erro");
+                return `<td class="${cls}">${v || "—"}</td>`;
+            }).join("");
+            return `<tr><td class="label">${gridLabels[idx]}</td>${cells}<td style="font-weight:700;color:#fff;">${real||"—"}</td></tr>`;
+        }).join("");
+
+        // Tabela palpites corrida
+        const corridaTipos = Array.from({length:10},(_,i)=>`corrida_p${i+1}`).concat(["vr"]);
+        const corridaLabels = Array.from({length:10},(_,i)=>`P${i+1}`).concat(["⚡ VR"]);
+        const corridaTable = corridaTipos.map((tipo, idx) => {
+            const real = res[tipo] || "";
+            const cells = participantes.map(p => {
+                const v = pal[p]?.[tipo] || "";
+                const cls = v && v === real ? "acerto" : (!v ? "sem-palp" : "erro");
+                return `<td class="${cls}">${v || "—"}</td>`;
+            }).join("");
+            return `<tr><td class="label">${corridaLabels[idx]}</td>${cells}<td style="font-weight:700;color:#fff;">${real||"—"}</td></tr>`;
+        }).join("");
+
+        const thParts = participantes.map(p => `<th>${p.substring(0,4)}</th>`).join("");
+
+        document.getElementById("tab-etapas").innerHTML = `
+            <button class="back-btn" onclick="irPara('#etapas')">← Voltar às etapas</button>
+            <div class="card">
+                <div class="card-title">🏁 ${nome}${d.mult>1?`<span class="etapa-mult">x${d.mult}</span>`:""}</div>
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:0.65rem;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Resultado Oficial</div>
+                    <div style="display:flex;gap:5px;flex-wrap:wrap;">${gridBadges}</div>
+                    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;">${corridaBadges}</div>
+                    <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap;">
+                        ${res.pd  ? `<span class="badge badge-green">🏆 PD: ${res.pd}</span>` : ""}
+                        ${res.vr  ? `<span class="badge badge-green">⚡ VR: ${res.vr}</span>` : ""}
+                        ${res.zebra ? `<span class="badge badge-gray">🦓 Zebra: ${res.zebra}</span>` : ""}
+                    </div>
+                </div>
+                <div style="font-size:0.65rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;">Pontuação</div>
+                ${ptsRows}
+            </div>
+            <div class="card">
+                <div class="card-title">📝 Classificação</div>
+                <div style="overflow-x:auto;">
+                    <table class="palpites-table">
+                        <thead><tr><th>Pos</th>${thParts}<th style="color:var(--red);">Real</th></tr></thead>
+                        <tbody>${gridTable}</tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">📝 Corrida</div>
+                <div style="overflow-x:auto;">
+                    <table class="palpites-table">
+                        <thead><tr><th>Pos</th>${thParts}<th style="color:var(--red);">Real</th></tr></thead>
+                        <tbody>${corridaTable}</tbody>
+                    </table>
+                </div>
+            </div>`;
+    } catch(e) {
+        document.getElementById("tab-etapas").innerHTML =
+            `<button class="back-btn" onclick="irPara('#etapas')">← Voltar às etapas</button>
+            <div class="card" style="text-align:center;padding:30px;color:#DC2626;">❌ Erro ao carregar etapa</div>`;
+    }
+}
+
+// ── REGULAMENTO ──────────────────────────────────────────────────────────────
+function renderRegulamento() {
+    const novo = '<span class="reg-novo">NOVIDADE</span>';
+    const item = (txt, v, neg) => `<div class="reg-pts"><span>${txt}</span><span class="v${neg ? " neg" : ""}">${v}</span></div>`;
+    const secao = (n, titulo, corpo) => `<div class="card"><div class="card-title"><span class="reg-num">${n}</span>${titulo}</div>${corpo}</div>`;
+    document.getElementById("tab-regulamento").innerHTML = `
+        <div class="reg-hero">
+            <div class="emoji">📖🏁</div>
+            <h2>REGULAMENTO 2026</h2>
+            <p>Tudo o que você precisa saber para fazer seus palpites</p>
+        </div>
+        ${secao(1, "🚦 Classificação", `
+            <div class="reg-txt"><p>Aposte do <b>P1 ao P3</b> do grid.</p></div>
+            ${item("Cada acerto (P1 a P3)", "+2 pts")}`)}
+        ${secao(2, "🏁 Corrida", `
+            <div class="reg-txt"><p>Aposte do <b>P1 ao P10</b> da corrida.</p></div>
+            ${item("Acerto do P1 ao P5", "+3 pts")}
+            ${item("Acerto do P6 ao P10", "+4 pts")}
+            ${item("⚡ Volta Rápida", "+5 pts")}
+            <div class="reg-destaque">${novo} Este ano <b>não</b> teremos palpites para a corrida <b>Sprint</b>.</div>`)}
+        ${secao(3, "🏆 Piloto do Dia", `
+            <div class="reg-txt"><p>Envie junto com o palpite da <b>classificação</b> do fim de semana.</p></div>
+            ${item("Acerto do Piloto do Dia", "+5 pts")}`)}
+        ${secao(4, "🦓 Zebra", `
+            <div class="reg-txt">
+                <p>Na corrida, se você apostar no P1 em alguém <b>diferente do líder do campeonato</b> e acertar, ganha um bônus, além dos pontos normais do acerto.</p>
+            </div>
+            ${item("Bônus Zebra 🦓", "+10 pts")}
+            <div class="reg-destaque">Na primeira corrida, a zebra vale para quem acertar um vencedor <b>diferente do Norris</b> (atual campeão).</div>`)}
+        ${secao(5, "⏱️ Punições", `
+            <div class="reg-txt"><p>O <b>líder</b> do bolão deve enviar seus palpites até <b>10 minutos antes</b> do horário oficial de início da atividade. Se não cumprir:</p></div>
+            ${item("No treino (classificação)", "−2 pts", true)}
+            ${item("Na corrida", "−10 pts", true)}`)}
+        ${secao(6, "🗑️ Descarte", `
+            <div class="reg-txt"><p>A pontuação do seu <b>pior fim de semana</b> é descartada no total. Um tropeço não define o campeonato!</p></div>`)}
+        ${secao(7, "🔥 Reta Final", `
+            <div class="reg-txt"><p>${novo}</p><p>Chance extra para quem ficou pra trás ao longo do ano!</p></div>
+            ${item("Penúltima etapa", "Pontos x2")}
+            ${item("Última etapa", "Pontos x3")}`)}
+        ${secao(8, "⏳ Cápsula do Tempo", `
+            <div class="reg-txt"><p>Palpites para a <b>classificação final</b> do campeonato.</p></div>
+            <div class="reg-sub">a) 6 primeiros pilotos</div>
+            ${item("Posição exata", "+10 pts")}
+            ${item("Piloto certo, posição trocada", "+5 pts")}
+            <div class="reg-sub">b) 3 primeiras equipes</div>
+            ${item("Posição exata", "+10 pts")}
+            ${item("Equipe certa, posição trocada", "+5 pts")}
+            <div class="reg-sub">c) Melhor do Resto ${novo}</div>
+            ${item("Piloto fora das 4 grandes com mais pontos no fim do ano", "+10 pts")}
+            <div class="reg-sub">d) Piloto GP2 — o pior! ${novo}</div>
+            ${item("Piloto pior classificado no fim do campeonato", "+10 pts")}
+            <div class="reg-destaque">Em caso de empate em pontos, o pior piloto é aquele com a pior performance nas posições de chegada.</div>`)}
+        ${secao(9, "💰 Valor e Premiação", `
+            <div class="reg-txt"><p>Inscrição: <b>R$ 120,00</b> por participante.</p></div>
+            <div class="reg-premio">
+                <div>🥇 Campeão<b>75%</b>do prêmio</div>
+                <div>🥈 Vice<b>25%</b>do prêmio</div>
+            </div>`)}
+        <div style="text-align:center;color:var(--muted);font-size:0.75rem;margin:16px 0 8px;">Boa sorte e bons palpites! 🏎️💨</div>`;
+}
+
+// ── CAPSULA ───────────────────────────────────────────────────────────────────
+async function renderCapsula() {
+    loading("tab-capsula");
+    try {
+        const d = await apiFetch("/api/capsula");
+        const res = d.resultado || {};
+        const pal = d.palpites  || {};
+        const pts = d.pontuacao || {};
+        const participantes = Object.keys(pal).sort();
+
+        // Ranking capsula
+        const rankCap = Object.entries(pts)
+            .sort((a,b) => (b[1].pts_total||0) - (a[1].pts_total||0));
+        const medalhas = {0:"🥇",1:"🥈",2:"🥉"};
+        const rankRows = rankCap.map(([nome, p], i) => `
+            <div class="rank-row">
+                <div class="rank-pos">${medalhas[i]||i+1}</div>
+                <div class="rank-name">${nome}</div>
+                <div class="rank-pts">${Math.round(p.pts_total||0)}<span>pts</span></div>
+            </div>`).join("");
+
+        // Resultado parcial
+        const pilotosRes = (res.pilotos||[]).map((p,i) =>
+            p ? `<div style="padding:4px 0;border-bottom:1px solid var(--input);font-size:0.82rem;">
+                <span style="color:var(--muted);margin-right:6px;">P${i+1}</span><strong>${p}</strong>
+            </div>` : ""
+        ).join("");
+
+        const equipesRes = (res.equipes||[]).map((e,i) =>
+            e ? `<div style="padding:4px 0;border-bottom:1px solid var(--input);font-size:0.82rem;">
+                <span style="color:var(--muted);margin-right:6px;">P${i+1}</span><strong>${e}</strong>
+            </div>` : ""
+        ).join("");
+
+        // Tabela pilotos
+        const thParts = participantes.map(p => `<th>${p.substring(0,4)}</th>`).join("");
+        const pilotosRows = Array.from({length:6},(_,i) => {
+            const cat  = `piloto_p${i+1}`;
+            const real = (res.pilotos||[])[i] || "";
+            const cells = participantes.map(p => {
+                const v = pal[p]?.[cat] || "";
+                const cls = v && v === real ? "acerto" : (!v ? "sem-palp" : "erro");
+                return `<td class="${cls}">${v ? v.split(" ").pop() : "—"}</td>`;
+            }).join("");
+            return `<tr><td class="label">P${i+1}</td>${cells}<td style="font-weight:700;color:#fff;">${real ? real.split(" ").pop() : "—"}</td></tr>`;
+        }).join("");
+
+        const equipesRows = Array.from({length:3},(_,i) => {
+            const cat  = `equipe_p${i+1}`;
+            const real = (res.equipes||[])[i] || "";
+            const cells = participantes.map(p => {
+                const v = pal[p]?.[cat] || "";
+                const cls = v && v === real ? "acerto" : (!v ? "sem-palp" : "erro");
+                return `<td class="${cls}">${v||"—"}</td>`;
+            }).join("");
+            return `<tr><td class="label">P${i+1}</td>${cells}<td style="font-weight:700;color:#fff;">${real||"—"}</td></tr>`;
+        }).join("");
+
+        const realMR  = res.melhor_resto || "";
+        const realGP2 = res.gp2 || "";
+        const mrCells = participantes.map(p => {
+            const v = pal[p]?.melhor_resto || "";
+            const cls = v && v === realMR ? "acerto" : (!v ? "sem-palp" : "erro");
+            return `<td class="${cls}">${v ? v.split(" ").pop() : "—"}</td>`;
+        }).join("");
+        const gp2Cells = participantes.map(p => {
+            const v = pal[p]?.gp2 || "";
+            const cls = v && v === realGP2 ? "acerto" : (!v ? "sem-palp" : "erro");
+            return `<td class="${cls}">${v ? v.split(" ").pop() : "—"}</td>`;
+        }).join("");
+
+        document.getElementById("tab-capsula").innerHTML = `
+            <div class="nota">⚠️ Resultado parcial — pontuação definitiva ao final do campeonato.</div>
+            <div class="card">
+                <div class="card-title">⏳ Pontuação — Cápsula do Tempo</div>
+                ${rankRows}
+            </div>
+            <div class="card">
+                <div class="card-title">📊 Resultado Parcial (F1.com)</div>
+                <div style="font-size:0.65rem;color:var(--red);font-weight:700;margin-bottom:6px;text-transform:uppercase;">🏎️ Top 6 Pilotos</div>
+                ${pilotosRes}
+                <div style="font-size:0.65rem;color:var(--red);font-weight:700;margin:12px 0 6px;text-transform:uppercase;">🏗️ Top 3 Construtores</div>
+                ${equipesRes}
+                <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+                    ${realMR  ? `<div><div style="font-size:0.62rem;color:var(--muted);margin-bottom:3px;">MELHOR DO RESTO</div><span class="badge badge-green">${realMR}</span></div>` : ""}
+                    ${realGP2 ? `<div><div style="font-size:0.62rem;color:var(--muted);margin-bottom:3px;">PILOTO GP2</div><span class="badge badge-red">${realGP2}</span></div>` : ""}
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">📝 Palpites — Pilotos</div>
+                <div style="overflow-x:auto;">
+                    <table class="palpites-table">
+                        <thead><tr><th>Pos</th>${thParts}<th style="color:var(--red);">Real</th></tr></thead>
+                        <tbody>${pilotosRows}</tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">📝 Palpites — Construtores</div>
+                <div style="overflow-x:auto;">
+                    <table class="palpites-table">
+                        <thead><tr><th>Pos</th>${thParts}<th style="color:var(--red);">Real</th></tr></thead>
+                        <tbody>${equipesRows}</tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">📝 Melhor do Resto & GP2</div>
+                <div style="overflow-x:auto;">
+                    <table class="palpites-table">
+                        <thead><tr><th>Item</th>${thParts}<th style="color:var(--red);">Real</th></tr></thead>
+                        <tbody>
+                            <tr><td class="label">Melhor Resto</td>${mrCells}<td style="font-weight:700;color:#fff;">${realMR ? realMR.split(" ").pop() : "—"}</td></tr>
+                            <tr><td class="label">GP2</td>${gp2Cells}<td style="font-weight:700;color:#fff;">${realGP2 ? realGP2.split(" ").pop() : "—"}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+    } catch(e) {
+        document.getElementById("tab-capsula").innerHTML =
+            `<div class="card" style="text-align:center;padding:30px;color:#DC2626;">
+                ❌ Erro ao carregar cápsula
+                <button class="btn btn-gray" style="margin-top:14px;width:auto;padding:8px 20px;" onclick="renderCapsula()">Tentar novamente</button>
+            </div>`;
+    }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, error=false) {
+    const el = document.getElementById("toast");
+    el.textContent = msg;
+    el.className = `toast ${error?"error":""} show`;
+    setTimeout(() => el.classList.remove("show"), 3000);
+}
+
+// ── Start ─────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
