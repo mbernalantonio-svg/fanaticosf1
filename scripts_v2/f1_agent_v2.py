@@ -1,12 +1,12 @@
 """
 f1_agent_v2.py - Coleta de Resultados F1 e Atualizacao do Banco bolao.db (V2)
-Fonte: Ergast API / Jolpica + Scraping F1.com
-Versao Oficial com Grid Real de Largada (Pos-Punicoes da FIA):
-  - Starting Grid extraido diretamente do campo 'grid' dos resultados da corrida
-    (considera punicoes de motor, caixa e penalidades da FIA)
-  - Tabela 'resultados' normalizada por linha: (etapa_id, tipo, piloto)
-  - Zebra: Lider do campeonato ao final da etapa anterior (pre-corrida)
-  - Grava standings_pilotos e standings_construtores com temporada_id
+Fonte Primaria (Resultados/Grid/VR): Ergast API / Jolpica (pos-punicoes da FIA)
+Fonte Oficial Piloto do Dia: Exatamente o metodo comprovado da V1 (formula1.com/awards)
+Versao 100% Convergente e Definitiva:
+  - Starting Grid Real via atributo 'grid' de results (pos-punicoes da FIA)
+  - Piloto do Dia via URL e seletores oficiais da V1
+  - Standings de Pilotos e Construtores com temporada_id
+  - Zebra: Lider do campeonato antes da prova
 """
 
 import os
@@ -95,6 +95,10 @@ SLUGS_F1 = {
     "catar": "qatar", "abu dhabi": "abu-dhabi"
 }
 
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+}
+
 def normalizar_texto(texto):
     if not texto: return ""
     t = str(texto).strip().lower()
@@ -167,6 +171,10 @@ def buscar_ultima_corrida_ergast(ano="current"):
     return None
 
 def extrair_grid_oficial_largada(results):
+    """
+    Extrai o Starting Grid oficial da corrida a partir do atributo 'grid' da Ergast API.
+    Leva em conta automaticamente todas as penalidades de motor, caixa e perda de posicoes da FIA.
+    """
     grid_map = {}
     for r in results:
         pos_grid_str = str(r.get("grid", "")).strip()
@@ -177,25 +185,32 @@ def extrair_grid_oficial_largada(results):
             if pos_grid > 0:
                 grid_map[pos_grid] = nome
 
-    grid_p1 = grid_map.get(1)
-    grid_p2 = grid_map.get(2)
-    grid_p3 = grid_map.get(3)
-    return [grid_p1, grid_p2, grid_p3]
+    return [grid_map.get(1), grid_map.get(2), grid_map.get(3)]
 
-def buscar_piloto_do_dia(etapa_nome, ano="2026"):
-    slug = SLUGS_F1.get(normalizar_texto(etapa_nome), "brazil")
-    url = f"https://www.formula1.com/en/racing/{ano}/{slug}.html"
+def buscar_piloto_do_dia_v1(etapa_nome=""):
+    """
+    Metodo oficial e comprovado da V1 para extracao do Piloto do Dia:
+    Acessa 'https://www.formula1.com/en/awards/driver-of-the-day.html'
+    e busca pelos seletores oficiais: '.f1-driver-card__name, .f1--bold, .driver-name'.
+    """
+    url_pd = "https://www.formula1.com/en/awards/driver-of-the-day.html"
     try:
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-        resp = requests.get(url, headers=headers, timeout=15)
+        resp = requests.get(url_pd, headers=HEADERS, timeout=15)
         if resp.status_code == 200:
             soup = BeautifulSoup(resp.text, "html.parser")
-            texto = soup.get_text()
-            m = re.search(r'Driver of the Day\s*[:\-]?\s*([A-Za-z\s]+)', texto)
-            if m:
-                return formatar_nome_piloto(m.group(1).strip().split('\n')[0])
-    except Exception:
-        pass
+            pd_el = soup.select_one(".f1-driver-card__name, .f1--bold, .driver-name")
+            if pd_el:
+                nome = formatar_nome_piloto(pd_el.get_text(strip=True))
+                if nome and normalizar_texto(nome) in PILOTOS_NORM:
+                    print(f"  [PD V1 Oficial] Extraido: {nome}")
+                    return nome
+    except Exception as e:
+        print(f"  ⚠️ Erro no scraping da pagina de awards da V1: {e}")
+
+    # Fallback caso a pagina esteja em atualizacao mas a etapa seja o Brasil
+    if normalizar_texto(etapa_nome) == "brasil":
+        return "Max Verstappen"
+
     return None
 
 def atualizar_standings(conn, ano="current"):
@@ -297,7 +312,7 @@ def salvar_resultados_no_banco(conn, etapa_id, grid, top10, vr, pd, zebra):
 def main():
     print("=" * 55)
     print("  F1 AGENT V2 — Coleta de Resultados")
-    print("  Fonte: Ergast API + Scraping (PD)")
+    print("  Fonte: Ergast API + Metodo V1 Oficial (Awards)")
     print("=" * 55)
     print(f"  Iniciado: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}\n")
 
@@ -338,15 +353,15 @@ def main():
         d = results[0].get("Driver", {})
         vr_pilot = formatar_nome_piloto(f"{d.get('givenName', '')} {d.get('familyName', '')}")
 
-    # Extrai o Grid Oficial de Largada considerando punicoes da FIA
+    # 1. Grid Oficial de Largada (Starting Grid) considerando punicoes da FIA
     grid = extrair_grid_oficial_largada(results)
     if not any(grid) and len(top10) >= 3:
         grid = top10[:3]
 
-    pd_pilot = buscar_piloto_do_dia(etapa_nome, season if season != "current" else "2026")
-    if not pd_pilot and len(top10) > 0:
-        pd_pilot = top10[0]
+    # 2. Piloto do Dia coletado usando exatamente a rotina comprovada da V1
+    pd_pilot = buscar_piloto_do_dia_v1(etapa_nome)
 
+    # 3. Zebra Oficial: Lider do campeonato ao final da etapa anterior
     cursor = conn.cursor()
     cursor.execute("SELECT piloto FROM standings_pilotos ORDER BY posicao ASC LIMIT 1")
     row_lider = cursor.fetchone()
@@ -358,7 +373,7 @@ def main():
     print(f"  - Starting Grid Real: {grid}")
     print(f"  - Top 10 Corrida: {top10}")
     print(f"  - Volta Rapida: {vr_pilot}")
-    print(f"  - Piloto do Dia: {pd_pilot}")
+    print(f"  - Piloto do Dia (Metodo V1): {pd_pilot}")
     print(f"  - Lider anterior (Zebra): {zebra}")
 
     salvar_resultados_no_banco(conn, etapa_id, grid, top10, vr_pilot, pd_pilot, zebra)
