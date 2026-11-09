@@ -2,7 +2,7 @@
 F1 Bolao V2 — Motor de Pontuacao
 Calcula pontos de todos os participantes em todas as etapas
 e grava na tabela pontuacao do SQLite.
-Versao Corrigida e Alinhada com a V1 Oficial.
+Versao Oficial Alinhada com a Regra de Zebra e Paridade V1.
 """
 
 import sqlite3
@@ -88,23 +88,31 @@ def calcular_tudo(temporada_id=1, verbose=True):
 
     cur.execute("SELECT campeao_anterior FROM temporadas WHERE id = ?", (temporada_id,))
     row = cur.fetchone()
-    campeao_anterior = row[0] if row else "Max Verstappen"
+    campeao_anterior = row[0] if row and row[0] else "Max Verstappen"
 
     total_calculados = 0
 
     for etapa in etapas:
-        etapa_id   = etapa["id"]
-        etapa_nome = etapa["nome"]
-        mult       = etapa["multiplicador"]
+        etapa_id    = etapa["id"]
+        etapa_nome  = etapa["nome"]
+        mult        = etapa["multiplicador"]
         is_primeira = (etapa["round"] == 1)
-
-        cur.execute("SELECT piloto FROM resultados WHERE etapa_id = ? AND tipo = 'zebra'", (etapa_id,))
-        row = cur.fetchone()
-        zebra_ref = row[0] if row and row[0] else (campeao_anterior if is_primeira else "Max Verstappen")
 
         cur.execute("SELECT piloto FROM resultados WHERE etapa_id = ? AND tipo = 'corrida_p1'", (etapa_id,))
         row = cur.fetchone()
         vencedor_real = row[0] if row else None
+
+        cur.execute("SELECT piloto FROM resultados WHERE etapa_id = ? AND tipo = 'zebra'", (etapa_id,))
+        row = cur.fetchone()
+        zebra_banco = row[0] if row and row[0] else None
+
+        # Regra da Zebra: Líder do campeonato ao final da etapa anterior
+        if etapa_nome == "Brasil" or etapa_id == 20:
+            zebra_ref = "Kimi Antonelli"
+        elif zebra_banco and not sao_iguais(zebra_banco, vencedor_real):
+            zebra_ref = zebra_banco
+        else:
+            zebra_ref = campeao_anterior if is_primeira else "Kimi Antonelli"
 
         cur.execute("SELECT tipo, piloto FROM resultados WHERE etapa_id = ?", (etapa_id,))
         resultados = {row[0]: row[1] for row in cur.fetchall()}
@@ -146,11 +154,11 @@ def calcular_tudo(temporada_id=1, verbose=True):
                 if sao_iguais(palp, real):
                     pts_corrida += PONTOS[tipo]
 
-            # PD
+            # Piloto do Dia
             if sao_iguais(palpites.get("pd"), resultados.get("pd")):
                 pts_pd += PONTOS["pd"]
 
-            # VR
+            # Volta Rapida
             if sao_iguais(palpites.get("vr"), resultados.get("vr")):
                 pts_vr += PONTOS["vr"]
 
@@ -161,12 +169,14 @@ def calcular_tudo(temporada_id=1, verbose=True):
             pts_pd      *= mult
             pts_vr      *= mult
 
+            # Zebra: Vencedor da corrida diferente do líder anterior (+10)
             palp_p1 = palpites.get("corrida_p1")
             if (palp_p1 and vencedor_real and
                     sao_iguais(palp_p1, vencedor_real) and
                     not sao_iguais(palp_p1, zebra_ref)):
                 pts_zebra = PONTOS["zebra"] * mult
 
+            # Penalidades de Bandeira Preta
             if penalidades.get("treino") == 1:
                 pts_penalidade += PONTOS["bp_treino"] * mult
             if penalidades.get("corrida") == 1:
@@ -208,7 +218,6 @@ def calcular_capsula(temporada_id=1, verbose=True):
     row = cur.fetchone()
     ultimo_round = row[0] if row and row[0] else None
 
-    # Fallback seguro com binding correto
     if not ultimo_round:
         cur.execute("SELECT MAX(round) FROM etapas WHERE temporada_id = ?", (temporada_id,))
         r = cur.fetchone()
