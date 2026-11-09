@@ -2,7 +2,7 @@
 F1 Bolao V2 — Motor de Pontuacao
 Calcula pontos de todos os participantes em todas as etapas
 e grava na tabela pontuacao do SQLite.
-Versao Oficial Alinhada com a Regra de Zebra e Paridade V1.
+Versao com Matriz de Auditoria Etapa a Etapa.
 """
 
 import sqlite3
@@ -106,7 +106,6 @@ def calcular_tudo(temporada_id=1, verbose=True):
         row = cur.fetchone()
         zebra_banco = row[0] if row and row[0] else None
 
-        # Regra da Zebra: Líder do campeonato ao final da etapa anterior
         if etapa_nome == "Brasil" or etapa_id == 20:
             zebra_ref = "Kimi Antonelli"
         elif zebra_banco and not sao_iguais(zebra_banco, vencedor_real):
@@ -140,43 +139,36 @@ def calcular_tudo(temporada_id=1, verbose=True):
             pts_zebra      = 0
             pts_penalidade = 0
 
-            # Grid P1-P3
             for tipo in ["grid_p1", "grid_p2", "grid_p3"]:
                 palp = palpites.get(tipo)
                 real = resultados.get(tipo)
                 if sao_iguais(palp, real):
                     pts_grid += PONTOS[tipo]
 
-            # Corrida P1-P10
             for tipo in [f"corrida_p{i}" for i in range(1, 11)]:
                 palp = palpites.get(tipo)
                 real = resultados.get(tipo)
                 if sao_iguais(palp, real):
                     pts_corrida += PONTOS[tipo]
 
-            # Piloto do Dia
             if sao_iguais(palpites.get("pd"), resultados.get("pd")):
                 pts_pd += PONTOS["pd"]
 
-            # Volta Rapida
             if sao_iguais(palpites.get("vr"), resultados.get("vr")):
                 pts_vr += PONTOS["vr"]
 
             subtotal = pts_grid + pts_corrida + pts_pd + pts_vr
-
             pts_grid    *= mult
             pts_corrida *= mult
             pts_pd      *= mult
             pts_vr      *= mult
 
-            # Zebra: Vencedor da corrida diferente do líder anterior (+10)
             palp_p1 = palpites.get("corrida_p1")
             if (palp_p1 and vencedor_real and
                     sao_iguais(palp_p1, vencedor_real) and
                     not sao_iguais(palp_p1, zebra_ref)):
                 pts_zebra = PONTOS["zebra"] * mult
 
-            # Penalidades de Bandeira Preta
             if penalidades.get("treino") == 1:
                 pts_penalidade += PONTOS["bp_treino"] * mult
             if penalidades.get("corrida") == 1:
@@ -197,9 +189,7 @@ def calcular_tudo(temporada_id=1, verbose=True):
 
     conn.commit()
     if verbose:
-        print(f"  ✅ {total_calculados} registros de pontuacao calculados")
-        print()
-
+        print(f"  ✅ {total_calculados} registros de pontuacao calculados\n")
     conn.close()
     return total_calculados
 
@@ -212,9 +202,7 @@ def calcular_capsula(temporada_id=1, verbose=True):
     if verbose:
         print("  Calculando Capsula do Tempo...")
 
-    cur.execute("""
-        SELECT MAX(round) FROM standings_pilotos WHERE temporada_id = ?
-    """, (temporada_id,))
+    cur.execute("SELECT MAX(round) FROM standings_pilotos WHERE temporada_id = ?", (temporada_id,))
     row = cur.fetchone()
     ultimo_round = row[0] if row and row[0] else None
 
@@ -223,37 +211,21 @@ def calcular_capsula(temporada_id=1, verbose=True):
         r = cur.fetchone()
         ultimo_round = r[0] if r and r[0] else 20
 
-    cur.execute("""
-        SELECT posicao, piloto FROM standings_pilotos
-        WHERE temporada_id = ?
-        ORDER BY posicao
-    """, (temporada_id,))
+    cur.execute("SELECT posicao, piloto FROM standings_pilotos WHERE temporada_id = ? ORDER BY posicao", (temporada_id,))
     stand_pilotos = {row[0]: row[1] for row in cur.fetchall()}
 
-    cur.execute("""
-        SELECT posicao, equipe FROM standings_construtores
-        WHERE temporada_id = ?
-        ORDER BY posicao
-    """, (temporada_id,))
+    cur.execute("SELECT posicao, equipe FROM standings_construtores WHERE temporada_id = ? ORDER BY posicao", (temporada_id,))
     stand_construtores = {row[0]: row[1] for row in cur.fetchall()}
 
     QUATRO_GRANDES = {"Mercedes", "Ferrari", "McLaren", "Red Bull", "Red Bull Racing"}
-    cur.execute("""
-        SELECT piloto, equipe FROM standings_pilotos
-        WHERE temporada_id = ?
-        ORDER BY posicao
-    """, (temporada_id,))
+    cur.execute("SELECT piloto, equipe FROM standings_pilotos WHERE temporada_id = ? ORDER BY posicao", (temporada_id,))
     melhor_resto = None
     for row in cur.fetchall():
         if row[1] not in QUATRO_GRANDES:
             melhor_resto = row[0]
             break
 
-    cur.execute("""
-        SELECT piloto FROM standings_pilotos
-        WHERE temporada_id = ?
-        ORDER BY posicao DESC LIMIT 1
-    """, (temporada_id,))
+    cur.execute("SELECT piloto FROM standings_pilotos WHERE temporada_id = ? ORDER BY posicao DESC LIMIT 1", (temporada_id,))
     row = cur.fetchone()
     gp2 = row[0] if row else None
 
@@ -263,10 +235,7 @@ def calcular_capsula(temporada_id=1, verbose=True):
     for part in participantes:
         part_id = part["id"]
 
-        cur.execute("""
-            SELECT categoria, valor FROM capsula
-            WHERE temporada_id = ? AND participante_id = ?
-        """, (temporada_id, part_id))
+        cur.execute("SELECT categoria, valor FROM capsula WHERE temporada_id = ? AND participante_id = ?", (temporada_id, part_id))
         palpites_cap = {row[0]: row[1] for row in cur.fetchall()}
 
         pts_pilotos_exato   = 0
@@ -321,7 +290,59 @@ def calcular_capsula(temporada_id=1, verbose=True):
     conn.commit()
     conn.close()
     if verbose:
-        print(f"  ✅ Capsula calculada!")
+        print("  ✅ Capsula calculada!")
+
+
+def imprimir_comparativo_detalhado(temporada_id=1):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT e.round, e.nome as etapa, p.nome as participante, pt.pts_total
+        FROM pontuacao pt
+        JOIN participantes p ON p.id = pt.participante_id
+        JOIN etapas e ON e.id = pt.etapa_id
+        WHERE e.temporada_id = ?
+        ORDER BY e.round, p.nome
+    """, (temporada_id,))
+    rows = cur.fetchall()
+
+    matriz = {}
+    etapas = []
+    participantes = set()
+    for r in rows:
+        etapa = f"{r['round']:02d}. {r['etapa']}"
+        part = r['participante']
+        if etapa not in etapas:
+            etapas.append(etapa)
+        participantes.add(part)
+        if part not in matriz:
+            matriz[part] = {}
+        matriz[part][etapa] = r['pts_total']
+
+    parts_ordenados = sorted(list(participantes))
+    print("\n" + "=" * 90)
+    print("  MATRIZ DE PONTOS POR ETAPA (V2)")
+    print("=" * 90)
+    header = f"{'Etapa':18s} | " + " | ".join(f"{p:7s}" for p in parts_ordenados)
+    print(header)
+    print("-" * len(header))
+
+    totais = {p: 0 for p in parts_ordenados}
+    for e in etapas:
+        linha = f"{e:18s} | "
+        for p in parts_ordenados:
+            pts = matriz.get(p, {}).get(e, 0.0)
+            totais[p] += pts
+            linha += f"{pts:7.1f} | "
+        print(linha)
+
+    print("-" * len(header))
+    linha_tot = f"{'TOTAL ACUMULADO':18s} | " + " | ".join(f"{totais[p]:7.1f}" for p in parts_ordenados)
+    print(linha_tot)
+    print("=" * 90 + "\n")
+    conn.close()
 
 
 def get_ranking(temporada_id=1):
@@ -381,7 +402,6 @@ def get_ranking(temporada_id=1):
     ranking = sorted(dados.items(),
                      key=lambda x: x[1].get("total_com_descarte", x[1]["total"]),
                      reverse=True)
-
     conn.close()
 
     return {
@@ -397,9 +417,9 @@ def get_ranking(temporada_id=1):
 def run(temporada_id=1):
     calcular_tudo(temporada_id, verbose=True)
     calcular_capsula(temporada_id, verbose=True)
+    imprimir_comparativo_detalhado(temporada_id)
 
     dados = get_ranking(temporada_id)
-    print()
     print("=== RANKING ATUAL ===")
     medalhas = {1:"🥇", 2:"🥈", 3:"🥉"}
     for i, nome in enumerate(dados["ranking"], 1):
@@ -409,8 +429,7 @@ def run(temporada_id=1):
         m = medalhas.get(i, f"{i}.")
         print(f"  {m} {nome:10} {total:4} pts | descarte: {desc[0]} ({desc[1]}pt)")
 
-    print()
-    print(f"  Etapas: {dados['n_etapas']}/23")
+    print(f"\n  Etapas: {dados['n_etapas']}/23")
     print(f"  {'Descarte APLICADO' if dados['todas_disp'] else 'Descarte sera aplicado ao final'}")
 
     conn = sqlite3.connect(DB_PATH)
