@@ -1,0 +1,37 @@
+name: Apuracao e Sincronizacao F1 Bolao V2
+
+on:
+  # Permite disparar manualmente pelo botão "Run workflow" (igual ao automacao-web)
+  workflow_dispatch:
+
+  # Agendamento automático todo domingo às 23:00 UTC (20:00 Horário de Brasília)
+  schedule:
+    - cron: '0 23 * * 0'
+
+jobs:
+  apuracao:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'deploy-6aec8e380279f70c8c6e050a/package-lock.json'
+
+      - name: Instalar Dependências
+        working-directory: ./deploy-6aec8e380279f70c8c6e050a
+        run: npm ci
+
+      - name: Executar Apuração / Sincronização V2
+        working-directory: ./deploy-6aec8e380279f70c8c6e050a
+        env:
+          # Se sua V2 usar banco Neon/Postgres ou variáveis de ambiente, configure em Secrets
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          npm run build
+          # Se houver script de processamento dedicado no package.json, ex: npm run processar
