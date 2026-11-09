@@ -19,17 +19,20 @@
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
         :root {
-            --red:    #E10600;
-            --dark:   #15151E;
-            --card:   #1F2937;
-            --input:  #374151;
-            --border: #4B5563;
-            --text:   #F9FAFB;
-            --muted:  #9CA3AF;
-            --green:  #16A34A;
-            --gold:   #F59E0B;
-            --stripe: #F9FAFB;
-            --badge-space: max(64px, env(safe-area-inset-bottom));
+            --red:          #E10600;
+            --dark:         #15151E;
+            --card:         #1F2937;
+            --input:        #374151;
+            --border:       #4B5563;
+            --text:         #F9FAFB;
+            --muted:        #9CA3AF;
+            --green:        #16A34A;
+            --gold:         #F59E0B;
+            --stripe:       #F9FAFB;
+            --senna-yellow: #FED100;
+            --senna-blue:   #002776;
+            --senna-green:  #009B3A;
+            --badge-space:  max(64px, env(safe-area-inset-bottom));
         }
 
         body {
@@ -46,15 +49,28 @@
             padding: 12px 16px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             position: sticky;
             top: 0;
             z-index: 100;
             box-shadow: 0 2px 8px rgba(0,0,0,0.4);
         }
-        .header img { width: 32px; height: 32px; border-radius: 6px; }
-        .header-title { font-size: 1rem; font-weight: 700; letter-spacing: 1px; }
-        .header-sub { font-size: 0.68rem; opacity: 0.85; }
+        .header img {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            border: 1.5px solid rgba(255,255,255,0.2);
+        }
+        .header-title {
+            font-size: 1rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            font-style: italic;
+            color: var(--senna-yellow);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+        }
+        .header-sub { font-size: 0.68rem; opacity: 0.9; }
         .header-right { margin-left: auto; font-size: 0.68rem; opacity: 0.8; text-align: right; }
         .btn-sair {
             background: rgba(0,0,0,0.25);
@@ -156,9 +172,23 @@
             min-height: 85vh;
             padding: 24px;
         }
-        .login-screen img { width: 78px; height: 78px; margin-bottom: 20px; border-radius: 14px; }
-        .login-screen h2 { font-size: 1.3rem; margin-bottom: 6px; }
-        .login-screen p { color: var(--muted); font-size: 0.82rem; margin-bottom: 28px; text-align: center; }
+        .login-screen img {
+            width: 86px;
+            height: 86px;
+            margin-bottom: 18px;
+            border-radius: 20px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+        }
+        .login-screen h2 {
+            font-size: 1.45rem;
+            font-weight: 900;
+            font-style: italic;
+            letter-spacing: 1.5px;
+            margin-bottom: 4px;
+            color: var(--senna-yellow);
+            text-shadow: 1px 2px 4px rgba(0,0,0,0.6);
+        }
+        .login-screen p { color: var(--muted); font-size: 0.82rem; margin-bottom: 26px; text-align: center; }
 
         /* Form */
         .form-group { margin-bottom: 14px; }
@@ -435,8 +465,8 @@
 <!-- ── LOGIN ── -->
 <div id="screen-login" style="display:none;">
 <div class="login-screen">
-<!-- Logotipo Próprio Fanáticos por F1 -->
-<img alt="Fanáticos por F1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2315151E'/%3E%3Cpath d='M16 80 L42 20 L62 20 L36 80 Z' fill='%23E10600'/%3E%3Cpath d='M46 80 L66 20 L80 20 L60 80 Z' fill='%23F59E0B'/%3E%3Ctext x='16' y='63' font-family='Arial,sans-serif' font-size='29' font-weight='900' font-style='italic' fill='%23FFFFFF'%3EFP%3C/text%3E%3Ctext x='56' y='63' font-family='Arial,sans-serif' font-size='29' font-weight='900' font-style='italic' fill='%23E10600'%3EF1%3C/text%3E%3C/svg%3E"/>
+<!-- Logotipo Tema Capacete Ayrton Senna -->
+<img alt="Fanáticos por F1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FED100'/%3E%3Cpath d='M0 36 L100 22 L100 36 L0 50 Z' fill='%23002776'/%3E%3Cpath d='M0 54 L100 40 L100 53 L0 67 Z' fill='%23009B3A'/%3E%3Ctext x='50' y='88' text-anchor='middle' font-family='Arial,sans-serif' font-size='23' font-weight='900' font-style='italic' fill='%2315151E' letter-spacing='1.5'%3EFPF1%3C/text%3E%3Ccircle cx='50' cy='20' r='5' fill='%23002776'/%3E%3C/svg%3E"/>
 <h2>Fanáticos por F1</h2>
 <p>Fanáticos por F1<br/>Selecione seu nome e digite sua senha</p>
 <div style="width:100%; max-width:320px;">
@@ -470,8 +500,8 @@
 <!-- ── TROCAR SENHA (primeiro acesso) ── -->
 <div id="screen-senha" style="display:none;">
 <div class="login-screen">
-<!-- Logotipo Próprio Fanáticos por F1 -->
-<img alt="Fanáticos por F1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2315151E'/%3E%3Cpath d='M16 80 L42 20 L62 20 L36 80 Z' fill='%23E10600'/%3E%3Cpath d='M46 80 L66 20 L80 20 L60 80 Z' fill='%23F59E0B'/%3E%3Ctext x='16' y='63' font-family='Arial,sans-serif' font-size='29' font-weight='900' font-style='italic' fill='%23FFFFFF'%3EFP%3C/text%3E%3Ctext x='56' y='63' font-family='Arial,sans-serif' font-size='29' font-weight='900' font-style='italic' fill='%23E10600'%3EF1%3C/text%3E%3C/svg%3E"/>
+<!-- Logotipo Tema Capacete Ayrton Senna -->
+<img alt="Fanáticos por F1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FED100'/%3E%3Cpath d='M0 36 L100 22 L100 36 L0 50 Z' fill='%23002776'/%3E%3Cpath d='M0 54 L100 40 L100 53 L0 67 Z' fill='%23009B3A'/%3E%3Ctext x='50' y='88' text-anchor='middle' font-family='Arial,sans-serif' font-size='23' font-weight='900' font-style='italic' fill='%2315151E' letter-spacing='1.5'%3EFPF1%3C/text%3E%3Ccircle cx='50' cy='20' r='5' fill='%23002776'/%3E%3C/svg%3E"/>
 <h2 id="senha-titulo">Crie sua senha</h2>
 <p id="senha-texto">Este é seu primeiro acesso, <span id="senha-nome"></span>.<br/>Escolha uma senha só sua.</p>
 <div style="width:100%; max-width:320px;">
@@ -493,10 +523,10 @@
 <!-- ── APP ── -->
 <div id="screen-app" style="display:none;">
 <div class="header">
-<!-- Logotipo Compacto no Header -->
-<img alt="Fanáticos por F1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2315151E'/%3E%3Cpath d='M16 80 L42 20 L62 20 L36 80 Z' fill='%23E10600'/%3E%3Cpath d='M46 80 L66 20 L80 20 L60 80 Z' fill='%23F59E0B'/%3E%3Ctext x='16' y='63' font-family='Arial,sans-serif' font-size='29' font-weight='900' font-style='italic' fill='%23FFFFFF'%3EFP%3C/text%3E%3Ctext x='56' y='63' font-family='Arial,sans-serif' font-size='29' font-weight='900' font-style='italic' fill='%23E10600'%3EF1%3C/text%3E%3C/svg%3E"/>
+<!-- Logotipo Compacto Tema Capacete Senna no Header -->
+<img alt="Fanáticos por F1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FED100'/%3E%3Cpath d='M0 36 L100 22 L100 36 L0 50 Z' fill='%23002776'/%3E%3Cpath d='M0 54 L100 40 L100 53 L0 67 Z' fill='%23009B3A'/%3E%3Ctext x='50' y='88' text-anchor='middle' font-family='Arial,sans-serif' font-size='23' font-weight='900' font-style='italic' fill='%2315151E' letter-spacing='1.5'%3EFPF1%3C/text%3E%3Ccircle cx='50' cy='20' r='5' fill='%23002776'/%3E%3C/svg%3E"/>
 <div>
-<div class="header-title">F1 BOLÃO 2026</div>
+<div class="header-title">FANÁTICOS POR F1</div>
 <div class="header-sub">Olá, <span id="header-nome">--</span> 👋</div>
 </div>
 <div class="header-right" id="header-atualizado"></div>
@@ -540,8 +570,6 @@ let apelidos      = null;  // nome real -> apelido (só no modo visitante)
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 // ── Modo de teste do líder ───────────────────────────────────────────────────
-// Abra o app com ?teste=lider para simular os avisos do líder sem entrar na conta dele.
-// Nesse modo você é tratado como líder, aparece uma etapa fictícia "🧪 Teste" e NADA é gravado.
 (function () {
     const q = new URLSearchParams(location.search).get("teste");
     if (q === "lider") sessionStorage.setItem("f1bolao_teste", "lider");
@@ -559,7 +587,6 @@ function fmtBRT(d) {
 }
 
 async function init() {
-    // Sessão só dura enquanto a aba estiver aberta: ao fechar, é preciso logar de novo.
     localStorage.removeItem("f1bolao_usuario");
     localStorage.removeItem("f1bolao_senha_ok");
     const saved = sessionStorage.getItem("f1bolao_usuario");
@@ -588,9 +615,8 @@ async function carregarNomes() {
     } catch(e) {}
 }
 
-// Login e troca de senha são verificados no servidor (/api/auth/*)
-let senhaAtual = ""; // guardada só em memória até a troca de senha
-let modoTroca  = "primeiro"; // "primeiro" (primeiro acesso) ou "voluntario" (pela tela de login)
+let senhaAtual = "";
+let modoTroca  = "primeiro";
 
 async function authPost(acao, body) {
     const r = await fetch(`/api/auth/${acao}`, {
@@ -655,7 +681,6 @@ function abrirTelaSenha(modo) {
     document.getElementById("nova-senha").focus();
 }
 
-// Troca de senha a pedido do usuário, a partir da tela de login
 async function iniciarTrocaSenha() {
     const sel   = document.getElementById("login-select");
     const senha = document.getElementById("login-senha").value;
@@ -673,7 +698,6 @@ async function iniciarTrocaSenha() {
     }
 }
 
-// ── Modo visitante ───────────────────────────────────────────────────────────
 function entrarVisitante() {
     mostrarErro("login-erro", "");
     visitante = true;
@@ -684,7 +708,6 @@ function entrarVisitante() {
     mostrarApp();
 }
 
-// Cria apelidos (Fã A, Fã B, ...) em ordem embaralhada, para não revelar quem é quem
 async function garantirApelidos() {
     if (apelidos) return;
     const r = await fetch(API_URL + "/api/ranking", { headers: { "X-API-Key": API_KEY } });
@@ -698,7 +721,6 @@ async function garantirApelidos() {
     apelidos = new Map(nomes.map((n, i) => [n, `Fã ${letra(i)}`]));
 }
 
-// Troca, em toda a resposta, os nomes dos participantes (chaves e valores) pelos apelidos
 function anonimizar(v) {
     if (typeof v === "string") return apelidos.get(v) ?? v;
     if (Array.isArray(v)) return v.map(anonimizar);
@@ -769,12 +791,9 @@ function entrar() {
     if (!TESTE) avisoLider();
 }
 
-// ── Líder do bolão ───────────────────────────────────────────────────────────
-// Antecedência mínima exigida do líder (regulamento: 10 minutos antes do início)
 const ANTECEDENCIA_LIDER_MIN = 10;
 let lideresCache = null;
 
-// Líder(es) pelo ranking atual (resultado da última etapa disputada). Empate no topo conta como líder.
 async function lideresAtuais() {
     if (lideresCache) return lideresCache;
     try {
@@ -790,7 +809,6 @@ async function souLider() {
     return !visitante && !!usuario && (await lideresAtuais()).includes(usuario);
 }
 
-// Aviso mostrado ao logar quando o participante é o líder do bolão
 async function avisoLider() {
     if (!(await souLider())) return;
     const m = document.createElement("div");
@@ -809,7 +827,6 @@ async function avisoLider() {
     document.body.appendChild(m);
 }
 
-// Horário limite do líder (10 min antes do início, menos 1s)
 function horaLimiteLider(s) {
     const d = new Date(inicioSessao(s).getTime() - ANTECEDENCIA_LIDER_MIN * 60000 - 1000);
     const tz = { timeZone: "America/Sao_Paulo" };
@@ -836,7 +853,6 @@ function mostrarApp() {
     rotear();
 }
 
-// ── API ───────────────────────────────────────────────────────────────────────
 async function apiFetch(endpoint, opts={}) {
     const headers = { "X-API-Key": API_KEY, ...opts.headers };
     const r = await fetch(API_URL + endpoint, { ...opts, headers });
@@ -847,11 +863,9 @@ async function apiFetch(endpoint, opts={}) {
     return anonimizar(data);
 }
 
-// Horários do servidor estão em horário de Brasília (UTC-3)
 function dataBRT(str) {
     return new Date(str.replace(" ","T") + (str.length <= 16 ? ":00" : "") + "-03:00");
 }
-// Palpite aceito até 1s antes do início oficial (início 14:00:00 → até 13:59:59)
 function inicioSessao(s) { return dataBRT(s.inicio || s.corte); }
 function horaLimite(s) {
     const d = new Date(inicioSessao(s).getTime() - 1000);
@@ -869,9 +883,6 @@ async function apiPost(endpoint, body) {
     });
 }
 
-// ── Nav ───────────────────────────────────────────────────────────────────────
-// Cada tela tem um endereço (#palpites, #ranking, #etapas, #etapas/Brasil...),
-// assim o botão "voltar" do celular volta para a tela anterior dentro do app.
 const TABS = ["palpites","ranking","etapas","capsula","regulamento"];
 let tabAtual = null;
 
@@ -921,7 +932,6 @@ function loading(id) {
         '<div class="loading"><div class="spinner"></div>Carregando...</div>';
 }
 
-// ── PALPITES ──────────────────────────────────────────────────────────────────
 async function renderPalpites() {
     loading("tab-palpites");
     try {
@@ -934,7 +944,6 @@ async function renderPalpites() {
             .map(e => ({ ...e, sessoes: e.sessoes.filter(s => inicioSessao(s) > agora) }))
             .filter(e => e.sessoes.length);
         pilotos       = rPilotos.pilotos || [];
-        // Etapa fictícia do modo teste: classificação dentro dos 10 min do líder (com punição) e corrida fora (sem punição)
         if (TESTE) etapasAbertas.unshift({ etapa: ETAPA_TESTE, sessoes: [
             { sessao: "classificacao", inicio: fmtBRT(new Date(Date.now() + 5 * 60000)) },
             { sessao: "corrida",       inicio: fmtBRT(new Date(Date.now() + 60 * 60000)) }
@@ -1035,7 +1044,6 @@ function sessaoSel(etapa, sessao) {
     return e && e.sessoes.find(x => x.sessao === sessao);
 }
 
-// Substituições de pilotos por etapa: { etapa: { sai: "Piloto", entra: "Substituto" } }
 const SUBSTITUICOES = {
     "Brasil": [{ sai: "Esteban Ocon", entra: "Rafael Camara" }]
 };
@@ -1048,13 +1056,11 @@ function pilotosDaEtapa(etapa) {
     return lista.sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
 
-// Posições que não podem repetir piloto (PD e VR ficam livres)
 function camposUnicos(sessao) {
     return sessao === "classificacao"
         ? ["grid_p1","grid_p2","grid_p3"]
         : [1,2,3,4,5,6,7,8,9,10].map(i => `corrida_p${i}`);
 }
-// Desabilita, em cada posição, os pilotos já escolhidos nas outras posições
 function atualizarRepetidos() {
     const sels = camposUnicos(window._sessaoSel)
         .map(t => document.getElementById(`palp-${t}`)).filter(Boolean);
@@ -1161,7 +1167,6 @@ async function enviarPalpites() {
     }
 }
 
-// ── RANKING ───────────────────────────────────────────────────────────────────
 async function renderRanking() {
     loading("tab-ranking");
     try {
@@ -1185,7 +1190,6 @@ async function renderRanking() {
             </div>`;
         }).join("");
 
-        // Heatmap
         const etapas = d.etapas || [];
         const heatRows = d.ranking.map(nome => {
             const info = d.dados[nome] || {};
@@ -1205,7 +1209,6 @@ async function renderRanking() {
 
         const heatHeaders = etapas.map(e => `<th>${e.substring(0,4)}</th>`).join("");
 
-        // Acumulado
         const accRows = d.ranking.map(nome => {
             const info = d.dados[nome] || {};
             const cells = (info.acumulado || []).map((v,i,arr) =>
@@ -1251,7 +1254,6 @@ async function renderRanking() {
     }
 }
 
-// ── ETAPAS ────────────────────────────────────────────────────────────────────
 async function renderEtapas() {
     if (etapaDetalhe) { renderPalpitesEtapa(etapaDetalhe); return; }
     loading("tab-etapas");
@@ -1297,7 +1299,6 @@ async function renderPalpitesEtapa(nome) {
         const pts = d.pontuacao || {};
         const participantes = Object.keys(pal).sort();
 
-        // Resultado badges
         const gridBadges = [1,2,3].map(i => {
             const p = res[`grid_p${i}`];
             return p ? `<span class="badge badge-gray">Grid P${i}: ${p}</span>` : "";
@@ -1308,7 +1309,6 @@ async function renderPalpitesEtapa(nome) {
             return p ? `<span class="badge ${i<3?'badge-gold':'badge-gray'}">P${i+1}: ${p}</span>` : "";
         }).join(" ");
 
-        // Pontuacao
         const ptsRows = Object.entries(pts).sort((a,b)=>b[1]-a[1]).map(([n,v],i) => `
             <div class="rank-row">
                 <div class="rank-pos">${i+1}</div>
@@ -1316,7 +1316,6 @@ async function renderPalpitesEtapa(nome) {
                 <div class="rank-pts">${Math.round(v)}<span>pts</span></div>
             </div>`).join("");
 
-        // Tabela palpites grid
         const gridTipos = ["grid_p1","grid_p2","grid_p3","pd"];
         const gridLabels = ["P1","P2","P3","🏆 PD"];
         const gridTable = gridTipos.map((tipo, idx) => {
@@ -1329,7 +1328,6 @@ async function renderPalpitesEtapa(nome) {
             return `<tr><td class="label">${gridLabels[idx]}</td>${cells}<td style="font-weight:700;color:#fff;">${real||"—"}</td></tr>`;
         }).join("");
 
-        // Tabela palpites corrida
         const corridaTipos = Array.from({length:10},(_,i)=>`corrida_p${i+1}`).concat(["vr"]);
         const corridaLabels = Array.from({length:10},(_,i)=>`P${i+1}`).concat(["⚡ VR"]);
         const corridaTable = corridaTipos.map((tipo, idx) => {
@@ -1386,7 +1384,6 @@ async function renderPalpitesEtapa(nome) {
     }
 }
 
-// ── REGULAMENTO ──────────────────────────────────────────────────────────────
 function renderRegulamento() {
     const novo = '<span class="reg-novo">NOVIDADE</span>';
     const item = (txt, v, neg) => `<div class="reg-pts"><span>${txt}</span><span class="v${neg ? " neg" : ""}">${v}</span></div>`;
@@ -1447,7 +1444,6 @@ function renderRegulamento() {
         <div style="text-align:center;color:var(--muted);font-size:0.75rem;margin:16px 0 8px;">Boa sorte e bons palpites! 🏎️💨</div>`;
 }
 
-// ── CAPSULA ───────────────────────────────────────────────────────────────────
 async function renderCapsula() {
     loading("tab-capsula");
     try {
@@ -1457,7 +1453,6 @@ async function renderCapsula() {
         const pts = d.pontuacao || {};
         const participantes = Object.keys(pal).sort();
 
-        // Ranking capsula
         const rankCap = Object.entries(pts)
             .sort((a,b) => (b[1].pts_total||0) - (a[1].pts_total||0));
         const medalhas = {0:"🥇",1:"🥈",2:"🥉"};
@@ -1468,7 +1463,6 @@ async function renderCapsula() {
                 <div class="rank-pts">${Math.round(p.pts_total||0)}<span>pts</span></div>
             </div>`).join("");
 
-        // Resultado parcial
         const pilotosRes = (res.pilotos||[]).map((p,i) =>
             p ? `<div style="padding:4px 0;border-bottom:1px solid var(--input);font-size:0.82rem;">
                 <span style="color:var(--muted);margin-right:6px;">P${i+1}</span><strong>${p}</strong>
@@ -1481,7 +1475,6 @@ async function renderCapsula() {
             </div>` : ""
         ).join("");
 
-        // Tabela pilotos
         const thParts = participantes.map(p => `<th>${p.substring(0,4)}</th>`).join("");
         const pilotosRows = Array.from({length:6},(_,i) => {
             const cat  = `piloto_p${i+1}`;
@@ -1574,7 +1567,6 @@ async function renderCapsula() {
     }
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
 function showToast(msg, error=false) {
     const el = document.getElementById("toast");
     el.textContent = msg;
@@ -1582,7 +1574,6 @@ function showToast(msg, error=false) {
     setTimeout(() => el.classList.remove("show"), 3000);
 }
 
-// ── Start ─────────────────────────────────────────────────────────────────────
 init();
 </script>
 </body>
