@@ -1,0 +1,7 @@
+​<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<rect width="512" height="512" rx="110" fill="#FED100"/>
+<path d="M0 184 L512 112 L512 184 L0 256 Z" fill="#002776"/>
+<path d="M0 276 L512 204 L512 271 L0 343 Z" fill="#009B3A"/>
+<circle cx="256" cy="102" r="26" fill="#002776"/>
+<text x="256" y="450" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="118" font-weight="900" font-style="italic" fill="#15151E" letter-spacing="8">FPF1</text>
+</svg>
