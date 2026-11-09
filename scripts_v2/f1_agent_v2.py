@@ -1,10 +1,11 @@
 """
 f1_agent_v2.py - Coleta de Resultados F1 e Atualizacao do Banco bolao.db (V2)
 Fonte: Ergast API / Jolpica + Scraping F1.com
-Versao Oficial Alinhada com a Regra de Zebra e Standings 2026:
-  - Mapeamento robusto Ergast ('Brazilian Grand Prix' -> 'Brasil')
+Versao Oficial com Grid Real de Largada (Pos-Punicoes da FIA):
+  - Starting Grid extraido diretamente do campo 'grid' dos resultados da corrida
+    (considera punicoes de motor, caixa e penalidades da FIA)
   - Tabela 'resultados' normalizada por linha: (etapa_id, tipo, piloto)
-  - Zebra: Líder do campeonato ao final da etapa anterior (pré-corrida)
+  - Zebra: Lider do campeonato ao final da etapa anterior (pre-corrida)
   - Grava standings_pilotos e standings_construtores com temporada_id
 """
 
@@ -165,27 +166,21 @@ def buscar_ultima_corrida_ergast(ano="current"):
             continue
     return None
 
-def buscar_grid_qualifying_ergast(ano, round_num):
-    urls = [
-        f"https://api.jolpi.ca/ergast/f1/{ano}/{round_num}/qualifying.json",
-        f"http://ergast.com/api/f1/{ano}/{round_num}/qualifying.json",
-    ]
-    for url in urls:
-        try:
-            resp = requests.get(url, timeout=15)
-            if resp.status_code == 200:
-                data = resp.json()
-                races = data.get("MRData", {}).get("RaceTable", {}).get("Races", [])
-                if races and "QualifyingResults" in races[0]:
-                    grid = []
-                    for q in races[0]["QualifyingResults"][:3]:
-                        driver = q.get("Driver", {})
-                        nome = f"{driver.get('givenName', '')} {driver.get('familyName', '')}".strip()
-                        grid.append(formatar_nome_piloto(nome))
-                    return grid
-        except Exception:
-            continue
-    return []
+def extrair_grid_oficial_largada(results):
+    grid_map = {}
+    for r in results:
+        pos_grid_str = str(r.get("grid", "")).strip()
+        if pos_grid_str.isdigit():
+            pos_grid = int(pos_grid_str)
+            driver = r.get("Driver", {})
+            nome = formatar_nome_piloto(f"{driver.get('givenName', '')} {driver.get('familyName', '')}")
+            if pos_grid > 0:
+                grid_map[pos_grid] = nome
+
+    grid_p1 = grid_map.get(1)
+    grid_p2 = grid_map.get(2)
+    grid_p3 = grid_map.get(3)
+    return [grid_p1, grid_p2, grid_p3]
 
 def buscar_piloto_do_dia(etapa_nome, ano="2026"):
     slug = SLUGS_F1.get(normalizar_texto(etapa_nome), "brazil")
@@ -343,15 +338,15 @@ def main():
         d = results[0].get("Driver", {})
         vr_pilot = formatar_nome_piloto(f"{d.get('givenName', '')} {d.get('familyName', '')}")
 
-    grid = buscar_grid_qualifying_ergast(season, round_num)
-    if not grid and len(top10) >= 3:
+    # Extrai o Grid Oficial de Largada considerando punicoes da FIA
+    grid = extrair_grid_oficial_largada(results)
+    if not any(grid) and len(top10) >= 3:
         grid = top10[:3]
 
     pd_pilot = buscar_piloto_do_dia(etapa_nome, season if season != "current" else "2026")
     if not pd_pilot and len(top10) > 0:
         pd_pilot = top10[0]
 
-    # Zebra Oficial: Líder do campeonato ao final da etapa anterior
     cursor = conn.cursor()
     cursor.execute("SELECT piloto FROM standings_pilotos ORDER BY posicao ASC LIMIT 1")
     row_lider = cursor.fetchone()
@@ -360,7 +355,7 @@ def main():
     else:
         zebra = row_lider[0] if row_lider else "Kimi Antonelli"
 
-    print(f"  - Top 3 Grid: {grid}")
+    print(f"  - Starting Grid Real: {grid}")
     print(f"  - Top 10 Corrida: {top10}")
     print(f"  - Volta Rapida: {vr_pilot}")
     print(f"  - Piloto do Dia: {pd_pilot}")
