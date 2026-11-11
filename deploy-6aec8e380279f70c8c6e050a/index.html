@@ -901,8 +901,8 @@ function inicioSessao(s) {
 function horaLimite(s) {
     const d = new Date(inicioSessao(s).getTime() - 1000);
     const tz = { timeZone: "America/Sao_Paulo" };
-    const dia  = d.toLocaleDateString("pt-BR", { ...tz, weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" });
-    const hora = d.toLocaleTimeString("pt-BR", { ...tz, hour12: false });
+    const dia  = d.toLocaleDateString("pt-BR", { ...tz, weekday: "short", day: "2-digit", month: "2-digit" });
+    const hora = d.toLocaleTimeString("pt-BR", { ...tz, hour: "2-digit", minute: "2-digit", hour12: false });
     return `${dia} às ${hora}`;
 }
 
@@ -956,7 +956,7 @@ function loading(id) {
         '<div class="loading"><div class="spinner"></div>Carregando...</div>';
 }
 
-// ── SESSÃO NEWS (Totalmente Sincronizada com a Aba Palpites) ───────────────────
+// ── SESSÃO NEWS (Home Sincronizada 100% com a mesma fonte de Palpites) ────────
 async function renderNews() {
     loading("tab-news");
     try {
@@ -966,13 +966,7 @@ async function renderNews() {
         ]);
 
         const etapas = (rEtapas.status === "fulfilled" && rEtapas.value.etapas_abertas) ? rEtapas.value.etapas_abertas : [];
-        const proxima = etapas.length ? etapas[0] : {
-            etapa: "Las Vegas",
-            sessoes: [
-                { sessao: "classificacao", inicio: "2026-11-21 01:00:00" },
-                { sessao: "corrida",       inicio: "2026-11-22 03:00:00" }
-            ]
-        };
+        const proxima = etapas.length ? etapas[0] : null;
 
         const circuitos = {
             "Las Vegas": "Las Vegas Strip Circuit, EUA",
@@ -981,25 +975,29 @@ async function renderNews() {
             "Brasil": "Autódromo de Interlagos, São Paulo"
         };
 
-        const circuito = circuitos[proxima.etapa] || "Circuito Oficial de Fórmula 1";
+        const nomeEtapa = proxima ? proxima.etapa : "Temporada Concluída";
+        const circuito = circuitos[nomeEtapa] || "Circuito Oficial de Fórmula 1";
         const noticias = (rNews.status === "fulfilled" && rNews.value.noticias && rNews.value.noticias.length) ? rNews.value.noticias : [];
 
-        // Monta as linhas da tabela estritamente com as sessões oficiais do Bolão
-        const sessoesRows = (proxima.sessoes || []).map(s => {
-            const dt = inicioSessao(s);
-            const diaSemana = dt.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" });
-            const hora = dt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false });
-            const label = s.sessao === "classificacao" ? "Classificação" : "Corrida Oficial";
-            return `
-                <tr>
-                    <td class="tipo">${label}</td>
-                    <td style="color:#D1D5DB;">${diaSemana}</td>
-                    <td class="horario">${hora}</td>
-                </tr>
-            `;
-        }).join("");
+        // Monta as linhas estritamente com as sessões oficiais do banco
+        let sessoesRows = "";
+        if (proxima && proxima.sessoes) {
+            sessoesRows = proxima.sessoes.map(s => {
+                const dt = inicioSessao(s);
+                const diaSemana = dt.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" });
+                const hora = dt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false });
+                const label = s.sessao === "classificacao" ? "Classificação" : (s.sessao === "corrida" ? "Corrida Oficial" : s.sessao);
+                return `
+                    <tr>
+                        <td class="tipo">${label}</td>
+                        <td style="color:#D1D5DB;">${diaSemana}</td>
+                        <td class="horario">${hora}</td>
+                    </tr>
+                `;
+            }).join("");
+        }
 
-        // Slides das 3 notícias (1 de cada grande portal)
+        // Slides das 3 notícias (1 de cada portal oficial)
         const slidesHtml = noticias.map(n => `
             <div class="carousel-slide">
                 <div>
@@ -1015,7 +1013,7 @@ async function renderNews() {
         `).join("");
 
         // Maiores Vencedores Históricos
-        const vencedores = HISTORICO_VENCEDORES[proxima.etapa] || [];
+        const vencedores = HISTORICO_VENCEDORES[nomeEtapa] || [];
         let historicoHtml = "";
         if (vencedores.length > 0) {
             const itensVencedores = vencedores.map(([p, v]) => `
@@ -1027,7 +1025,7 @@ async function renderNews() {
 
             historicoHtml = `
                 <div class="card">
-                    <div class="card-title">🏆 Maiores Vencedores — GP de ${proxima.etapa}</div>
+                    <div class="card-title">🏆 Maiores Vencedores — GP de ${nomeEtapa}</div>
                     ${itensVencedores}
                 </div>`;
         }
@@ -1035,7 +1033,7 @@ async function renderNews() {
         document.getElementById("tab-news").innerHTML = `
             <div class="next-race-hero">
                 <span class="next-race-tag">PRÓXIMA ETAPA</span>
-                <div class="next-race-name">🏁 GP de ${proxima.etapa}</div>
+                <div class="next-race-name">🏁 GP de ${nomeEtapa}</div>
                 <div class="next-race-circuit">📍 ${circuito}</div>
                 
                 <div class="countdown-box">
@@ -1044,7 +1042,7 @@ async function renderNews() {
                 </div>
 
                 <table class="sessions-table">
-                    <tbody>${sessoesRows}</tbody>
+                    <tbody>${sessoesRows || '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:8px;">Aguardando abertura da próxima etapa.</td></tr>'}</tbody>
                 </table>
             </div>
 
@@ -1072,7 +1070,9 @@ async function renderNews() {
 
         carouselIdx = 0;
         iniciarAutoPlayCarousel(noticias.length);
-        iniciarContagemRegressiva(proxima.sessoes || []);
+        if (proxima && proxima.sessoes) {
+            iniciarContagemRegressiva(proxima.sessoes);
+        }
 
     } catch(e) {
         document.getElementById("tab-news").innerHTML = `
@@ -1091,7 +1091,7 @@ function iniciarContagemRegressiva(sessoes) {
     for (const s of sessoes) {
         const t = inicioSessao(s).getTime();
         if (t > agora) {
-            const label = s.sessao === "classificacao" ? "a Classificação" : "a Corrida Oficial";
+            const label = s.sessao === "classificacao" ? "a Classificação" : (s.sessao === "corrida" ? "a Corrida Oficial" : s.sessao);
             alvoSessao = { label: label, timestamp: t };
             break;
         }
@@ -1115,15 +1115,20 @@ function iniciarContagemRegressiva(sessoes) {
 
         const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
         const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const minutos = Math.floor((diff % (1000 * 60)) / 1000 / 60);
         const segundos = Math.floor((diff % (1000 * 60)) / 1000);
 
         if (elLabel) elLabel.textContent = `Tempo restante até ${alvoSessao.label}`;
         elTimer.textContent = `${dias}d ${horas}h ${minutos}m ${segundos}s`;
     }
 
-    atualizarTimer();
-    countdownTimer = setInterval(atualizarTimer, 1000);
+    if (alvoSessao) {
+        atualizarTimer();
+        countdownTimer = setInterval(atualizarTimer, 1000);
+    } else {
+        const elTimer = document.getElementById("countdown-timer");
+        if (elTimer) elTimer.textContent = "Aguardando próxima sessão";
+    }
 }
 
 let carouselTimer = null;
@@ -1171,18 +1176,12 @@ async function renderPalpites() {
         const rPilotos = resPilotos.status === "fulfilled" ? resPilotos.value : { pilotos: [] };
 
         etapasAbertas = rEtapas.etapas_abertas || [];
-        pilotos = rPilotos.pilotos && rPilotos.pilotos.length ? rPilotos.pilotos : [
-            "Alexander Albon", "Carlos Sainz", "Charles Leclerc", "Esteban Ocon",
-            "Fernando Alonso", "Gabriel Bortoleto", "George Russell", "Isack Hadjar",
-            "Jack Doohan", "Kimi Antonelli", "Lance Stroll", "Lando Norris",
-            "Lewis Hamilton", "Liam Lawson", "Max Verstappen", "Nico Hülkenberg",
-            "Oliver Bearman", "Oscar Piastri", "Pierre Gasly", "Yuki Tsunoda"
-        ];
+        pilotos = rPilotos.pilotos && rPilotos.pilotos.length ? rPilotos.pilotos : [];
 
         let opts = '<option value="">Selecione a sessão para palpitar</option>';
         etapasAbertas.forEach(e => {
             (e.sessoes || []).forEach(s => {
-                const label = s.sessao === "classificacao" ? "Classificação" : "Corrida";
+                const label = s.sessao === "classificacao" ? "Classificação" : (s.sessao === "corrida" ? "Corrida" : s.sessao);
                 opts += `<option value="${e.etapa}|${s.sessao}">${e.etapa} — ${label}</option>`;
             });
         });
