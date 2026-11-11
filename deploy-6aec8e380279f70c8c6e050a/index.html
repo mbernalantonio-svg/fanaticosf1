@@ -571,7 +571,6 @@
 <div class="container" id="tab-capsula" style="display:none;"></div>
 <div class="container" id="tab-regulamento" style="display:none;"></div>
 
-<!-- 5 Opções com News no Meio (Home Oficial) -->
 <nav class="nav-bottom">
 <a id="nav-palpites" onclick="showTab('palpites')">
 <span class="icon">📝</span>Palpites
@@ -1075,7 +1074,7 @@ function iniciarContagemRegressiva(sessoes) {
     const agora = Date.now();
     let alvoSessao = null;
     for (const s of sessoes) {
-        const t = s.timestamp_iso ? new Date(s.timestamp_iso).getTime() : (s.inicio ? dataBRT(s.inicio).getTime() : 0);
+        const t = s.inicio ? dataBRT(s.inicio).getTime() : 0;
         if (t > agora) {
             alvoSessao = { label: s.tipo, timestamp: t };
             break;
