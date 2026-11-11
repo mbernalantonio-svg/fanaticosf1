@@ -13,7 +13,11 @@
 <meta name="googlebot" content="noindex, nofollow"/>
 <meta name="description" content="Aplicação privada e recreativa para bolão amador entre amigos sobre automobilismo."/>
 
+<!-- Declaração de PWA e Ícones do Navegador (Tema Capacete Senna) -->
 <link href="manifest.json" rel="manifest"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FED100'/%3E%3Cpath d='M0 36 L100 22 L100 36 L0 50 Z' fill='%23002776'/%3E%3Cpath d='M0 54 L100 40 L100 53 L0 67 Z' fill='%23009B3A'/%3E%3Ccircle cx='50' cy='20' r='5' fill='%23002776'/%3E%3Ctext x='50' y='88' text-anchor='middle' font-family='Arial,sans-serif' font-size='23' font-weight='900' font-style='italic' fill='%2315151E' letter-spacing='1.5'%3EFPF1%3C/text%3E%3C/svg%3E"/>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FED100'/%3E%3Cpath d='M0 36 L100 22 L100 36 L0 50 Z' fill='%23002776'/%3E%3Cpath d='M0 54 L100 40 L100 53 L0 67 Z' fill='%23009B3A'/%3E%3Ccircle cx='50' cy='20' r='5' fill='%23002776'/%3E%3Ctext x='50' y='88' text-anchor='middle' font-family='Arial,sans-serif' font-size='23' font-weight='900' font-style='italic' fill='%2315151E' letter-spacing='1.5'%3EFPF1%3C/text%3E%3C/svg%3E"/>
+
 <title>Fanáticos por F1</title>
 <style>
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -345,7 +349,7 @@
         }
         .info-bar strong { color: var(--text); }
 
-        /* Nota */
+        /* Nota e Avisos */
         .lider-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 1000;
             display: flex; align-items: center; justify-content: center; padding: 20px; }
         .lider-box { background: var(--card, #1F1F2B); border: 2px solid #F59E0B; border-radius: 14px;
@@ -447,17 +451,7 @@
             border: none;
             padding: 0;
         }
-
-        /* Capsula pontuacao */
-        .cap-pts-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            border-bottom: 1px solid var(--input);
-            font-size: 0.8rem;
-        }
-        .cap-pts-row:last-child { border-bottom: none; }
-    </style>
+</style>
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -465,8 +459,8 @@
 <!-- ── LOGIN ── -->
 <div id="screen-login" style="display:none;">
 <div class="login-screen">
-<!-- Logotipo Tema Capacete Ayrton Senna -->
-<img alt="Fanáticos por F1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FED100'/%3E%3Cpath d='M0 36 L100 22 L100 36 L0 50 Z' fill='%23002776'/%3E%3Cpath d='M0 54 L100 40 L100 53 L0 67 Z' fill='%23009B3A'/%3E%3Ctext x='50' y='88' text-anchor='middle' font-family='Arial,sans-serif' font-size='23' font-weight='900' font-style='italic' fill='%2315151E' letter-spacing='1.5'%3EFPF1%3C/text%3E%3Ccircle cx='50' cy='20' r='5' fill='%23002776'/%3E%3C/svg%3E"/>
+<!-- Logotipo SVG com as Cores de Ayrton Senna -->
+<img alt="Fanáticos por F1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FED100'/%3E%3Cpath d='M0 36 L100 22 L100 36 L0 50 Z' fill='%23002776'/%3E%3Cpath d='M0 54 L100 40 L100 53 L0 67 Z' fill='%23009B3A'/%3E%3Ccircle cx='50' cy='20' r='5' fill='%23002776'/%3E%3Ctext x='50' y='88' text-anchor='middle' font-family='Arial,sans-serif' font-size='23' font-weight='900' font-style='italic' fill='%2315151E' letter-spacing='1.5'%3EFPF1%3C/text%3E%3C/svg%3E"/>
 <h2>Fanáticos por F1</h2>
 <p>Fanáticos por F1<br/>Selecione seu nome e digite sua senha</p>
 <div style="width:100%; max-width:320px;">
@@ -497,11 +491,10 @@
 </div>
 </div>
 
-<!-- ── TROCAR SENHA (primeiro acesso) ── -->
+<!-- ── TROCAR SENHA ── -->
 <div id="screen-senha" style="display:none;">
 <div class="login-screen">
-<!-- Logotipo Tema Capacete Ayrton Senna -->
-<img alt="Fanáticos por F1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FED100'/%3E%3Cpath d='M0 36 L100 22 L100 36 L0 50 Z' fill='%23002776'/%3E%3Cpath d='M0 54 L100 40 L100 53 L0 67 Z' fill='%23009B3A'/%3E%3Ctext x='50' y='88' text-anchor='middle' font-family='Arial,sans-serif' font-size='23' font-weight='900' font-style='italic' fill='%2315151E' letter-spacing='1.5'%3EFPF1%3C/text%3E%3Ccircle cx='50' cy='20' r='5' fill='%23002776'/%3E%3C/svg%3E"/>
+<img alt="Fanáticos por F1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FED100'/%3E%3Cpath d='M0 36 L100 22 L100 36 L0 50 Z' fill='%23002776'/%3E%3Cpath d='M0 54 L100 40 L100 53 L0 67 Z' fill='%23009B3A'/%3E%3Ccircle cx='50' cy='20' r='5' fill='%23002776'/%3E%3Ctext x='50' y='88' text-anchor='middle' font-family='Arial,sans-serif' font-size='23' font-weight='900' font-style='italic' fill='%2315151E' letter-spacing='1.5'%3EFPF1%3C/text%3E%3C/svg%3E"/>
 <h2 id="senha-titulo">Crie sua senha</h2>
 <p id="senha-texto">Este é seu primeiro acesso, <span id="senha-nome"></span>.<br/>Escolha uma senha só sua.</p>
 <div style="width:100%; max-width:320px;">
@@ -520,11 +513,10 @@
 </div>
 </div>
 
-<!-- ── APP ── -->
+<!-- ── APLICAÇÃO ── -->
 <div id="screen-app" style="display:none;">
 <div class="header">
-<!-- Logotipo Compacto Tema Capacete Senna no Header -->
-<img alt="Fanáticos por F1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FED100'/%3E%3Cpath d='M0 36 L100 22 L100 36 L0 50 Z' fill='%23002776'/%3E%3Cpath d='M0 54 L100 40 L100 53 L0 67 Z' fill='%23009B3A'/%3E%3Ctext x='50' y='88' text-anchor='middle' font-family='Arial,sans-serif' font-size='23' font-weight='900' font-style='italic' fill='%2315151E' letter-spacing='1.5'%3EFPF1%3C/text%3E%3Ccircle cx='50' cy='20' r='5' fill='%23002776'/%3E%3C/svg%3E"/>
+<img alt="Fanáticos por F1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FED100'/%3E%3Cpath d='M0 36 L100 22 L100 36 L0 50 Z' fill='%23002776'/%3E%3Cpath d='M0 54 L100 40 L100 53 L0 67 Z' fill='%23009B3A'/%3E%3Ccircle cx='50' cy='20' r='5' fill='%23002776'/%3E%3Ctext x='50' y='88' text-anchor='middle' font-family='Arial,sans-serif' font-size='23' font-weight='900' font-style='italic' fill='%2315151E' letter-spacing='1.5'%3EFPF1%3C/text%3E%3C/svg%3E"/>
 <div>
 <div class="header-title">FANÁTICOS POR F1</div>
 <div class="header-sub">Olá, <span id="header-nome">--</span> 👋</div>
@@ -533,35 +525,38 @@
 <button type="button" class="btn-sair" id="btn-regulamento" onclick="showTab('regulamento')" title="Regulamento do bolão">📖 Regras</button>
 <button type="button" class="btn-sair" onclick="sair()" title="Sair da conta">Sair ⏻</button>
 </div>
-<!-- Tabs -->
+
+<!-- Conteúdos das Tabs -->
 <div class="container" id="tab-palpites" style="display:none;"></div>
 <div class="container" id="tab-ranking" style="display:none;"></div>
 <div class="container" id="tab-etapas" style="display:none;"></div>
 <div class="container" id="tab-capsula" style="display:none;"></div>
 <div class="container" id="tab-regulamento" style="display:none;"></div>
+
 <nav class="nav-bottom">
 <a class="active" id="nav-palpites" onclick="showTab('palpites')">
 <span class="icon">📝</span>Palpites
-        </a>
+</a>
 <a id="nav-ranking" onclick="showTab('ranking')">
 <span class="icon">🏆</span>Ranking
-        </a>
+</a>
 <a id="nav-etapas" onclick="showTab('etapas')">
 <span class="icon">📋</span>Etapas
-        </a>
+</a>
 <a id="nav-capsula" onclick="showTab('capsula')">
 <span class="icon">⏳</span>Cápsula
-        </a>
+</a>
 </nav>
 </div>
+
 <script>
 // ── Config ────────────────────────────────────────────────────────────────────
 const API_URL = "https://mbernalantonio.pythonanywhere.com";
 const API_KEY = "f1bolao2027secretkey";
 
 // ── Estado ────────────────────────────────────────────────────────────────────
-let usuario      = null;
-let pilotos      = [];
+let usuario       = null;
+let pilotos       = [];
 let etapasAbertas = [];
 let rankingCache  = null;
 let etapaDetalhe  = null;
@@ -862,7 +857,7 @@ async function apiFetch(endpoint, opts={}) {
     return anonimizar(data);
 }
 
-// Tratamento unificado de data com tolerância a formatos e offset BRT
+// ── Tratamento de Data e Fuso Horário de Brasília (UTC-3) ──────────────────────
 function dataBRT(str) {
     if (!str) return new Date();
     if (str.includes("Z") || (str.includes("+") && str.length > 18)) {
