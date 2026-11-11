@@ -94,6 +94,43 @@
         .btn-sair.ativo { background: var(--senna-yellow); color: var(--senna-blue); }
         @media (max-width: 400px) { .header-right { display: none; } #btn-regulamento { margin-left: auto; } .btn-sair { padding: 6px 8px; } }
 
+        /* Regulamento Detalhado */
+        .reg-hero { 
+            text-align: center; 
+            padding: 22px 16px; 
+            background: linear-gradient(135deg, #002776, #001744); 
+            border: 1.5px solid var(--senna-yellow);
+            border-radius: 12px; 
+            margin-bottom: 12px; 
+        }
+        .reg-hero .emoji { font-size: 2.4rem; }
+        .reg-hero h2 { font-size: 1.2rem; letter-spacing: 1px; margin: 6px 0 4px; color: var(--senna-yellow); }
+        .reg-hero p { font-size: 0.8rem; color: #FFFFFF; opacity: 0.95; }
+        .reg-num { 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center; 
+            width: 22px; 
+            height: 22px; 
+            border-radius: 50%; 
+            background: var(--senna-blue); 
+            color: var(--senna-yellow); 
+            border: 1px solid var(--senna-yellow);
+            font-size: 0.7rem; 
+            font-weight: 700;
+            margin-right: 6px; 
+        }
+        .reg-txt { font-size: 0.84rem; line-height: 1.5; color: var(--text); }
+        .reg-txt p + p { margin-top: 8px; }
+        .reg-txt b { color: #fff; }
+        .reg-pts { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--input); font-size: 0.84rem; gap: 10px; }
+        .reg-pts:last-child { border-bottom: none; }
+        .reg-pts .v { background: #064E3B; color: #6EE7B7; font-weight: 700; border-radius: 999px; padding: 3px 10px; font-size: 0.75rem; white-space: nowrap; }
+        .reg-pts .v.neg { background: var(--senna-blue); color: var(--senna-yellow); border: 1px solid var(--senna-yellow); }
+        .reg-novo { display: inline-block; background: var(--senna-yellow); color: var(--senna-blue); font-size: 0.6rem; font-weight: 800; border-radius: 4px; padding: 2px 6px; margin-left: 6px; vertical-align: middle; letter-spacing: 0.5px; }
+        .reg-destaque { background: rgba(0, 39, 118, 0.4); border-left: 3px solid var(--senna-yellow); border-radius: 6px; padding: 10px 12px; font-size: 0.8rem; margin-top: 10px; line-height: 1.45; }
+        .reg-sub { font-size: 0.7rem; font-weight: 700; color: var(--senna-yellow); text-transform: uppercase; letter-spacing: 0.5px; margin: 12px 0 4px; }
+
         /* Navegação Inferior Rente à Base */
         .nav-bottom {
             position: fixed;
@@ -147,7 +184,7 @@
             justify-content: space-between;
         }
 
-        /* ── Sessão News (Home) ── */
+        /* Sessão News (Home) */
         .next-race-hero {
             background: linear-gradient(135deg, #002776 0%, #001744 100%);
             border: 2px solid var(--senna-yellow);
@@ -170,7 +207,6 @@
         .next-race-name { font-size: 1.35rem; font-weight: 900; color: #FFFFFF; font-style: italic; }
         .next-race-circuit { font-size: 0.78rem; color: #D1D5DB; margin-top: 2px; }
 
-        /* Contagem Regressiva */
         .countdown-box {
             background: rgba(0, 23, 68, 0.6);
             border: 1px dashed var(--senna-yellow);
@@ -189,7 +225,6 @@
         .sessions-table td.tipo { font-weight: 700; color: #FFFFFF; }
         .sessions-table td.horario { text-align: right; font-weight: 800; color: var(--senna-yellow); }
 
-        /* Carrossel de Notícias */
         .carousel-wrap { position: relative; overflow: hidden; border-radius: 10px; margin-bottom: 8px; }
         .carousel-track { display: flex; transition: transform 0.35s ease-in-out; }
         .carousel-slide {
@@ -222,7 +257,6 @@
         .carousel-dot.active { background: var(--senna-yellow); width: 18px; border-radius: 4px; }
         .carousel-btn { background: var(--input); border: 1px solid var(--border); color: #FFFFFF; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-weight: 800; }
 
-        /* Histórico Vencedores */
         .winner-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--input); font-size: 0.82rem; }
         .winner-row:last-child { border-bottom: none; }
         .winner-name { font-weight: 600; color: #FFFFFF; }
@@ -948,7 +982,6 @@ async function renderNews() {
             { titulo: "Bastidores do paddock: estratégias e projeções para a classificação", fonte: "Grande Prêmio", link: "https://www.grandepremio.com.br/f1/" }
         ];
 
-        // Linhas de Cronograma de Atividades
         const sessoesRows = (proxima.sessoes || []).map(s => `
             <tr>
                 <td class="tipo">${s.tipo}</td>
@@ -957,7 +990,6 @@ async function renderNews() {
             </tr>
         `).join("");
 
-        // Slides do Carrossel (3 Notícias)
         const slidesHtml = noticias.slice(0, 3).map(n => `
             <div class="carousel-slide">
                 <div>
@@ -972,7 +1004,6 @@ async function renderNews() {
             <div class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="moverCarousel(${i})"></div>
         `).join("");
 
-        // Histórico de Maiores Vencedores
         const vencedores = HISTORICO_VENCEDORES[proxima.nome] || [];
         let historicoHtml = "";
         if (vencedores.length > 0) {
@@ -996,7 +1027,6 @@ async function renderNews() {
                 <div class="next-race-name">🏁 GP de ${proxima.nome}</div>
                 <div class="next-race-circuit">📍 ${proxima.circuito || "Circuito Oficial de Fórmula 1"}</div>
                 
-                <!-- Caixa de Contagem Regressiva Viva -->
                 <div class="countdown-box">
                     <div class="countdown-title" id="countdown-label">Contagem Regressiva para a Largada</div>
                     <div class="countdown-timer" id="countdown-timer">Carregando tempo...</div>
@@ -1031,8 +1061,6 @@ async function renderNews() {
 
         carouselIdx = 0;
         iniciarAutoPlayCarousel(noticias.slice(0,3).length);
-
-        // Ativa a contagem regressiva viva
         iniciarContagemRegressiva(proxima.sessoes || []);
 
     } catch(e) {
@@ -1047,7 +1075,6 @@ async function renderNews() {
 function iniciarContagemRegressiva(sessoes) {
     if (countdownTimer) clearInterval(countdownTimer);
     
-    // Procura a próxima sessão que ainda vai acontecer
     const agora = Date.now();
     let alvoSessao = null;
     for (const s of sessoes) {
@@ -1058,7 +1085,6 @@ function iniciarContagemRegressiva(sessoes) {
         }
     }
     
-    // Se todas passaram ou padrão
     if (!alvoSessao && sessoes.length) {
         const ultima = sessoes[sessoes.length - 1];
         alvoSessao = { 
@@ -1144,7 +1170,6 @@ async function renderPalpites() {
             "Oliver Bearman", "Oscar Piastri", "Pierre Gasly", "Yuki Tsunoda"
         ];
 
-        // Se a lista de etapas abertas vier vazia, garante a exibição das próximas etapas
         if (!etapasAbertas.length) {
             etapasAbertas = [
                 {
@@ -1442,16 +1467,6 @@ async function renderEtapas() {
             etapas = [];
         }
 
-        // Se a lista vier vazia, puxa as etapas do ranking já consolidadas
-        if (!etapas.length && rankingCache && rankingCache.etapas) {
-            etapas = rankingCache.etapas.map(nome => ({
-                nome: nome,
-                multiplicador: 1,
-                vencedor: "Resultado Consolidado",
-                volta_rapida: "—"
-            }));
-        }
-
         const itens = etapas.map(e => `
             <button class="etapa-btn" onclick="verEtapa('${e.nome}')">
                 <div>
@@ -1561,20 +1576,81 @@ async function renderPalpitesEtapa(nome) {
     }
 }
 
-// ── REGULAMENTO ───────────────────────────────────────────────────────────────
+// ── REGULAMENTO (COMPLETO E DETALHADO) ─────────────────────────────────────────
 function renderRegulamento() {
-    const item = (txt, v) => `<div class="reg-pts" style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--input);font-size:0.84rem;"><span>${txt}</span><span class="v" style="background:#064E3B;color:#6EE7B7;font-weight:700;border-radius:999px;padding:2px 8px;">${v}</span></div>`;
+    const novo = '<span class="reg-novo">NOVIDADE</span>';
+    const item = (txt, v, neg) => `<div class="reg-pts"><span>${txt}</span><span class="v${neg ? " neg" : ""}">${v}</span></div>`;
+    const secao = (n, titulo, corpo) => `<div class="card"><div class="card-title"><span class="reg-num">${n}</span>${titulo}</div>${corpo}</div>`;
+    
     document.getElementById("tab-regulamento").innerHTML = `
-        <div class="card" style="border:2px solid var(--senna-yellow);">
-            <div class="card-title">📖 REGULAMENTO 2026</div>
-            <p style="font-size:0.84rem;line-height:1.5;margin-bottom:12px;">Tudo o que você precisa saber para fazer seus palpites no Fanáticos por F1.</p>
-            ${item("Grid P1 a P3", "+2 pts cada")}
-            ${item("Corrida P1 ao P5", "+3 pts cada")}
-            ${item("Corrida P6 ao P10", "+4 pts cada")}
-            ${item("Volta Rápida (VR)", "+5 pts")}
-            ${item("Piloto do Dia (PD)", "+5 pts")}
-            ${item("Zebra 🦓", "+10 pts bônus")}
-        </div>`;
+        <div class="reg-hero">
+            <div class="emoji">📖🏁</div>
+            <h2>REGULAMENTO 2026</h2>
+            <p>Tudo o que você precisa saber para fazer seus palpites</p>
+        </div>
+        
+        ${secao(1, "🚦 Classificação", `
+            <div class="reg-txt"><p>Aposte do <b>P1 ao P3</b> do grid de largada.</p></div>
+            ${item("Cada acerto (P1 a P3)", "+2 pts")}`)}
+            
+        ${secao(2, "🏁 Corrida", `
+            <div class="reg-txt"><p>Aposte do <b>P1 ao P10</b> da corrida.</p></div>
+            ${item("Acerto do P1 ao P5", "+3 pts")}
+            ${item("Acerto do P6 ao P10", "+4 pts")}
+            ${item("⚡ Volta Rápida", "+5 pts")}
+            <div class="reg-destaque">${novo} Este ano <b>não</b> teremos palpites para a corrida <b>Sprint</b>.</div>`)}
+            
+        ${secao(3, "🏆 Piloto do Dia", `
+            <div class="reg-txt"><p>Enviar junto com o palpite da <b>classificação</b> do fim de semana.</p></div>
+            ${item("Acerto do Piloto do Dia", "+5 pts")}`)}
+            
+        ${secao(4, "🦓 Zebra", `
+            <div class="reg-txt">
+                <p>Na corrida, se você apostar no P1 em alguém <b>diferente do líder do campeonato</b> e acertar, ganha um bônus, além dos pontos normais do acerto.</p>
+            </div>
+            ${item("Bônus Zebra 🦓", "+10 pts")}
+            <div class="reg-destaque">Na primeira corrida, a zebra vale para quem acertar um vencedor <b>diferente do Norris</b> (atual campeão).</div>`)}
+            
+        ${secao(5, "⏱️ Punições", `
+            <div class="reg-txt">
+                <p>O <b>líder</b> do bolão deve enviar seus palpites até <b>10 minutos antes</b> do horário oficial de início de cada atividade. Em caso de não cumprimento:</p>
+            </div>
+            ${item("No treino (classificação)", "−2 pts", true)}
+            ${item("Na corrida", "−10 pts", true)}`)}
+            
+        ${secao(6, "🗑️ Descarte", `
+            <div class="reg-txt">
+                <p>A pontuação do seu <b>pior fim de semana</b> é descartada no total. Um tropeço não define o campeonato!</p>
+            </div>`)}
+            
+        ${secao(7, "🔥 Reta Final", `
+            <div class="reg-txt">
+                <p>${novo}</p>
+                <p>Chance extra para quem ficou para trás ao longo do ano!</p>
+            </div>
+            ${item("Penúltima etapa", "Pontos x2")}
+            ${item("Última etapa", "Pontos x3")}`)}
+            
+        ${secao(8, "⏳ Cápsula do Tempo", `
+            <div class="reg-txt"><p>Palpites para a <b>classificação final</b> do campeonato.</p></div>
+            
+            <div class="reg-sub">a) 6 primeiros pilotos</div>
+            ${item("Posição exata", "+10 pts")}
+            ${item("Piloto certo, posição trocada", "+5 pts")}
+            
+            <div class="reg-sub">b) 3 primeiras equipes</div>
+            ${item("Posição exata", "+10 pts")}
+            ${item("Equipe certa, posição trocada", "+5 pts")}
+            
+            <div class="reg-sub">c) Melhor do Resto ${novo}</div>
+            ${item("Piloto fora das 4 grandes com mais pontos no fim do ano", "+10 pts")}
+            
+            <div class="reg-sub">d) Piloto GP2 — o pior! ${novo}</div>
+            ${item("Piloto pior classificado no fim do campeonato", "+10 pts")}
+            <div class="reg-destaque">Havendo mais de um piloto com a mesma pontuação, será considerado pior piloto aquele com a pior performance nas posições de chegada.</div>`)}
+            
+        <div style="text-align:center;color:var(--muted);font-size:0.75rem;margin:16px 0 8px;">Boa sorte e bons palpites! 🏎️💨</div>
+    `;
 }
 
 // ── CÁPSULA ───────────────────────────────────────────────────────────────────
