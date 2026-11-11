@@ -94,7 +94,7 @@
         .btn-sair.ativo { background: var(--senna-yellow); color: var(--senna-blue); }
         @media (max-width: 400px) { .header-right { display: none; } #btn-regulamento { margin-left: auto; } .btn-sair { padding: 6px 8px; } }
 
-        /* Navegação Inferior Ajustada e Rente à Base */
+        /* Navegação Inferior Rente à Base */
         .nav-bottom {
             position: fixed;
             bottom: 0; left: 0; right: 0;
@@ -124,10 +124,8 @@
         .nav-bottom a.active { color: var(--senna-yellow); font-weight: 800; }
         .nav-bottom a .icon { font-size: 1.25rem; }
 
-        /* Container */
         .container { padding: 14px; max-width: 540px; margin: 0 auto; }
 
-        /* Cards */
         .card {
             background: var(--card);
             border-radius: 12px;
@@ -245,7 +243,6 @@
         }
         .login-screen p { color: var(--muted); font-size: 0.82rem; margin-bottom: 26px; text-align: center; }
 
-        /* Form */
         .form-group { margin-bottom: 14px; }
         .form-group label {
             display: block;
@@ -270,7 +267,6 @@
         select:focus, input:focus { outline: none; border-color: var(--senna-yellow); }
         select:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        /* Botões */
         .btn {
             width: 100%;
             padding: 13px;
@@ -281,7 +277,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             cursor: pointer;
-            transition: opacity 0.2s, filter 0.2s;
+            transition: opacity 0.2s;
         }
         .btn:active { opacity: 0.85; }
         .btn-senna-green { 
@@ -375,14 +371,12 @@
         .erro     { color: #4B5563; }
         .sem-palp { color: #374151; font-style: italic; }
 
-        /* Badges */
         .badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 0.65rem; font-weight: 700; }
         .badge-green { background: #D1FAE5; color: #065F46; }
         .badge-senna { background: var(--senna-blue); color: var(--senna-yellow); border: 1px solid var(--senna-yellow); }
         .badge-gold  { background: #FEF3C7; color: #92400E; }
         .badge-gray  { background: var(--input); color: var(--muted); }
 
-        /* Info bar */
         .info-bar {
             background: var(--input);
             border-radius: 8px;
@@ -397,15 +391,7 @@
         }
         .info-bar strong { color: var(--text); }
 
-        /* Avisos e Notas */
-        .lider-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .lider-box { background: var(--card); border: 2px solid var(--senna-yellow); border-radius: 14px; max-width: 360px; width: 100%; padding: 22px 18px; text-align: center; }
-        .lider-box .emoji { font-size: 2.6rem; margin-bottom: 8px; }
-        .lider-box h3 { color: var(--senna-yellow); margin: 0 0 10px; font-size: 1.15rem; }
-        .lider-box p { font-size: 0.85rem; line-height: 1.45; margin: 0 0 10px; color: #F9FAFB; }
-        .penalidade { background: rgba(0, 39, 118, 0.45); border: 1px solid var(--senna-yellow); color: var(--senna-yellow); border-radius: 10px; padding: 12px; font-size: 0.82rem; margin: 0 0 16px; line-height: 1.45; }
         .nota { background: var(--input); border-left: 3.5px solid var(--senna-yellow); padding: 9px 12px; border-radius: 0 8px 8px 0; font-size: 0.74rem; color: var(--senna-yellow); margin-bottom: 14px; }
-
         .section-header {
             background: var(--senna-blue);
             border-radius: 6px;
@@ -616,7 +602,6 @@ async function init() {
     }
 }
 
-// Carregamento infalível de nomes com rota de participantes e fallback
 async function carregarNomes() {
     const sel = document.getElementById("login-select");
     try {
@@ -739,14 +724,17 @@ function entrarVisitante() {
 
 async function garantirApelidos() {
     if (apelidos) return;
-    const r = await fetch(API_URL + "/api/participantes", { headers: { "X-API-Key": API_KEY } });
     let nomes = [];
-    if (r.ok) {
-        nomes = (await r.json()).participantes || [];
-    }
+    try {
+        const r = await fetch(API_URL + "/api/participantes", { headers: { "X-API-Key": API_KEY } });
+        if (r.ok) nomes = (await r.json()).participantes || [];
+    } catch(e) {}
+    
     if (!nomes.length) {
-        const r2 = await fetch(API_URL + "/api/ranking", { headers: { "X-API-Key": API_KEY } });
-        if (r2.ok) nomes = (await r2.json()).ranking || [];
+        try {
+            const r2 = await fetch(API_URL + "/api/ranking", { headers: { "X-API-Key": API_KEY } });
+            if (r2.ok) nomes = (await r2.json()).ranking || [];
+        } catch(e) {}
     }
     const listaUnica = [...new Set(nomes)];
     for (let i = listaUnica.length - 1; i > 0; i--) {
@@ -1061,19 +1049,30 @@ function prevSlide() {
     moverCarousel(carouselIdx);
 }
 
-// ── PALPITES ──────────────────────────────────────────────────────────────────
+// ── PALPITES (Tratamento Tolerante de Erro) ───────────────────────────────────
 async function renderPalpites() {
     loading("tab-palpites");
     try {
-        const [rEtapas, rPilotos] = await Promise.all([
+        const [resEtapas, resPilotos] = await Promise.allSettled([
             apiFetch("/api/etapas_abertas"),
             apiFetch("/api/pilotos")
         ]);
+
+        const rEtapas = resEtapas.status === "fulfilled" ? resEtapas.value : { etapas_abertas: [] };
+        const rPilotos = resPilotos.status === "fulfilled" ? resPilotos.value : { pilotos: [] };
+
         const agoraMs = Date.now();
         etapasAbertas = (rEtapas.etapas_abertas || [])
             .map(e => ({ ...e, sessoes: e.sessoes.filter(s => inicioSessao(s).getTime() > agoraMs) }))
             .filter(e => e.sessoes.length);
-        pilotos = rPilotos.pilotos || [];
+
+        pilotos = rPilotos.pilotos && rPilotos.pilotos.length ? rPilotos.pilotos : [
+            "Alexander Albon", "Carlos Sainz", "Charles Leclerc", "Esteban Ocon",
+            "Fernando Alonso", "Gabriel Bortoleto", "George Russell", "Isack Hadjar",
+            "Jack Doohan", "Kimi Antonelli", "Lance Stroll", "Lando Norris",
+            "Lewis Hamilton", "Liam Lawson", "Max Verstappen", "Nico Hülkenberg",
+            "Oliver Bearman", "Oscar Piastri", "Pierre Gasly", "Yuki Tsunoda"
+        ];
 
         if (!etapasAbertas.length) {
             document.getElementById("tab-palpites").innerHTML = `
@@ -1081,7 +1080,7 @@ async function renderPalpites() {
                     <div style="font-size:3rem;margin-bottom:14px;">🏁</div>
                     <div style="font-weight:800;color:var(--senna-yellow);margin-bottom:6px;">Nenhuma sessão aberta</div>
                     <div style="color:var(--muted);font-size:0.82rem;">
-                        Os palpites estarão disponíveis antes de cada sessão.
+                        Os palpites estarão disponíveis antes de cada sessão oficial.
                     </div>
                 </div>`;
             return;
@@ -1356,13 +1355,20 @@ async function renderRanking() {
     }
 }
 
-// ── ETAPAS ────────────────────────────────────────────────────────────────────
+// ── ETAPAS (Tolerante e com feedback claro) ───────────────────────────────────
 async function renderEtapas() {
     if (etapaDetalhe) { renderPalpitesEtapa(etapaDetalhe); return; }
     loading("tab-etapas");
     try {
-        const d = await apiFetch("/api/etapas_lista");
-        const itens = (d.etapas || []).map(e => `
+        let etapas = [];
+        try {
+            const d = await apiFetch("/api/etapas_lista");
+            etapas = d.etapas || [];
+        } catch(e) {
+            etapas = [];
+        }
+
+        const itens = etapas.map(e => `
             <button class="etapa-btn" onclick="verEtapa('${e.nome}')">
                 <div>
                     <div class="nome">${e.nome}${e.multiplicador > 1 ? `<span class="etapa-mult">x${e.multiplicador}</span>` : ""}</div>
@@ -1373,12 +1379,12 @@ async function renderEtapas() {
 
         document.getElementById("tab-etapas").innerHTML = `
             <div class="info-bar">
-                <div><strong>${(d.etapas||[]).length}</strong> etapas disputadas</div>
-                <div><span class="badge badge-gray">Toque para ver palpites</span></div>
+                <div><strong>${etapas.length}</strong> etapas disputadas</div>
+                <div><span class="badge badge-gray">${etapas.length ? 'Toque para ver' : 'Aguardando início'}</span></div>
             </div>
             <div class="card">
                 <div class="card-title">📋 Etapas Disputadas</div>
-                ${itens || '<div style="color:var(--muted);text-align:center;padding:20px;">Nenhuma etapa ainda</div>'}
+                ${itens || '<div style="color:var(--muted);text-align:center;padding:24px 14px;font-size:0.85rem;">As etapas encerradas e seus resultados aparecerão aqui assim que as corridas forem concluídas.</div>'}
             </div>`;
     } catch(e) {
         document.getElementById("tab-etapas").innerHTML =
