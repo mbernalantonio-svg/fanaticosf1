@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
-<meta content="#E10600" name="theme-color"/>
+<!-- Cor da barra do sistema operacional (Android / Chrome) em Azul Marinho Senna -->
+<meta content="#002776" name="theme-color"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="Fanáticos por F1" name="apple-mobile-web-app-title"/>
@@ -23,19 +24,16 @@
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
         :root {
-            --red:          #E10600;
-            --dark:         #15151E;
-            --card:         #1F2937;
-            --input:        #374151;
-            --border:       #4B5563;
-            --text:         #F9FAFB;
-            --muted:        #9CA3AF;
-            --green:        #16A34A;
-            --gold:         #F59E0B;
-            --stripe:       #F9FAFB;
             --senna-yellow: #FED100;
             --senna-blue:   #002776;
             --senna-green:  #009B3A;
+            --white:        #FFFFFF;
+            --dark:         #15151E;
+            --card:         #1F2937;
+            --input:        #2B3544;
+            --border:       #4B5563;
+            --text:         #F9FAFB;
+            --muted:        #9CA3AF;
             --badge-space:  max(64px, env(safe-area-inset-bottom));
         }
 
@@ -47,9 +45,10 @@
             padding-bottom: calc(80px + var(--badge-space));
         }
 
-        /* Header */
+        /* Header Senna */
         .header {
-            background: var(--red);
+            background: var(--senna-blue);
+            border-bottom: 3px solid var(--senna-yellow);
             padding: 12px 16px;
             display: flex;
             align-items: center;
@@ -57,83 +56,103 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.5);
         }
         .header img {
-            width: 34px;
-            height: 34px;
+            width: 36px;
+            height: 36px;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            border: 1.5px solid rgba(255,255,255,0.2);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            border: 1.5px solid var(--senna-yellow);
         }
         .header-title {
-            font-size: 1rem;
+            font-size: 1.05rem;
             font-weight: 900;
-            letter-spacing: 1px;
+            letter-spacing: 1.2px;
             font-style: italic;
             color: var(--senna-yellow);
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
         }
-        .header-sub { font-size: 0.68rem; opacity: 0.9; }
-        .header-right { margin-left: auto; font-size: 0.68rem; opacity: 0.8; text-align: right; }
+        .header-sub { font-size: 0.72rem; color: #FFFFFF; opacity: 0.95; }
+        .header-right { margin-left: auto; font-size: 0.68rem; color: #E5E7EB; opacity: 0.9; text-align: right; }
         .btn-sair {
-            background: rgba(0,0,0,0.25);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.45);
+            background: rgba(254, 209, 0, 0.15);
+            color: #FFFFFF;
+            border: 1px solid var(--senna-yellow);
             border-radius: 6px;
             padding: 6px 10px;
             font-size: 0.72rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             white-space: nowrap;
         }
-        .btn-sair:hover { background: rgba(0,0,0,0.4); }
-        .btn-sair.ativo { background: #fff; color: var(--red); }
+        .btn-sair:hover { background: rgba(254, 209, 0, 0.3); }
+        .btn-sair.ativo { background: var(--senna-yellow); color: var(--senna-blue); }
         @media (max-width: 400px) { .header-right { display: none; } #btn-regulamento { margin-left: auto; } .btn-sair { padding: 6px 8px; } }
 
         /* Regulamento */
-        .reg-hero { text-align: center; padding: 22px 16px; background: linear-gradient(135deg, #E10600, #7F1D1D); border-radius: 12px; margin-bottom: 12px; }
+        .reg-hero { 
+            text-align: center; 
+            padding: 22px 16px; 
+            background: linear-gradient(135deg, #002776, #001744); 
+            border: 1.5px solid var(--senna-yellow);
+            border-radius: 12px; 
+            margin-bottom: 12px; 
+        }
         .reg-hero .emoji { font-size: 2.4rem; }
-        .reg-hero h2 { font-size: 1.15rem; letter-spacing: 1px; margin: 6px 0 4px; }
-        .reg-hero p { font-size: 0.78rem; opacity: 0.9; }
-        .reg-num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--red); color: #fff; font-size: 0.7rem; margin-right: 6px; }
+        .reg-hero h2 { font-size: 1.2rem; letter-spacing: 1px; margin: 6px 0 4px; color: var(--senna-yellow); }
+        .reg-hero p { font-size: 0.8rem; color: #FFFFFF; opacity: 0.95; }
+        .reg-num { 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center; 
+            width: 22px; 
+            height: 22px; 
+            border-radius: 50%; 
+            background: var(--senna-blue); 
+            color: var(--senna-yellow); 
+            border: 1px solid var(--senna-yellow);
+            font-size: 0.7rem; 
+            font-weight: 700;
+            margin-right: 6px; 
+        }
         .reg-txt { font-size: 0.84rem; line-height: 1.5; color: var(--text); }
         .reg-txt p + p { margin-top: 8px; }
         .reg-txt b { color: #fff; }
         .reg-pts { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--input); font-size: 0.84rem; gap: 10px; }
         .reg-pts:last-child { border-bottom: none; }
         .reg-pts .v { background: #064E3B; color: #6EE7B7; font-weight: 700; border-radius: 999px; padding: 3px 10px; font-size: 0.75rem; white-space: nowrap; }
-        .reg-pts .v.neg { background: #7F1D1D; color: #FCA5A5; }
-        .reg-novo { display: inline-block; background: #FACC15; color: #111; font-size: 0.6rem; font-weight: 800; border-radius: 4px; padding: 2px 6px; margin-left: 6px; vertical-align: middle; letter-spacing: 0.5px; }
-        .reg-destaque { background: rgba(225,6,0,0.12); border-left: 3px solid var(--red); border-radius: 6px; padding: 10px 12px; font-size: 0.8rem; margin-top: 10px; line-height: 1.45; }
-        .reg-sub { font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 12px 0 2px; }
+        .reg-pts .v.neg { background: var(--senna-blue); color: var(--senna-yellow); border: 1px solid var(--senna-yellow); }
+        .reg-novo { display: inline-block; background: var(--senna-yellow); color: var(--senna-blue); font-size: 0.6rem; font-weight: 800; border-radius: 4px; padding: 2px 6px; margin-left: 6px; vertical-align: middle; letter-spacing: 0.5px; }
+        .reg-destaque { background: rgba(0, 39, 118, 0.4); border-left: 3px solid var(--senna-yellow); border-radius: 6px; padding: 10px 12px; font-size: 0.8rem; margin-top: 10px; line-height: 1.45; }
+        .reg-sub { font-size: 0.7rem; font-weight: 700; color: var(--senna-yellow); text-transform: uppercase; letter-spacing: 0.5px; margin: 12px 0 2px; }
         .reg-premio { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .reg-premio div { background: var(--dark); border-radius: 10px; padding: 12px; text-align: center; font-size: 0.75rem; color: var(--muted); }
-        .reg-premio b { display: block; font-size: 1.3rem; color: #fff; margin: 4px 0 2px; }
+        .reg-premio div { background: var(--dark); border-radius: 10px; padding: 12px; text-align: center; font-size: 0.75rem; color: var(--muted); border: 1px solid var(--input); }
+        .reg-premio b { display: block; font-size: 1.3rem; color: var(--senna-yellow); margin: 4px 0 2px; }
         .ou-sep { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; margin: 18px 0 14px; }
         .ou-sep::before, .ou-sep::after { content: ""; flex: 1; height: 1px; background: var(--input); }
         .visitante-info { color: var(--muted); font-size: 0.72rem; text-align: center; margin-top: 8px; line-height: 1.4; }
         .link-btn {
-            background: none; border: none; color: var(--muted);
+            background: none; border: none; color: var(--senna-yellow);
             font-size: 0.78rem; text-decoration: underline; cursor: pointer;
             display: block; margin: 14px auto 0; padding: 4px;
         }
 
-        /* Nav bottom */
+        /* Navegação Inferior */
         .nav-bottom {
             position: fixed;
             bottom: 0; left: 0; right: 0;
-            background: var(--card);
+            background: #001744;
             display: flex;
-            border-top: 2px solid var(--red);
+            border-top: 2.5px solid var(--senna-yellow);
             padding-bottom: var(--badge-space);
             z-index: 100;
         }
         .nav-bottom a {
             flex: 1;
             text-align: center;
-            padding: 8px 4px;
-            color: var(--muted);
+            padding: 9px 4px;
+            color: #9CA3AF;
             text-decoration: none;
             font-size: 0.65rem;
             font-weight: 600;
@@ -143,7 +162,7 @@
             gap: 2px;
             cursor: pointer;
         }
-        .nav-bottom a.active { color: var(--red); }
+        .nav-bottom a.active { color: var(--senna-yellow); font-weight: 800; }
         .nav-bottom a .icon { font-size: 1.2rem; }
 
         /* Container */
@@ -155,16 +174,17 @@
             border-radius: 12px;
             padding: 14px;
             margin-bottom: 14px;
+            border: 1px solid rgba(255,255,255,0.06);
         }
         .card-title {
-            font-size: 0.7rem;
-            font-weight: 700;
+            font-size: 0.75rem;
+            font-weight: 800;
             letter-spacing: 1.5px;
-            color: var(--red);
+            color: var(--senna-yellow);
             text-transform: uppercase;
             margin-bottom: 12px;
             padding-bottom: 8px;
-            border-bottom: 1px solid var(--input);
+            border-bottom: 1.5px solid var(--senna-blue);
         }
 
         /* Login */
@@ -181,7 +201,8 @@
             height: 86px;
             margin-bottom: 18px;
             border-radius: 20px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+            border: 2px solid var(--senna-yellow);
         }
         .login-screen h2 {
             font-size: 1.45rem;
@@ -190,7 +211,7 @@
             letter-spacing: 1.5px;
             margin-bottom: 4px;
             color: var(--senna-yellow);
-            text-shadow: 1px 2px 4px rgba(0,0,0,0.6);
+            text-shadow: 1px 2px 4px rgba(0,0,0,0.8);
         }
         .login-screen p { color: var(--muted); font-size: 0.82rem; margin-bottom: 26px; text-align: center; }
 
@@ -199,8 +220,8 @@
         .form-group label {
             display: block;
             font-size: 0.7rem;
-            font-weight: 600;
-            color: var(--muted);
+            font-weight: 700;
+            color: #D1D5DB;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 5px;
@@ -216,25 +237,31 @@
             appearance: none;
             -webkit-appearance: none;
         }
-        select:focus, input:focus { outline: none; border-color: var(--red); }
+        select:focus, input:focus { outline: none; border-color: var(--senna-yellow); }
         select:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        /* Botoes */
+        /* Botões */
         .btn {
             width: 100%;
             padding: 13px;
             border: none;
             border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 700;
+            font-size: 0.92rem;
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
             cursor: pointer;
-            transition: opacity 0.2s;
+            transition: opacity 0.2s, filter 0.2s;
         }
-        .btn:active { opacity: 0.8; }
-        .btn-red  { background: var(--red); color: #fff; }
-        .btn-gray { background: var(--input); color: var(--text); }
+        .btn:active { opacity: 0.85; }
+        /* Botão Principal em Verde Senna */
+        .btn-senna-green { 
+            background: var(--senna-green); 
+            color: #FFFFFF; 
+            border: 1px solid rgba(255,255,255,0.25);
+            box-shadow: 0 3px 8px rgba(0, 155, 58, 0.35);
+        }
+        .btn-gray { background: var(--input); color: var(--text); border: 1px solid var(--border); }
         .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         /* Ranking */
@@ -247,12 +274,13 @@
         .rank-row:last-child { border-bottom: none; }
         .rank-pos { width: 28px; font-size: 1rem; text-align: center; }
         .rank-name { flex: 1; font-size: 0.9rem; font-weight: 600; padding: 0 8px; }
-        .rank-pts { font-size: 1rem; font-weight: 700; color: var(--red); }
+        .rank-pts { font-size: 1rem; font-weight: 800; color: var(--senna-yellow); }
         .rank-pts span { font-size: 0.65rem; color: var(--muted); font-weight: 400; }
         .descarte-badge {
             font-size: 0.62rem;
-            background: #FEE2E2;
-            color: #991B1B;
+            background: rgba(0, 39, 118, 0.4);
+            color: var(--senna-yellow);
+            border: 1px solid var(--senna-yellow);
             padding: 1px 5px;
             border-radius: 4px;
             margin-left: 5px;
@@ -262,11 +290,11 @@
         .heatmap { overflow-x: auto; }
         .heatmap table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
         .heatmap th {
-            background: var(--input);
-            padding: 5px 3px;
+            background: var(--senna-blue);
+            color: var(--senna-yellow);
+            padding: 6px 4px;
             text-align: center;
-            font-size: 0.62rem;
-            color: var(--muted);
+            font-size: 0.65rem;
             white-space: nowrap;
         }
         .heatmap td { padding: 4px 3px; text-align: center; border: 1px solid var(--input); }
@@ -275,33 +303,34 @@
         .pts-low  { background: #064E3B; color: #6EE7B7; }
         .pts-med  { background: #065F46; color: #A7F3D0; }
         .pts-high { background: #047857; color: #fff; font-weight: 700; }
-        .pts-top  { background: #059669; color: #fff; font-weight: 700; }
-        .pts-desc { background: #7F1D1D; color: #FCA5A5; font-style: italic; }
+        .pts-top  { background: var(--senna-green); color: #fff; font-weight: 800; }
+        .pts-desc { background: var(--senna-blue); color: var(--senna-yellow); font-style: italic; }
 
         /* Etapas */
         .etapa-btn {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 11px;
+            padding: 12px;
             background: var(--input);
+            border: 1px solid var(--border);
             border-radius: 8px;
             margin-bottom: 7px;
             text-decoration: none;
             color: var(--text);
             cursor: pointer;
-            border: none;
             width: 100%;
             text-align: left;
         }
         .etapa-btn:active { opacity: 0.8; }
-        .etapa-btn .nome { font-weight: 600; font-size: 0.88rem; }
+        .etapa-btn .nome { font-weight: 700; font-size: 0.9rem; color: #FFFFFF; }
         .etapa-btn .info { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
-        .etapa-btn .arrow { color: var(--red); font-size: 1.1rem; }
+        .etapa-btn .arrow { color: var(--senna-yellow); font-size: 1.2rem; font-weight: 800; }
         .etapa-mult {
             font-size: 0.62rem;
-            background: #7C2D12;
-            color: #FED7AA;
+            background: var(--senna-blue);
+            color: var(--senna-yellow);
+            border: 1px solid var(--senna-yellow);
             padding: 1px 5px;
             border-radius: 4px;
             margin-left: 5px;
@@ -310,15 +339,15 @@
         /* Palpites table */
         .palpites-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
         .palpites-table th {
-            background: var(--input);
+            background: var(--senna-blue);
             padding: 6px 4px;
             text-align: center;
             font-size: 0.65rem;
-            color: var(--muted);
+            color: var(--senna-yellow);
         }
         .palpites-table td { padding: 6px 4px; border-bottom: 1px solid var(--input); text-align: center; }
         .palpites-table td.label { text-align: left; color: var(--muted); font-size: 0.68rem; white-space: nowrap; }
-        .acerto   { background: #064E3B; color: #6EE7B7; border-radius: 3px; font-weight: 700; }
+        .acerto   { background: var(--senna-green); color: #FFFFFF; border-radius: 3px; font-weight: 800; }
         .erro     { color: #4B5563; }
         .sem-palp { color: #374151; font-style: italic; }
 
@@ -331,7 +360,7 @@
             font-weight: 700;
         }
         .badge-green { background: #D1FAE5; color: #065F46; }
-        .badge-red   { background: #FEE2E2; color: #991B1B; }
+        .badge-senna { background: var(--senna-blue); color: var(--senna-yellow); border: 1px solid var(--senna-yellow); }
         .badge-gold  { background: #FEF3C7; color: #92400E; }
         .badge-gray  { background: var(--input); color: var(--muted); }
 
@@ -346,58 +375,62 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border: 1px solid var(--border);
         }
         .info-bar strong { color: var(--text); }
 
         /* Nota e Avisos */
-        .lider-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 1000;
+        .lider-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000;
             display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .lider-box { background: var(--card, #1F1F2B); border: 2px solid #F59E0B; border-radius: 14px;
+        .lider-box { background: var(--card); border: 2px solid var(--senna-yellow); border-radius: 14px;
             max-width: 360px; width: 100%; padding: 22px 18px; text-align: center; }
         .lider-box .emoji { font-size: 2.6rem; margin-bottom: 8px; }
-        .lider-box h3 { color: #F59E0B; margin: 0 0 10px; font-size: 1.1rem; }
-        .lider-box p { font-size: 0.85rem; line-height: 1.45; margin: 0 0 10px; }
-        .penalidade { background: rgba(220,38,38,0.12); border: 1px solid #DC2626; color: #FCA5A5;
+        .lider-box h3 { color: var(--senna-yellow); margin: 0 0 10px; font-size: 1.15rem; }
+        .lider-box p { font-size: 0.85rem; line-height: 1.45; margin: 0 0 10px; color: #F9FAFB; }
+        .penalidade { background: rgba(0, 39, 118, 0.45); border: 1px solid var(--senna-yellow); color: var(--senna-yellow);
             border-radius: 10px; padding: 12px; font-size: 0.82rem; margin: 0 0 16px; line-height: 1.45; }
         .nota {
             background: var(--input);
-            border-left: 3px solid var(--gold);
+            border-left: 3.5px solid var(--senna-yellow);
             padding: 9px 12px;
             border-radius: 0 8px 8px 0;
-            font-size: 0.72rem;
-            color: #FCD34D;
+            font-size: 0.74rem;
+            color: var(--senna-yellow);
             margin-bottom: 14px;
         }
 
         /* Section header */
         .section-header {
-            background: var(--input);
+            background: var(--senna-blue);
             border-radius: 6px;
             padding: 8px 12px;
             margin: 14px 0 8px;
             font-size: 0.75rem;
-            font-weight: 700;
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: var(--red);
+            color: var(--senna-yellow);
+            border-left: 3px solid var(--senna-green);
         }
 
         /* Pos label */
         .pos-label {
             font-size: 0.72rem;
             font-weight: 700;
-            color: var(--red);
+            color: var(--senna-yellow);
             margin: 12px 0 5px;
             display: flex;
             align-items: center;
             gap: 5px;
         }
         .pos-badge {
-            background: var(--red);
-            color: #fff;
+            background: var(--senna-blue);
+            color: var(--senna-yellow);
+            border: 1px solid var(--senna-yellow);
             border-radius: 4px;
             padding: 1px 6px;
             font-size: 0.65rem;
+            font-weight: 800;
         }
 
         /* Toast */
@@ -406,18 +439,19 @@
             bottom: calc(76px + var(--badge-space));
             left: 50%;
             transform: translateX(-50%);
-            background: var(--green);
+            background: var(--senna-green);
             color: #fff;
             padding: 10px 20px;
             border-radius: 20px;
             font-size: 0.82rem;
-            font-weight: 600;
+            font-weight: 700;
             z-index: 200;
             opacity: 0;
             transition: opacity 0.3s;
             white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
-        .toast.error { background: #DC2626; }
+        .toast.error { background: var(--senna-blue); border: 1px solid var(--senna-yellow); color: var(--senna-yellow); }
         .toast.show  { opacity: 1; }
 
         /* Loading */
@@ -425,7 +459,7 @@
         .spinner {
             width: 28px; height: 28px;
             border: 3px solid var(--input);
-            border-top-color: var(--red);
+            border-top-color: var(--senna-yellow);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
             margin: 0 auto 10px;
@@ -435,13 +469,13 @@
         /* Success */
         .success-screen { text-align: center; padding: 36px 16px; }
         .success-icon  { font-size: 3.5rem; margin-bottom: 14px; }
-        .success-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; }
+        .success-title { font-size: 1.25rem; font-weight: 800; color: var(--senna-yellow); margin-bottom: 6px; }
         .success-sub   { color: var(--muted); font-size: 0.82rem; margin-bottom: 20px; }
 
         /* Back btn */
-        select.campo-erro { border: 2px solid #DC2626 !important; }
+        select.campo-erro { border: 2px solid var(--senna-yellow) !important; }
         .back-btn {
-            color: var(--muted);
+            color: var(--senna-yellow);
             font-size: 0.78rem;
             text-decoration: none;
             display: inline-block;
@@ -450,6 +484,7 @@
             background: none;
             border: none;
             padding: 0;
+            font-weight: 600;
         }
 </style>
 </head>
@@ -459,7 +494,7 @@
 <!-- ── LOGIN ── -->
 <div id="screen-login" style="display:none;">
 <div class="login-screen">
-<!-- Logotipo SVG com as Cores de Ayrton Senna -->
+<!-- Logotipo Senna -->
 <img alt="Fanáticos por F1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FED100'/%3E%3Cpath d='M0 36 L100 22 L100 36 L0 50 Z' fill='%23002776'/%3E%3Cpath d='M0 54 L100 40 L100 53 L0 67 Z' fill='%23009B3A'/%3E%3Ccircle cx='50' cy='20' r='5' fill='%23002776'/%3E%3Ctext x='50' y='88' text-anchor='middle' font-family='Arial,sans-serif' font-size='23' font-weight='900' font-style='italic' fill='%2315151E' letter-spacing='1.5'%3EFPF1%3C/text%3E%3C/svg%3E"/>
 <h2>Fanáticos por F1</h2>
 <p>Fanáticos por F1<br/>Selecione seu nome e digite sua senha</p>
@@ -474,14 +509,14 @@
 <label for="login-senha">Senha</label>
 <input type="password" id="login-senha" placeholder="Digite sua senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')fazerLogin()"/>
 </div>
-<div id="login-erro" style="display:none;color:#F87171;font-size:0.8rem;margin-bottom:12px;text-align:center;"></div>
-<button class="btn btn-red" onclick="fazerLogin()">ENTRAR 🏎️</button>
+<div id="login-erro" style="display:none;color:var(--senna-yellow);font-size:0.8rem;margin-bottom:12px;text-align:center;"></div>
+<button class="btn btn-senna-green" onclick="fazerLogin()">ENTRAR 🏎️</button>
 <button type="button" class="link-btn" onclick="iniciarTrocaSenha()">🔑 Trocar minha senha</button>
 <div class="ou-sep"><span>ou</span></div>
 <button type="button" class="btn btn-gray" onclick="entrarVisitante()">👀 SOU VISITANTE</button>
 <div class="visitante-info">Navegue pelo bolão sem login. Os nomes dos participantes ficam ocultos e não é possível enviar palpites.</div>
 
-<!-- Rodapé de Conformidade no Login -->
+<!-- Rodapé de Conformidade -->
 <div style="margin-top:20px;padding-top:12px;border-top:1px solid var(--input);font-size:0.68rem;color:var(--muted);text-align:center;line-height:1.4;">
   <p><strong>Aplicação Amadora e Recreativa</strong></p>
   <p>Uso estritamente privado entre amigos. Sem vínculo oficial com a Formula One Licensing B.V. ou FIA.</p>
@@ -506,8 +541,8 @@
 <label for="nova-senha2">Confirme a nova senha</label>
 <input type="password" id="nova-senha2" placeholder="Digite de novo" autocomplete="new-password" onkeydown="if(event.key==='Enter')trocarSenha()"/>
 </div>
-<div id="senha-erro" style="display:none;color:#F87171;font-size:0.8rem;margin-bottom:12px;text-align:center;"></div>
-<button class="btn btn-red" id="btn-trocar" onclick="trocarSenha()">SALVAR SENHA 🔒</button>
+<div id="senha-erro" style="display:none;color:var(--senna-yellow);font-size:0.8rem;margin-bottom:12px;text-align:center;"></div>
+<button class="btn btn-senna-green" id="btn-trocar" onclick="trocarSenha()">SALVAR SENHA 🔒</button>
 <button type="button" class="link-btn" id="btn-cancelar-troca" style="display:none;" onclick="voltarLogin()">Cancelar</button>
 </div>
 </div>
@@ -813,8 +848,8 @@ async function avisoLider() {
             <h3>Você é o líder do bolão!</h3>
             <p>Parabéns, <b></b>! Pelo regulamento, o líder deve enviar seus palpites até
                <b>${ANTECEDENCIA_LIDER_MIN} minutos antes</b> do horário oficial de início de cada atividade.</p>
-            <p style="color:#FCA5A5;">Envio fora desse prazo gera punição:<br><b>−2 pts</b> na classificação e <b>−10 pts</b> na corrida.</p>
-            <button class="btn btn-red" style="margin-top:6px;">ENTENDI 👍</button>
+            <p style="color:var(--senna-yellow);">Envio fora desse prazo gera punição:<br><b>−2 pts</b> na classificação e <b>−10 pts</b> na corrida.</p>
+            <button class="btn btn-senna-green" style="margin-top:6px;">ENTENDI 👍</button>
         </div>`;
     m.querySelector("p b").textContent = usuario;
     m.querySelector("button").onclick = () => m.remove();
@@ -837,9 +872,9 @@ function mostrarApp() {
     if (TESTE && !document.getElementById("faixa-teste")) {
         const f = document.createElement("div");
         f.id = "faixa-teste";
-        f.style.cssText = "background:#F59E0B;color:#111;font-size:0.75rem;font-weight:700;text-align:center;padding:6px 10px;";
+        f.style.cssText = "background:var(--senna-yellow);color:var(--senna-blue);font-size:0.75rem;font-weight:800;text-align:center;padding:6px 10px;";
         f.innerHTML = `🧪 MODO TESTE DO LÍDER — você é tratado como líder e nada é gravado.
-            <a href="#" style="color:#111;text-decoration:underline;margin-left:6px;" onclick="sairDoTeste();return false;">Sair do teste</a>`;
+            <a href="#" style="color:var(--senna-blue);text-decoration:underline;margin-left:6px;" onclick="sairDoTeste();return false;">Sair do teste</a>`;
         document.getElementById("screen-app").prepend(f);
         avisoLider();
     }
@@ -959,7 +994,7 @@ async function renderPalpites() {
             document.getElementById("tab-palpites").innerHTML = `
                 <div class="card" style="text-align:center;padding:40px 16px;">
                     <div style="font-size:3rem;margin-bottom:14px;">🏁</div>
-                    <div style="font-weight:700;margin-bottom:6px;">Nenhuma sessão aberta</div>
+                    <div style="font-weight:800;color:var(--senna-yellow);margin-bottom:6px;">Nenhuma sessão aberta</div>
                     <div style="color:var(--muted);font-size:0.82rem;">
                         Os palpites estarão disponíveis antes de cada sessão.
                     </div>
@@ -988,7 +1023,7 @@ async function renderPalpites() {
             </div>`;
     } catch(e) {
         document.getElementById("tab-palpites").innerHTML =
-            `<div class="card" style="text-align:center;padding:30px;color:#DC2626;">
+            `<div class="card" style="text-align:center;padding:30px;color:var(--senna-yellow);">
                 ❌ Erro ao conectar<br>
                 <button class="btn btn-gray" style="margin-top:14px;width:auto;padding:8px 20px;" onclick="renderPalpites()">Tentar novamente</button>
             </div>`;
@@ -1029,7 +1064,7 @@ function onSessaoChange(val) {
 
     const enviar = visitante && !TESTE
         ? `<div class="nota" style="margin-top:18px;">👀 Você está no modo visitante: é possível ver o formulário, mas não enviar palpites. Entre com seu nome e senha para palpitar.</div>`
-        : `<button class="btn btn-red" style="margin-top:18px;" onclick="enviarPalpites()">
+        : `<button class="btn btn-senna-green" style="margin-top:18px;" onclick="enviarPalpites()">
             ENVIAR PALPITES 🏎️
         </button>`;
     body.innerHTML = `${aviso}<div id="aviso-lider"></div>${campos}${enviar}
@@ -1126,7 +1161,7 @@ async function enviarPalpites() {
     const palpites = {};
     tipos.forEach(t => { palpites[t] = document.getElementById(`palp-${t}`).value; });
 
-    const btn = document.querySelector("#form-body .btn-red");
+    const btn = document.querySelector("#form-body .btn-senna-green");
     btn.disabled = true; btn.textContent = "ENVIANDO...";
 
     try {
@@ -1160,7 +1195,7 @@ async function enviarPalpites() {
                         <small style="color:var(--muted);">${r.dt_envio}</small>
                     </div>
                     ${penHtml}
-                    <button class="btn btn-red" onclick="irPara('#palpites')">Enviar mais palpites</button>
+                    <button class="btn btn-senna-green" onclick="irPara('#palpites')">Enviar mais palpites</button>
                     <button class="btn btn-gray" style="margin-top:10px;" onclick="showTab('ranking')">🏆 Ver ranking</button>
                 </div>`;
         } else {
@@ -1210,7 +1245,7 @@ async function renderRanking() {
                 else if (v > 25) cls = "pts-top";
                 return `<td class="${cls}">${v > 0 ? v : "-"}</td>`;
             }).join("");
-            return `<tr><td class="nome">${nome}</td>${cells}<td style="font-weight:700;color:var(--red);">${Math.round(info.total||0)}</td></tr>`;
+            return `<tr><td class="nome">${nome}</td>${cells}<td style="font-weight:800;color:var(--senna-yellow);">${Math.round(info.total||0)}</td></tr>`;
         }).join("");
 
         const heatHeaders = etapas.map(e => `<th>${e.substring(0,4)}</th>`).join("");
@@ -1218,7 +1253,7 @@ async function renderRanking() {
         const accRows = d.ranking.map(nome => {
             const info = d.dados[nome] || {};
             const cells = (info.acumulado || []).map((v,i,arr) =>
-                `<td style="${i===arr.length-1?'font-weight:700;color:var(--red);':''}">${Math.round(v)}</td>`
+                `<td style="${i===arr.length-1?'font-weight:800;color:var(--senna-yellow);':''}">${Math.round(v)}</td>`
             ).join("");
             return `<tr><td class="nome">${nome}</td>${cells}</tr>`;
         }).join("");
@@ -1236,11 +1271,11 @@ async function renderRanking() {
                 <div class="card-title">📊 Pontos por Etapa</div>
                 <div class="heatmap">
                     <table>
-                        <thead><tr><th>Piloto</th>${heatHeaders}<th style="color:var(--red);">Total</th></tr></thead>
+                        <thead><tr><th>Piloto</th>${heatHeaders}<th style="color:var(--senna-yellow);">Total</th></tr></thead>
                         <tbody>${heatRows}</tbody>
                     </table>
                 </div>
-                <div style="margin-top:8px;font-size:0.62rem;color:#4B5563;">🔴 Itálico = pior FDS (descarte)</div>
+                <div style="margin-top:8px;font-size:0.62rem;color:var(--muted);">🔵 Itálico Azul = pior FDS (descarte)</div>
             </div>
             <div class="card">
                 <div class="card-title">📈 Evolução Acumulada</div>
@@ -1253,7 +1288,7 @@ async function renderRanking() {
             </div>`;
     } catch(e) {
         document.getElementById("tab-ranking").innerHTML =
-            `<div class="card" style="text-align:center;padding:30px;color:#DC2626;">
+            `<div class="card" style="text-align:center;padding:30px;color:var(--senna-yellow);">
                 ❌ Erro ao carregar ranking
                 <button class="btn btn-gray" style="margin-top:14px;width:auto;padding:8px 20px;" onclick="renderRanking()">Tentar novamente</button>
             </div>`;
@@ -1285,7 +1320,7 @@ async function renderEtapas() {
             </div>`;
     } catch(e) {
         document.getElementById("tab-etapas").innerHTML =
-            `<div class="card" style="text-align:center;padding:30px;color:#DC2626;">
+            `<div class="card" style="text-align:center;padding:30px;color:var(--senna-yellow);">
                 ❌ Erro ao carregar etapas
                 <button class="btn btn-gray" style="margin-top:14px;width:auto;padding:8px 20px;" onclick="renderEtapas()">Tentar novamente</button>
             </div>`;
@@ -1331,7 +1366,7 @@ async function renderPalpitesEtapa(nome) {
                 const cls = v && v === real ? "acerto" : (!v ? "sem-palp" : "erro");
                 return `<td class="${cls}">${v || "—"}</td>`;
             }).join("");
-            return `<tr><td class="label">${gridLabels[idx]}</td>${cells}<td style="font-weight:700;color:#fff;">${real||"—"}</td></tr>`;
+            return `<tr><td class="label">${gridLabels[idx]}</td>${cells}<td style="font-weight:800;color:var(--senna-yellow);">${real||"—"}</td></tr>`;
         }).join("");
 
         const corridaTipos = Array.from({length:10},(_,i)=>`corrida_p${i+1}`).concat(["vr"]);
@@ -1343,7 +1378,7 @@ async function renderPalpitesEtapa(nome) {
                 const cls = v && v === real ? "acerto" : (!v ? "sem-palp" : "erro");
                 return `<td class="${cls}">${v || "—"}</td>`;
             }).join("");
-            return `<tr><td class="label">${corridaLabels[idx]}</td>${cells}<td style="font-weight:700;color:#fff;">${real||"—"}</td></tr>`;
+            return `<tr><td class="label">${corridaLabels[idx]}</td>${cells}<td style="font-weight:800;color:var(--senna-yellow);">${real||"—"}</td></tr>`;
         }).join("");
 
         const thParts = participantes.map(p => `<th>${p.substring(0,4)}</th>`).join("");
@@ -1369,7 +1404,7 @@ async function renderPalpitesEtapa(nome) {
                 <div class="card-title">📝 Classificação</div>
                 <div style="overflow-x:auto;">
                     <table class="palpites-table">
-                        <thead><tr><th>Pos</th>${thParts}<th style="color:var(--red);">Real</th></tr></thead>
+                        <thead><tr><th>Pos</th>${thParts}<th style="color:var(--senna-yellow);">Real</th></tr></thead>
                         <tbody>${gridTable}</tbody>
                     </table>
                 </div>
@@ -1378,7 +1413,7 @@ async function renderPalpitesEtapa(nome) {
                 <div class="card-title">📝 Corrida</div>
                 <div style="overflow-x:auto;">
                     <table class="palpites-table">
-                        <thead><tr><th>Pos</th>${thParts}<th style="color:var(--red);">Real</th></tr></thead>
+                        <thead><tr><th>Pos</th>${thParts}<th style="color:var(--senna-yellow);">Real</th></tr></thead>
                         <tbody>${corridaTable}</tbody>
                     </table>
                 </div>
@@ -1386,7 +1421,7 @@ async function renderPalpitesEtapa(nome) {
     } catch(e) {
         document.getElementById("tab-etapas").innerHTML =
             `<button class="back-btn" onclick="irPara('#etapas')">← Voltar às etapas</button>
-            <div class="card" style="text-align:center;padding:30px;color:#DC2626;">❌ Erro ao carregar etapa</div>`;
+            <div class="card" style="text-align:center;padding:30px;color:var(--senna-yellow);">❌ Erro ao carregar etapa</div>`;
     }
 }
 
@@ -1490,7 +1525,7 @@ async function renderCapsula() {
                 const cls = v && v === real ? "acerto" : (!v ? "sem-palp" : "erro");
                 return `<td class="${cls}">${v ? v.split(" ").pop() : "—"}</td>`;
             }).join("");
-            return `<tr><td class="label">P${i+1}</td>${cells}<td style="font-weight:700;color:#fff;">${real ? real.split(" ").pop() : "—"}</td></tr>`;
+            return `<tr><td class="label">P${i+1}</td>${cells}<td style="font-weight:800;color:var(--senna-yellow);">${real ? real.split(" ").pop() : "—"}</td></tr>`;
         }).join("");
 
         const equipesRows = Array.from({length:3},(_,i) => {
@@ -1501,7 +1536,7 @@ async function renderCapsula() {
                 const cls = v && v === real ? "acerto" : (!v ? "sem-palp" : "erro");
                 return `<td class="${cls}">${v||"—"}</td>`;
             }).join("");
-            return `<tr><td class="label">P${i+1}</td>${cells}<td style="font-weight:700;color:#fff;">${real||"—"}</td></tr>`;
+            return `<tr><td class="label">P${i+1}</td>${cells}<td style="font-weight:800;color:var(--senna-yellow);">${real||"—"}</td></tr>`;
         }).join("");
 
         const realMR  = res.melhor_resto || "";
@@ -1525,20 +1560,20 @@ async function renderCapsula() {
             </div>
             <div class="card">
                 <div class="card-title">📊 Resultado Parcial (F1.com)</div>
-                <div style="font-size:0.65rem;color:var(--red);font-weight:700;margin-bottom:6px;text-transform:uppercase;">🏎️ Top 6 Pilotos</div>
+                <div style="font-size:0.65rem;color:var(--senna-yellow);font-weight:800;margin-bottom:6px;text-transform:uppercase;">🏎️ Top 6 Pilotos</div>
                 ${pilotosRes}
-                <div style="font-size:0.65rem;color:var(--red);font-weight:700;margin:12px 0 6px;text-transform:uppercase;">🏗️ Top 3 Construtores</div>
+                <div style="font-size:0.65rem;color:var(--senna-yellow);font-weight:800;margin:12px 0 6px;text-transform:uppercase;">🏗️ Top 3 Construtores</div>
                 ${equipesRes}
                 <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
                     ${realMR  ? `<div><div style="font-size:0.62rem;color:var(--muted);margin-bottom:3px;">MELHOR DO RESTO</div><span class="badge badge-green">${realMR}</span></div>` : ""}
-                    ${realGP2 ? `<div><div style="font-size:0.62rem;color:var(--muted);margin-bottom:3px;">PILOTO GP2</div><span class="badge badge-red">${realGP2}</span></div>` : ""}
+                    ${realGP2 ? `<div><div style="font-size:0.62rem;color:var(--muted);margin-bottom:3px;">PILOTO GP2</div><span class="badge badge-senna">${realGP2}</span></div>` : ""}
                 </div>
             </div>
             <div class="card">
                 <div class="card-title">📝 Palpites — Pilotos</div>
                 <div style="overflow-x:auto;">
                     <table class="palpites-table">
-                        <thead><tr><th>Pos</th>${thParts}<th style="color:var(--red);">Real</th></tr></thead>
+                        <thead><tr><th>Pos</th>${thParts}<th style="color:var(--senna-yellow);">Real</th></tr></thead>
                         <tbody>${pilotosRows}</tbody>
                     </table>
                 </div>
@@ -1547,7 +1582,7 @@ async function renderCapsula() {
                 <div class="card-title">📝 Palpites — Construtores</div>
                 <div style="overflow-x:auto;">
                     <table class="palpites-table">
-                        <thead><tr><th>Pos</th>${thParts}<th style="color:var(--red);">Real</th></tr></thead>
+                        <thead><tr><th>Pos</th>${thParts}<th style="color:var(--senna-yellow);">Real</th></tr></thead>
                         <tbody>${equipesRows}</tbody>
                     </table>
                 </div>
@@ -1556,17 +1591,17 @@ async function renderCapsula() {
                 <div class="card-title">📝 Melhor do Resto & GP2</div>
                 <div style="overflow-x:auto;">
                     <table class="palpites-table">
-                        <thead><tr><th>Item</th>${thParts}<th style="color:var(--red);">Real</th></tr></thead>
+                        <thead><tr><th>Item</th>${thParts}<th style="color:var(--senna-yellow);">Real</th></tr></thead>
                         <tbody>
-                            <tr><td class="label">Melhor Resto</td>${mrCells}<td style="font-weight:700;color:#fff;">${realMR ? realMR.split(" ").pop() : "—"}</td></tr>
-                            <tr><td class="label">GP2</td>${gp2Cells}<td style="font-weight:700;color:#fff;">${realGP2 ? realGP2.split(" ").pop() : "—"}</td></tr>
+                            <tr><td class="label">Melhor Resto</td>${mrCells}<td style="font-weight:800;color:var(--senna-yellow);">${realMR ? realMR.split(" ").pop() : "—"}</td></tr>
+                            <tr><td class="label">GP2</td>${gp2Cells}<td style="font-weight:800;color:var(--senna-yellow);">${realGP2 ? realGP2.split(" ").pop() : "—"}</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>`;
     } catch(e) {
         document.getElementById("tab-capsula").innerHTML =
-            `<div class="card" style="text-align:center;padding:30px;color:#DC2626;">
+            `<div class="card" style="text-align:center;padding:30px;color:var(--senna-yellow);">
                 ❌ Erro ao carregar cápsula
                 <button class="btn btn-gray" style="margin-top:14px;width:auto;padding:8px 20px;" onclick="renderCapsula()">Tentar novamente</button>
             </div>`;
