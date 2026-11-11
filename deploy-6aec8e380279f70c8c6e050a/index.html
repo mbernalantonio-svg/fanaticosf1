@@ -956,33 +956,50 @@ function loading(id) {
         '<div class="loading"><div class="spinner"></div>Carregando...</div>';
 }
 
-// ── SESSÃO NEWS (Home com Contagem Regressiva e Cronograma F1 Idêntico ao Bolão) ──
+// ── SESSÃO NEWS (Totalmente Sincronizada com a Aba Palpites) ───────────────────
 async function renderNews() {
     loading("tab-news");
     try {
-        const [rProxima, rNews] = await Promise.allSettled([
-            apiFetch("/api/proxima_etapa"),
+        const [rEtapas, rNews] = await Promise.allSettled([
+            apiFetch("/api/etapas_abertas"),
             apiFetch("/api/news")
         ]);
 
-        const proxima = (rProxima.status === "fulfilled" && rProxima.value.etapa) ? rProxima.value.etapa : {
-            nome: "Las Vegas",
-            circuito: "Las Vegas Strip Circuit, EUA",
-            sessoes: []
+        const etapas = (rEtapas.status === "fulfilled" && rEtapas.value.etapas_abertas) ? rEtapas.value.etapas_abertas : [];
+        const proxima = etapas.length ? etapas[0] : {
+            etapa: "Las Vegas",
+            sessoes: [
+                { sessao: "classificacao", inicio: "2026-11-21 01:00:00" },
+                { sessao: "corrida",       inicio: "2026-11-22 03:00:00" }
+            ]
         };
 
+        const circuitos = {
+            "Las Vegas": "Las Vegas Strip Circuit, EUA",
+            "Catar": "Circuito Internacional de Lusail, Catar",
+            "Abu Dhabi": "Circuito de Yas Marina, Abu Dhabi",
+            "Brasil": "Autódromo de Interlagos, São Paulo"
+        };
+
+        const circuito = circuitos[proxima.etapa] || "Circuito Oficial de Fórmula 1";
         const noticias = (rNews.status === "fulfilled" && rNews.value.noticias && rNews.value.noticias.length) ? rNews.value.noticias : [];
 
-        // Linhas de Cronograma de Atividades Oficiais do Bolão
-        const sessoesRows = (proxima.sessoes || []).map(s => `
-            <tr>
-                <td class="tipo">${s.tipo}</td>
-                <td style="color:#D1D5DB;">${s.data}</td>
-                <td class="horario">${s.hora}</td>
-            </tr>
-        `).join("");
+        // Monta as linhas da tabela estritamente com as sessões oficiais do Bolão
+        const sessoesRows = (proxima.sessoes || []).map(s => {
+            const dt = inicioSessao(s);
+            const diaSemana = dt.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" });
+            const hora = dt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false });
+            const label = s.sessao === "classificacao" ? "Classificação" : "Corrida Oficial";
+            return `
+                <tr>
+                    <td class="tipo">${label}</td>
+                    <td style="color:#D1D5DB;">${diaSemana}</td>
+                    <td class="horario">${hora}</td>
+                </tr>
+            `;
+        }).join("");
 
-        // Slides do Carrossel (3 Notícias, sendo 1 de cada grande portal)
+        // Slides das 3 notícias (1 de cada grande portal)
         const slidesHtml = noticias.map(n => `
             <div class="carousel-slide">
                 <div>
@@ -997,8 +1014,8 @@ async function renderNews() {
             <div class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="moverCarousel(${i})"></div>
         `).join("");
 
-        // Histórico de Maiores Vencedores
-        const vencedores = HISTORICO_VENCEDORES[proxima.nome] || [];
+        // Maiores Vencedores Históricos
+        const vencedores = HISTORICO_VENCEDORES[proxima.etapa] || [];
         let historicoHtml = "";
         if (vencedores.length > 0) {
             const itensVencedores = vencedores.map(([p, v]) => `
@@ -1010,7 +1027,7 @@ async function renderNews() {
 
             historicoHtml = `
                 <div class="card">
-                    <div class="card-title">🏆 Maiores Vencedores — GP de ${proxima.nome}</div>
+                    <div class="card-title">🏆 Maiores Vencedores — GP de ${proxima.etapa}</div>
                     ${itensVencedores}
                 </div>`;
         }
@@ -1018,8 +1035,8 @@ async function renderNews() {
         document.getElementById("tab-news").innerHTML = `
             <div class="next-race-hero">
                 <span class="next-race-tag">PRÓXIMA ETAPA</span>
-                <div class="next-race-name">🏁 GP de ${proxima.nome}</div>
-                <div class="next-race-circuit">📍 ${proxima.circuito || "Circuito Oficial de Fórmula 1"}</div>
+                <div class="next-race-name">🏁 GP de ${proxima.etapa}</div>
+                <div class="next-race-circuit">📍 ${circuito}</div>
                 
                 <div class="countdown-box">
                     <div class="countdown-title" id="countdown-label">Contagem Regressiva para os Palpites</div>
@@ -1027,7 +1044,7 @@ async function renderNews() {
                 </div>
 
                 <table class="sessions-table">
-                    <tbody>${sessoesRows || '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:8px;">Horários sincronizados com o calendário oficial.</td></tr>'}</tbody>
+                    <tbody>${sessoesRows}</tbody>
                 </table>
             </div>
 
@@ -1072,9 +1089,10 @@ function iniciarContagemRegressiva(sessoes) {
     const agora = Date.now();
     let alvoSessao = null;
     for (const s of sessoes) {
-        const t = s.timestamp_iso ? new Date(s.timestamp_iso).getTime() : inicioSessao(s).getTime();
+        const t = inicioSessao(s).getTime();
         if (t > agora) {
-            alvoSessao = { label: s.tipo, timestamp: t };
+            const label = s.sessao === "classificacao" ? "a Classificação" : "a Corrida Oficial";
+            alvoSessao = { label: label, timestamp: t };
             break;
         }
     }
@@ -1082,11 +1100,16 @@ function iniciarContagemRegressiva(sessoes) {
     function atualizarTimer() {
         const elTimer = document.getElementById("countdown-timer");
         const elLabel = document.getElementById("countdown-label");
-        if (!elTimer || !alvoSessao) return;
+        if (!elTimer) return;
+
+        if (!alvoSessao) {
+            elTimer.textContent = "ATIVIDADE EM ANDAMENTO 🟢";
+            return;
+        }
 
         const diff = alvoSessao.timestamp - Date.now();
         if (diff <= 0) {
-            elTimer.textContent = "ATIVIDADE EM ANDAMENTO 🟢";
+            elTimer.textContent = "PRAZO ENCERRADO 🏁";
             return;
         }
 
@@ -1099,13 +1122,8 @@ function iniciarContagemRegressiva(sessoes) {
         elTimer.textContent = `${dias}d ${horas}h ${minutos}m ${segundos}s`;
     }
 
-    if (alvoSessao) {
-        atualizarTimer();
-        countdownTimer = setInterval(atualizarTimer, 1000);
-    } else {
-        const elTimer = document.getElementById("countdown-timer");
-        if (elTimer) elTimer.textContent = "Aguardando próxima sessão";
-    }
+    atualizarTimer();
+    countdownTimer = setInterval(atualizarTimer, 1000);
 }
 
 let carouselTimer = null;
