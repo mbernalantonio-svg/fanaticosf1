@@ -571,6 +571,7 @@
 <div class="container" id="tab-capsula" style="display:none;"></div>
 <div class="container" id="tab-regulamento" style="display:none;"></div>
 
+<!-- 5 Opções com News no Meio (Home Oficial) -->
 <nav class="nav-bottom">
 <a id="nav-palpites" onclick="showTab('palpites')">
 <span class="icon">📝</span>Palpites
@@ -956,46 +957,31 @@ function loading(id) {
         '<div class="loading"><div class="spinner"></div>Carregando...</div>';
 }
 
-// ── SESSÃO NEWS (Home Sincronizada 100% com a mesma fonte de Palpites) ────────
+// ── SESSÃO NEWS (Home Totalmente Dinâmica) ────────────────────────────────────
 async function renderNews() {
     loading("tab-news");
     try {
-        const [rEtapas, rNews] = await Promise.allSettled([
-            apiFetch("/api/etapas_abertas"),
+        const [rProxima, rNews] = await Promise.allSettled([
+            apiFetch("/api/proxima_etapa"),
             apiFetch("/api/news")
         ]);
 
-        const etapas = (rEtapas.status === "fulfilled" && rEtapas.value.etapas_abertas) ? rEtapas.value.etapas_abertas : [];
-        const proxima = etapas.length ? etapas[0] : null;
-
-        const circuitos = {
-            "Las Vegas": "Las Vegas Strip Circuit, EUA",
-            "Catar": "Circuito Internacional de Lusail, Catar",
-            "Abu Dhabi": "Circuito de Yas Marina, Abu Dhabi",
-            "Brasil": "Autódromo de Interlagos, São Paulo"
+        const proxima = (rProxima.status === "fulfilled" && rProxima.value.etapa) ? rProxima.value.etapa : {
+            nome: "Aguardando Próxima Etapa",
+            circuito: "Circuito Oficial de Fórmula 1",
+            sessoes: []
         };
 
-        const nomeEtapa = proxima ? proxima.etapa : "Temporada Concluída";
-        const circuito = circuitos[nomeEtapa] || "Circuito Oficial de Fórmula 1";
         const noticias = (rNews.status === "fulfilled" && rNews.value.noticias && rNews.value.noticias.length) ? rNews.value.noticias : [];
 
-        // Monta as linhas estritamente com as sessões oficiais do banco
-        let sessoesRows = "";
-        if (proxima && proxima.sessoes) {
-            sessoesRows = proxima.sessoes.map(s => {
-                const dt = inicioSessao(s);
-                const diaSemana = dt.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" });
-                const hora = dt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false });
-                const label = s.sessao === "classificacao" ? "Classificação" : (s.sessao === "corrida" ? "Corrida Oficial" : s.sessao);
-                return `
-                    <tr>
-                        <td class="tipo">${label}</td>
-                        <td style="color:#D1D5DB;">${diaSemana}</td>
-                        <td class="horario">${hora}</td>
-                    </tr>
-                `;
-            }).join("");
-        }
+        // Monta as sessões oficiais lidas da tabela sessoes
+        const sessoesRows = (proxima.sessoes || []).map(s => `
+            <tr>
+                <td class="tipo">${s.tipo}</td>
+                <td style="color:#D1D5DB;">${s.data}</td>
+                <td class="horario">${s.hora}</td>
+            </tr>
+        `).join("");
 
         // Slides das 3 notícias (1 de cada portal oficial)
         const slidesHtml = noticias.map(n => `
@@ -1013,7 +999,7 @@ async function renderNews() {
         `).join("");
 
         // Maiores Vencedores Históricos
-        const vencedores = HISTORICO_VENCEDORES[nomeEtapa] || [];
+        const vencedores = HISTORICO_VENCEDORES[proxima.nome] || [];
         let historicoHtml = "";
         if (vencedores.length > 0) {
             const itensVencedores = vencedores.map(([p, v]) => `
@@ -1025,7 +1011,7 @@ async function renderNews() {
 
             historicoHtml = `
                 <div class="card">
-                    <div class="card-title">🏆 Maiores Vencedores — GP de ${nomeEtapa}</div>
+                    <div class="card-title">🏆 Maiores Vencedores — GP de ${proxima.nome}</div>
                     ${itensVencedores}
                 </div>`;
         }
@@ -1033,8 +1019,8 @@ async function renderNews() {
         document.getElementById("tab-news").innerHTML = `
             <div class="next-race-hero">
                 <span class="next-race-tag">PRÓXIMA ETAPA</span>
-                <div class="next-race-name">🏁 GP de ${nomeEtapa}</div>
-                <div class="next-race-circuit">📍 ${circuito}</div>
+                <div class="next-race-name">🏁 GP de ${proxima.nome}</div>
+                <div class="next-race-circuit">📍 ${proxima.circuito}</div>
                 
                 <div class="countdown-box">
                     <div class="countdown-title" id="countdown-label">Contagem Regressiva para os Palpites</div>
@@ -1042,7 +1028,7 @@ async function renderNews() {
                 </div>
 
                 <table class="sessions-table">
-                    <tbody>${sessoesRows || '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:8px;">Aguardando abertura da próxima etapa.</td></tr>'}</tbody>
+                    <tbody>${sessoesRows || '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:8px;">Horários sincronizados com a API oficial.</td></tr>'}</tbody>
                 </table>
             </div>
 
@@ -1089,10 +1075,9 @@ function iniciarContagemRegressiva(sessoes) {
     const agora = Date.now();
     let alvoSessao = null;
     for (const s of sessoes) {
-        const t = inicioSessao(s).getTime();
+        const t = s.timestamp_iso ? new Date(s.timestamp_iso).getTime() : (s.inicio ? dataBRT(s.inicio).getTime() : 0);
         if (t > agora) {
-            const label = s.sessao === "classificacao" ? "a Classificação" : (s.sessao === "corrida" ? "a Corrida Oficial" : s.sessao);
-            alvoSessao = { label: label, timestamp: t };
+            alvoSessao = { label: s.tipo, timestamp: t };
             break;
         }
     }
@@ -1115,7 +1100,7 @@ function iniciarContagemRegressiva(sessoes) {
 
         const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
         const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutos = Math.floor((diff % (1000 * 60)) / 1000 / 60);
+        const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const segundos = Math.floor((diff % (1000 * 60)) / 1000);
 
         if (elLabel) elLabel.textContent = `Tempo restante até ${alvoSessao.label}`;
@@ -1163,7 +1148,7 @@ function prevSlide() {
     moverCarousel(carouselIdx);
 }
 
-// ── PALPITES (Sessões Abertas Sempre Acessíveis para Envio) ────────────────────
+// ── PALPITES (Sessões Abertas Dinâmicas) ───────────────────────────────────────
 async function renderPalpites() {
     loading("tab-palpites");
     try {
@@ -1181,7 +1166,7 @@ async function renderPalpites() {
         let opts = '<option value="">Selecione a sessão para palpitar</option>';
         etapasAbertas.forEach(e => {
             (e.sessoes || []).forEach(s => {
-                const label = s.sessao === "classificacao" ? "Classificação" : (s.sessao === "corrida" ? "Corrida" : s.sessao);
+                const label = s.label || (s.sessao === "classificacao" ? "Classificação" : (s.sessao === "corrida" ? "Corrida" : s.sessao));
                 opts += `<option value="${e.etapa}|${s.sessao}">${e.etapa} — ${label}</option>`;
             });
         });
@@ -1212,7 +1197,7 @@ function onSessaoChange(val) {
     window._sessaoSel = sessao;
     const s = sessaoSel(etapa, sessao);
 
-    let aviso = s ? `<div class="nota">⏱️ Palpites até ${horaLimite(s)} (horário de Brasília)</div>` : "";
+    let aviso = (s && s.inicio) ? `<div class="nota">⏱️ Palpites até ${horaLimite(s)} (horário de Brasília)</div>` : "";
 
     const opts = pilotosDaEtapa(etapa).map(p => `<option value="${p}">${p}</option>`).join("");
 
