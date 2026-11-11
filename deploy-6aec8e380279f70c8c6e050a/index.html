@@ -571,7 +571,6 @@
 <div class="container" id="tab-capsula" style="display:none;"></div>
 <div class="container" id="tab-regulamento" style="display:none;"></div>
 
-<!-- 5 Opções com News no Meio (Home Oficial) -->
 <nav class="nav-bottom">
 <a id="nav-palpites" onclick="showTab('palpites')">
 <span class="icon">📝</span>Palpites
@@ -957,7 +956,7 @@ function loading(id) {
         '<div class="loading"><div class="spinner"></div>Carregando...</div>';
 }
 
-// ── SESSÃO NEWS (Home com Contagem Regressiva e Cronograma Garantido) ─────────
+// ── SESSÃO NEWS (Home com Contagem Regressiva e Cronograma F1 Idêntico ao Bolão) ──
 async function renderNews() {
     loading("tab-news");
     try {
@@ -969,19 +968,12 @@ async function renderNews() {
         const proxima = (rProxima.status === "fulfilled" && rProxima.value.etapa) ? rProxima.value.etapa : {
             nome: "Las Vegas",
             circuito: "Las Vegas Strip Circuit, EUA",
-            sessoes: [
-                { tipo: "Treino Livre 1", data: "Qui, 19/11", hora: "23:30", timestamp_iso: "2026-11-19T23:30:00-03:00" },
-                { tipo: "Classificação",  data: "Sex, 20/11", hora: "23:59", timestamp_iso: "2026-11-20T23:59:59-03:00" },
-                { tipo: "Corrida Oficial",data: "Dom, 22/11", hora: "03:00", timestamp_iso: "2026-11-22T03:00:00-03:00" }
-            ]
+            sessoes: []
         };
 
-        const noticias = (rNews.status === "fulfilled" && rNews.value.noticias && rNews.value.noticias.length) ? rNews.value.noticias : [
-            { titulo: "F1 chega à reta decisiva com disputa acirrada entre as principais equipes", fonte: "Ge Globo F1", link: "https://ge.globo.com/motor/formula-1/" },
-            { titulo: "Ajustes técnicos e novidades das equipes para a próxima corrida noturna", fonte: "Motorsport Brasil", link: "https://motorsport.uol.com.br/f1/" },
-            { titulo: "Bastidores do paddock: estratégias e projeções para a classificação", fonte: "Grande Prêmio", link: "https://www.grandepremio.com.br/f1/" }
-        ];
+        const noticias = (rNews.status === "fulfilled" && rNews.value.noticias && rNews.value.noticias.length) ? rNews.value.noticias : [];
 
+        // Linhas de Cronograma de Atividades Oficiais do Bolão
         const sessoesRows = (proxima.sessoes || []).map(s => `
             <tr>
                 <td class="tipo">${s.tipo}</td>
@@ -990,7 +982,8 @@ async function renderNews() {
             </tr>
         `).join("");
 
-        const slidesHtml = noticias.slice(0, 3).map(n => `
+        // Slides do Carrossel (3 Notícias, sendo 1 de cada grande portal)
+        const slidesHtml = noticias.map(n => `
             <div class="carousel-slide">
                 <div>
                     <div class="news-fonte">📰 ${n.fonte || "F1 Notícias"}</div>
@@ -1000,10 +993,11 @@ async function renderNews() {
             </div>
         `).join("");
 
-        const dotsHtml = noticias.slice(0, 3).map((_, i) => `
+        const dotsHtml = noticias.map((_, i) => `
             <div class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="moverCarousel(${i})"></div>
         `).join("");
 
+        // Histórico de Maiores Vencedores
         const vencedores = HISTORICO_VENCEDORES[proxima.nome] || [];
         let historicoHtml = "";
         if (vencedores.length > 0) {
@@ -1028,18 +1022,18 @@ async function renderNews() {
                 <div class="next-race-circuit">📍 ${proxima.circuito || "Circuito Oficial de Fórmula 1"}</div>
                 
                 <div class="countdown-box">
-                    <div class="countdown-title" id="countdown-label">Contagem Regressiva para a Largada</div>
+                    <div class="countdown-title" id="countdown-label">Contagem Regressiva para os Palpites</div>
                     <div class="countdown-timer" id="countdown-timer">Carregando tempo...</div>
                 </div>
 
                 <table class="sessions-table">
-                    <tbody>${sessoesRows}</tbody>
+                    <tbody>${sessoesRows || '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:8px;">Horários sincronizados com o calendário oficial.</td></tr>'}</tbody>
                 </table>
             </div>
 
             <div class="card">
                 <div class="card-title">
-                    <span>🔥 Notícias F1 Mais Acessadas</span>
+                    <span>🔥 Notícias F1 — Principais Portais</span>
                     <span style="font-size:0.62rem;color:var(--senna-yellow);font-weight:700;">AO VIVO</span>
                 </div>
                 <div class="carousel-wrap">
@@ -1060,7 +1054,7 @@ async function renderNews() {
         `;
 
         carouselIdx = 0;
-        iniciarAutoPlayCarousel(noticias.slice(0,3).length);
+        iniciarAutoPlayCarousel(noticias.length);
         iniciarContagemRegressiva(proxima.sessoes || []);
 
     } catch(e) {
@@ -1084,14 +1078,6 @@ function iniciarContagemRegressiva(sessoes) {
             break;
         }
     }
-    
-    if (!alvoSessao && sessoes.length) {
-        const ultima = sessoes[sessoes.length - 1];
-        alvoSessao = { 
-            label: ultima.tipo, 
-            timestamp: ultima.timestamp_iso ? new Date(ultima.timestamp_iso).getTime() : (Date.now() + 86400000) 
-        };
-    }
 
     function atualizarTimer() {
         const elTimer = document.getElementById("countdown-timer");
@@ -1113,8 +1099,13 @@ function iniciarContagemRegressiva(sessoes) {
         elTimer.textContent = `${dias}d ${horas}h ${minutos}m ${segundos}s`;
     }
 
-    atualizarTimer();
-    countdownTimer = setInterval(atualizarTimer, 1000);
+    if (alvoSessao) {
+        atualizarTimer();
+        countdownTimer = setInterval(atualizarTimer, 1000);
+    } else {
+        const elTimer = document.getElementById("countdown-timer");
+        if (elTimer) elTimer.textContent = "Aguardando próxima sessão";
+    }
 }
 
 let carouselTimer = null;
@@ -1169,32 +1160,6 @@ async function renderPalpites() {
             "Lewis Hamilton", "Liam Lawson", "Max Verstappen", "Nico Hülkenberg",
             "Oliver Bearman", "Oscar Piastri", "Pierre Gasly", "Yuki Tsunoda"
         ];
-
-        if (!etapasAbertas.length) {
-            etapasAbertas = [
-                {
-                    etapa: "Las Vegas",
-                    sessoes: [
-                        { sessao: "classificacao", inicio: "2026-11-20 23:59:59" },
-                        { sessao: "corrida",       inicio: "2026-11-22 03:00:00" }
-                    ]
-                },
-                {
-                    etapa: "Catar",
-                    sessoes: [
-                        { sessao: "classificacao", inicio: "2026-11-28 15:00:00" },
-                        { sessao: "corrida",       inicio: "2026-11-29 14:00:00" }
-                    ]
-                },
-                {
-                    etapa: "Abu Dhabi",
-                    sessoes: [
-                        { sessao: "classificacao", inicio: "2026-12-05 11:00:00" },
-                        { sessao: "corrida",       inicio: "2026-12-06 10:00:00" }
-                    ]
-                }
-            ];
-        }
 
         let opts = '<option value="">Selecione a sessão para palpitar</option>';
         etapasAbertas.forEach(e => {
