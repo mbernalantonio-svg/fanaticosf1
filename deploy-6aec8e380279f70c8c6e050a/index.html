@@ -38,7 +38,6 @@
             --border:       #4B5563;
             --text:         #F9FAFB;
             --muted:        #9CA3AF;
-            /* Rodapé aproximado da base de forma simétrica */
             --safe-bottom:  env(safe-area-inset-bottom, 8px);
         }
 
@@ -150,7 +149,7 @@
             justify-content: space-between;
         }
 
-        /* ── Estilos da Sessão News (Home) ── */
+        /* ── Sessão News (Home) ── */
         .next-race-hero {
             background: linear-gradient(135deg, #002776 0%, #001744 100%);
             border: 2px solid var(--senna-yellow);
@@ -206,25 +205,11 @@
             font-weight: 800;
             text-decoration: none;
         }
-        .carousel-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 8px;
-            padding: 0 4px;
-        }
+        .carousel-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding: 0 4px; }
         .carousel-dots { display: flex; gap: 6px; }
         .carousel-dot { width: 8px; height: 8px; border-radius: 50%; background: #4B5563; cursor: pointer; transition: background 0.2s; }
         .carousel-dot.active { background: var(--senna-yellow); width: 18px; border-radius: 4px; }
-        .carousel-btn {
-            background: var(--input);
-            border: 1px solid var(--border);
-            color: #FFFFFF;
-            width: 28px; height: 28px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 800;
-        }
+        .carousel-btn { background: var(--input); border: 1px solid var(--border); color: #FFFFFF; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-weight: 800; }
 
         /* Histórico Vencedores */
         .winner-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--input); font-size: 0.82rem; }
@@ -553,7 +538,6 @@
 <div class="container" id="tab-capsula" style="display:none;"></div>
 <div class="container" id="tab-regulamento" style="display:none;"></div>
 
-<!-- 5 Opções com News no Meio (Home Oficial) -->
 <nav class="nav-bottom">
 <a id="nav-palpites" onclick="showTab('palpites')">
 <span class="icon">📝</span>Palpites
@@ -588,7 +572,6 @@ let visitante     = false;
 let apelidos      = null;
 let carouselIdx   = 0;
 
-// Histórico de Maiores Vencedores por Prova Tradicional da F1
 const HISTORICO_VENCEDORES = {
     "Bahrein": [["Lewis Hamilton", 5], ["Sebastian Vettel", 4], ["Fernando Alonso", 3], ["Max Verstappen", 2]],
     "Arábia Saudita": [["Max Verstappen", 2], ["Lewis Hamilton", 1], ["Sergio Pérez", 1]],
@@ -633,16 +616,32 @@ async function init() {
     }
 }
 
+// Carregamento infalível de nomes com rota de participantes e fallback
 async function carregarNomes() {
+    const sel = document.getElementById("login-select");
     try {
-        const r = await apiFetch("/api/ranking");
-        const sel = document.getElementById("login-select");
-        (r.ranking || []).forEach(n => {
+        let nomes = [];
+        try {
+            const rPart = await apiFetch("/api/participantes");
+            nomes = rPart.participantes || [];
+        } catch(e) {}
+
+        if (!nomes.length) {
+            const rRank = await apiFetch("/api/ranking");
+            nomes = rRank.ranking || [];
+        }
+
+        sel.innerHTML = '<option value="">Selecione seu nome</option>';
+        nomes.forEach(n => {
+            if (!n) return;
             const o = document.createElement("option");
-            o.value = n; o.textContent = n;
+            o.value = n; 
+            o.textContent = n;
             sel.appendChild(o);
         });
-    } catch(e) {}
+    } catch(e) {
+        console.error("Erro ao carregar lista de nomes:", e);
+    }
 }
 
 let senhaAtual = "";
@@ -740,15 +739,22 @@ function entrarVisitante() {
 
 async function garantirApelidos() {
     if (apelidos) return;
-    const r = await fetch(API_URL + "/api/ranking", { headers: { "X-API-Key": API_KEY } });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const nomes = [...new Set(((await r.json()).ranking) || [])];
-    for (let i = nomes.length - 1; i > 0; i--) {
+    const r = await fetch(API_URL + "/api/participantes", { headers: { "X-API-Key": API_KEY } });
+    let nomes = [];
+    if (r.ok) {
+        nomes = (await r.json()).participantes || [];
+    }
+    if (!nomes.length) {
+        const r2 = await fetch(API_URL + "/api/ranking", { headers: { "X-API-Key": API_KEY } });
+        if (r2.ok) nomes = (await r2.json()).ranking || [];
+    }
+    const listaUnica = [...new Set(nomes)];
+    for (let i = listaUnica.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [nomes[i], nomes[j]] = [nomes[j], nomes[i]];
+        [listaUnica[i], listaUnica[j]] = [listaUnica[j], listaUnica[i]];
     }
     const letra = i => (i >= 26 ? letra(Math.floor(i / 26) - 1) : "") + String.fromCharCode(65 + (i % 26));
-    apelidos = new Map(nomes.map((n, i) => [n, `Fã ${letra(i)}`]));
+    apelidos = new Map(listaUnica.map((n, i) => [n, `Fã ${letra(i)}`]));
 }
 
 function anonimizar(v) {
@@ -827,7 +833,6 @@ function mostrarApp() {
     document.querySelector(".header-sub").lastChild.textContent = visitante ? " 👀" : " 👋";
     document.querySelector(".btn-sair").title = visitante ? "Sair do modo visitante" : "Sair da conta";
     tabAtual = null;
-    // Carrega a Home (News) por padrão se não houver hash
     if (!location.hash || location.hash === "#" || location.hash === "#palpites") {
         location.hash = "#news";
     }
@@ -866,7 +871,6 @@ function horaLimite(s) {
     return `${dia} às ${hora}`;
 }
 
-// Lista oficial com News no Centro (5 Abas)
 const TABS = ["palpites","ranking","news","etapas","capsula","regulamento"];
 let tabAtual = null;
 
@@ -879,7 +883,7 @@ function showTab(tab) { irPara("#" + tab); }
 async function rotear() {
     if (!usuario || document.getElementById("screen-app").style.display === "none") return;
     const [t0, ...resto] = location.hash.replace(/^#/, "").split("/");
-    const tab   = TABS.includes(t0) ? t0 : "news"; // Default é News
+    const tab   = TABS.includes(t0) ? t0 : "news";
     const param = resto.length ? decodeURIComponent(resto.join("/")) : null;
     const mesmaTab = tabAtual === tab;
     ativarTab(tab);
@@ -942,7 +946,6 @@ async function renderNews() {
             { titulo: "Bastidores do paddock: estratégias e projeções para a classificação", fonte: "Grande Prêmio", link: "https://www.grandepremio.com.br/f1/" }
         ];
 
-        // Cronograma de sessões
         const sessoesRows = (proxima.sessoes || []).map(s => `
             <tr>
                 <td class="tipo">${s.tipo}</td>
@@ -951,7 +954,6 @@ async function renderNews() {
             </tr>
         `).join("");
 
-        // Slides do Carrossel (3 Notícias)
         const slidesHtml = noticias.slice(0, 3).map(n => `
             <div class="carousel-slide">
                 <div>
@@ -966,7 +968,6 @@ async function renderNews() {
             <div class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="moverCarousel(${i})"></div>
         `).join("");
 
-        // Histórico de Vencedores (Somente se não for prova nova)
         const vencedores = HISTORICO_VENCEDORES[proxima.nome] || [];
         let historicoHtml = "";
         if (vencedores.length > 0) {
@@ -985,7 +986,6 @@ async function renderNews() {
         }
 
         document.getElementById("tab-news").innerHTML = `
-            <!-- Card Próxima Etapa -->
             <div class="next-race-hero">
                 <span class="next-race-tag">PRÓXIMA ETAPA</span>
                 <div class="next-race-name">🏁 GP de ${proxima.nome}</div>
@@ -995,7 +995,6 @@ async function renderNews() {
                 </table>
             </div>
 
-            <!-- Carrossel de Notícias ao Vivo -->
             <div class="card">
                 <div class="card-title">
                     <span>🔥 Notícias F1 Mais Acessadas</span>
@@ -1011,10 +1010,8 @@ async function renderNews() {
                 </div>
             </div>
 
-            <!-- Fatos Históricos -->
             ${historicoHtml}
 
-            <!-- Botão de Ação Rápida -->
             <button class="btn btn-senna-green" style="margin-bottom:12px;" onclick="showTab('palpites')">
                 FAZER MEUS PALPITES 🏎️
             </button>
@@ -1281,9 +1278,9 @@ async function renderRanking() {
         document.getElementById("header-atualizado").textContent = d.atualizado || "";
 
         const medalhas = {1:"🥇",2:"🥈",3:"🥉"};
-        const rows = d.ranking.map((nome, i) => {
+        const rows = (d.ranking || []).map((nome, i) => {
             const pos  = i + 1;
-            const info = d.dados[nome] || {};
+            const info = d.dados?.[nome] || {};
             const pts  = Math.round(info.total_com_descarte ?? info.total ?? 0);
             const desc = info.descarte;
             const descBadge = desc ? `<span class="descarte-badge">↓${Math.round(desc[1])}pt</span>` : "";
@@ -1297,8 +1294,8 @@ async function renderRanking() {
         }).join("");
 
         const etapas = d.etapas || [];
-        const heatRows = d.ranking.map(nome => {
-            const info = d.dados[nome] || {};
+        const heatRows = (d.ranking || []).map(nome => {
+            const info = d.dados?.[nome] || {};
             const desc_nome = info.descarte ? info.descarte[0] : "";
             const cells = etapas.map(e => {
                 const v = Math.round(info.pts_por_etapa?.[e] || 0);
@@ -1315,8 +1312,8 @@ async function renderRanking() {
 
         const heatHeaders = etapas.map(e => `<th>${e.substring(0,4)}</th>`).join("");
 
-        const accRows = d.ranking.map(nome => {
-            const info = d.dados[nome] || {};
+        const accRows = (d.ranking || []).map(nome => {
+            const info = d.dados?.[nome] || {};
             const cells = (info.acumulado || []).map((v,i,arr) =>
                 `<td style="${i===arr.length-1?'font-weight:800;color:var(--senna-yellow);':''}">${Math.round(v)}</td>`
             ).join("");
@@ -1325,12 +1322,12 @@ async function renderRanking() {
 
         document.getElementById("tab-ranking").innerHTML = `
             <div class="info-bar">
-                <div><strong>${d.n_etapas}/24</strong> etapas • Última: <strong>${d.ultima||"--"}</strong></div>
+                <div><strong>${d.n_etapas || 0}/24</strong> etapas • Última: <strong>${d.ultima||"--"}</strong></div>
                 <div>${d.todas_disp ? '<span class="badge badge-green">Descarte aplicado</span>' : '<span class="badge badge-gray">Descarte no final</span>'}</div>
             </div>
             <div class="card">
                 <div class="card-title">🏆 Ranking Atual</div>
-                ${rows}
+                ${rows || '<div style="color:var(--muted);text-align:center;padding:14px;">Nenhum participante pontuou ainda</div>'}
             </div>
             <div class="card">
                 <div class="card-title">📊 Pontos por Etapa</div>
