@@ -606,33 +606,6 @@ let apelidos      = null;
 let carouselIdx   = 0;
 let countdownTimer = null;
 
-const HISTORICO_VENCEDORES = {
-    "Bahrein": [["Lewis Hamilton", 5], ["Sebastian Vettel", 4], ["Fernando Alonso", 3], ["Max Verstappen", 2]],
-    "Arábia Saudita": [["Max Verstappen", 2], ["Lewis Hamilton", 1], ["Sergio Pérez", 1]],
-    "Austrália": [["Michael Schumacher", 4], ["Jenson Button", 3], ["Sebastian Vettel", 3], ["Lewis Hamilton", 2]],
-    "Japão": [["Michael Schumacher", 6], ["Lewis Hamilton", 5], ["Sebastian Vettel", 4], ["Max Verstappen", 3]],
-    "China": [["Lewis Hamilton", 6], ["Fernando Alonso", 2], ["Max Verstappen", 1], ["Daniel Ricciardo", 1]],
-    "Miami": [["Max Verstappen", 2], ["Lando Norris", 1]],
-    "Emília-Romanha": [["Max Verstappen", 3], ["Lewis Hamilton", 1]],
-    "Mônaco": [["Ayrton Senna", 6], ["Graham Hill", 5], ["Michael Schumacher", 5], ["Alain Prost", 4]],
-    "Canadá": [["Michael Schumacher", 7], ["Lewis Hamilton", 7], ["Nelson Piquet", 3], ["Max Verstappen", 3]],
-    "Espanha": [["Michael Schumacher", 6], ["Lewis Hamilton", 6], ["Max Verstappen", 4]],
-    "Áustria": [["Max Verstappen", 4], ["Alain Prost", 3], ["George Russell", 1]],
-    "Grã-Bretanha": [["Lewis Hamilton", 9], ["Alain Prost", 5], ["Jim Clark", 5], ["Nigel Mansell", 4]],
-    "Hungria": [["Lewis Hamilton", 8], ["Michael Schumacher", 4], ["Ayrton Senna", 3]],
-    "Bélgica": [["Michael Schumacher", 6], ["Ayrton Senna", 5], ["Lewis Hamilton", 5], ["Kimi Räikkönen", 4]],
-    "Holanda": [["Jim Clark", 4], ["Jackie Stewart", 3], ["Niki Lauda", 3], ["Max Verstappen", 3]],
-    "Itália": [["Michael Schumacher", 5], ["Lewis Hamilton", 5], ["Nelson Piquet", 4], ["Charles Leclerc", 2]],
-    "Azerbaijão": [["Sergio Pérez", 2], ["Max Verstappen", 1], ["Oscar Piastri", 1]],
-    "Singapura": [["Sebastian Vettel", 5], ["Lewis Hamilton", 4], ["Fernando Alonso", 2]],
-    "Estados Unidos": [["Lewis Hamilton", 6], ["Michael Schumacher", 5], ["Max Verstappen", 3]],
-    "México": [["Max Verstappen", 5], ["Jim Clark", 3], ["Alain Prost", 2], ["Carlos Sainz", 1]],
-    "Brasil": [["Alain Prost", 6], ["Michael Schumacher", 4], ["Carlos Reutemann", 4], ["Lewis Hamilton", 3], ["Ayrton Senna", 2]],
-    "Las Vegas": [["Max Verstappen", 1], ["George Russell", 1]],
-    "Catar": [["Max Verstappen", 2], ["Lewis Hamilton", 1]],
-    "Abu Dhabi": [["Lewis Hamilton", 5], ["Max Verstappen", 4], ["Sebastian Vettel", 3]]
-};
-
 async function init() {
     localStorage.removeItem("f1bolao_usuario");
     localStorage.removeItem("f1bolao_senha_ok");
@@ -957,7 +930,7 @@ function loading(id) {
         '<div class="loading"><div class="spinner"></div>Carregando...</div>';
 }
 
-// ── SESSÃO NEWS (Home Integrada e Confiável) ──────────────────────────────────
+// ── SESSÃO NEWS (Home com Consulta Dinâmica à Base Oficial da F1) ─────────────
 async function renderNews() {
     loading("tab-news");
     try {
@@ -981,7 +954,15 @@ async function renderNews() {
             {"titulo": "Programação de pista e horários oficiais das atividades do GP", "fonte": "Grande Prêmio", "link": "https://www.grandepremio.com.br/f1/"}
         ];
 
-        // Monta as linhas estritamente com as sessões oficiais
+        // Busca os vencedores históricos da pista diretamente da API da F1
+        let vencedores = [];
+        try {
+            const rHist = await apiFetch(`/api/vencedores_pista/${encodeURIComponent(proxima.nome)}`);
+            vencedores = rHist.vencedores || [];
+        } catch(e) {
+            vencedores = [];
+        }
+
         const sessoesRows = (proxima.sessoes || []).map(s => `
             <tr>
                 <td class="tipo">${s.tipo}</td>
@@ -990,7 +971,6 @@ async function renderNews() {
             </tr>
         `).join("");
 
-        // Slides das 3 notícias (1 de cada portal oficial)
         const slidesHtml = noticias.map(n => `
             <div class="carousel-slide">
                 <div>
@@ -1005,8 +985,6 @@ async function renderNews() {
             <div class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="moverCarousel(${i})"></div>
         `).join("");
 
-        // Histórico de Maiores Vencedores
-        const vencedores = HISTORICO_VENCEDORES[proxima.nome] || [];
         let historicoHtml = "";
         if (vencedores.length > 0) {
             const itensVencedores = vencedores.map(([p, v]) => `
@@ -1153,7 +1131,7 @@ function prevSlide() {
     moverCarousel(carouselIdx);
 }
 
-// ── PALPITES (Sessões Abertas Sempre Disponíveis) ─────────────────────────────
+// ── PALPITES ──────────────────────────────────────────────────────────────────
 async function renderPalpites() {
     loading("tab-palpites");
     try {
@@ -1455,7 +1433,7 @@ async function renderRanking() {
     }
 }
 
-// ── ETAPAS (Restauração Completa de Resultados) ────────────────────────────────
+// ── ETAPAS ────────────────────────────────────────────────────────────────────
 async function renderEtapas() {
     if (etapaDetalhe) { renderPalpitesEtapa(etapaDetalhe); return; }
     loading("tab-etapas");
