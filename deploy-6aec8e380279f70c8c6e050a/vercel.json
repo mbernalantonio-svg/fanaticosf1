@@ -1,6 +1,16 @@
 {
   "rewrites": [
-    { "source": "/api/auth/login",        "destination": "/api/auth" },
-    { "source": "/api/auth/trocar-senha", "destination": "/api/auth" }
+    {
+      "source": "/api/auth/login",
+      "destination": "/api/auth"
+    },
+    {
+      "source": "/api/auth/trocar-senha",
+      "destination": "/api/auth"
+    },
+    {
+      "source": "/api/auth/reset-senha",
+      "destination": "/api/auth"
+    }
   ]
 }
