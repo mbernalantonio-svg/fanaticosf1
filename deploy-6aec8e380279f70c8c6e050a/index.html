@@ -556,6 +556,52 @@
 </div>
 </div>
 
+
+<!-- ── ESQUECI MINHA SENHA ── -->
+<div id="screen-esqueci" style="display:none;">
+<div class="login-screen">
+<img alt="F1" src="https://upload.wikimedia.org/wikipedia/commons/3/33/F1.svg"/>
+<h2>Recuperar senha</h2>
+<p>Selecione seu nome e enviaremos um<br/>código de 6 dígitos para seu email.</p>
+<div style="width:100%; max-width:320px;">
+<div class="form-group">
+<label>Quem é você?</label>
+<select id="esqueci-select"><option value="">Selecione seu nome</option></select>
+</div>
+<div id="esqueci-erro" style="display:none;color:#F87171;font-size:0.8rem;margin-bottom:12px;text-align:center;"></div>
+<button class="btn btn-red" id="btn-enviar-codigo" onclick="enviarCodigo()">ENVIAR CÓDIGO 📧</button>
+<button type="button" class="link-btn" onclick="voltarLoginEsqueci()">← Voltar ao login</button>
+</div>
+</div>
+</div>
+
+<!-- ── VERIFICAR CODIGO ── -->
+<div id="screen-codigo" style="display:none;">
+<div class="login-screen">
+<img alt="F1" src="https://upload.wikimedia.org/wikipedia/commons/3/33/F1.svg"/>
+<h2>Digite o código</h2>
+<p id="codigo-texto">Enviamos um código para seu email.<br/>Digite abaixo para criar nova senha.</p>
+<div style="width:100%; max-width:320px;">
+<div class="form-group">
+<label>Código de 6 dígitos</label>
+<input type="text" id="codigo-input" placeholder="000000" maxlength="6" style="text-align:center;font-size:1.5rem;letter-spacing:8px;" onkeydown="if(event.key==='Enter')verificarCodigo()"/>
+</div>
+<div class="form-group">
+<label>Nova senha</label>
+<input type="password" id="codigo-nova-senha" placeholder="Mínimo 4 caracteres" autocomplete="new-password"/>
+</div>
+<div class="form-group">
+<label>Confirmar nova senha</label>
+<input type="password" id="codigo-nova-senha2" placeholder="Digite de novo" autocomplete="new-password" onkeydown="if(event.key==='Enter')verificarCodigo()"/>
+</div>
+<div id="codigo-erro" style="display:none;color:#F87171;font-size:0.8rem;margin-bottom:12px;text-align:center;"></div>
+<button class="btn btn-red" id="btn-verificar-codigo" onclick="verificarCodigo()">CONFIRMAR 🔐</button>
+<button type="button" class="link-btn" onclick="reenviarCodigo()">Reenviar código</button>
+<button type="button" class="link-btn" onclick="voltarLoginEsqueci()">← Voltar ao login</button>
+</div>
+</div>
+</div>
+
 <!-- ── APLICAÇÃO ── -->
 <div id="screen-app" style="display:none;">
 <div class="header">
@@ -1758,6 +1804,102 @@ function showToast(msg, error=false) {
     el.textContent = msg;
     el.className = `toast ${error?"error":""} show`;
     setTimeout(() => el.classList.remove("show"), 3000);
+}
+
+
+// ── Esqueci minha senha ──────────────────────────────────────────────────────
+let nomeEsqueci = "";
+
+function abrirEsqueciSenha() {
+    mostrarErro("login-erro", "");
+    const selLogin = document.getElementById("login-select");
+    const selEsq   = document.getElementById("esqueci-select");
+    selEsq.innerHTML = '<option value="">Selecione seu nome</option>';
+    Array.from(selLogin.options).forEach(o => {
+        if (o.value) {
+            const opt = document.createElement("option");
+            opt.value = o.value; opt.textContent = o.textContent;
+            selEsq.appendChild(opt);
+        }
+    });
+    document.getElementById("screen-login").style.display   = "none";
+    document.getElementById("screen-esqueci").style.display = "block";
+}
+
+function voltarLoginEsqueci() {
+    document.getElementById("screen-esqueci").style.display = "none";
+    document.getElementById("screen-codigo").style.display  = "none";
+    document.getElementById("screen-login").style.display   = "block";
+    mostrarErro("esqueci-erro", "");
+    mostrarErro("codigo-erro", "");
+}
+
+async function enviarCodigo() {
+    const sel = document.getElementById("esqueci-select");
+    mostrarErro("esqueci-erro", "");
+    if (!sel.value) { showToast("Selecione seu nome!", true); return; }
+    nomeEsqueci = sel.value;
+    const btn = document.getElementById("btn-enviar-codigo");
+    btn.disabled = true; btn.textContent = "ENVIANDO...";
+    try {
+        const r = await fetch("/api/auth/esqueci-senha", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nome: nomeEsqueci })
+        });
+        const data = await r.json();
+        if (data.ok) {
+            document.getElementById("codigo-texto").innerHTML =
+                `Código enviado! Digite abaixo para criar nova senha.`;
+            document.getElementById("screen-esqueci").style.display = "none";
+            document.getElementById("screen-codigo").style.display  = "block";
+            document.getElementById("codigo-input").focus();
+            showToast(data.mensagem);
+        } else {
+            mostrarErro("esqueci-erro", data.erro || "Erro ao enviar código.");
+        }
+    } catch(e) {
+        mostrarErro("esqueci-erro", "Erro de conexão. Tente novamente.");
+    } finally {
+        btn.disabled = false; btn.textContent = "ENVIAR CÓDIGO 📧";
+    }
+}
+
+async function reenviarCodigo() {
+    document.getElementById("screen-codigo").style.display  = "none";
+    document.getElementById("screen-esqueci").style.display = "block";
+}
+
+async function verificarCodigo() {
+    const cod   = document.getElementById("codigo-input").value.trim();
+    const nova  = document.getElementById("codigo-nova-senha").value;
+    const nova2 = document.getElementById("codigo-nova-senha2").value;
+    mostrarErro("codigo-erro", "");
+    if (!cod || cod.length !== 6) { mostrarErro("codigo-erro", "Digite o código de 6 dígitos."); return; }
+    if (nova.length < 4)          { mostrarErro("codigo-erro", "A senha precisa ter pelo menos 4 caracteres."); return; }
+    if (nova !== nova2)            { mostrarErro("codigo-erro", "As senhas não são iguais."); return; }
+    const btn = document.getElementById("btn-verificar-codigo");
+    btn.disabled = true; btn.textContent = "VERIFICANDO...";
+    try {
+        const r = await fetch("/api/auth/verificar-codigo", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nome: nomeEsqueci, codigo: cod, novaSenha: nova })
+        });
+        const data = await r.json();
+        if (data.ok) {
+            showToast("Senha alterada com sucesso! ✅");
+            document.getElementById("screen-codigo").style.display = "none";
+            document.getElementById("screen-login").style.display  = "block";
+            document.getElementById("login-select").value = nomeEsqueci;
+        } else {
+            mostrarErro("codigo-erro", data.erro || "Código inválido.");
+        }
+    } catch(e) {
+        mostrarErro("codigo-erro", "Erro de conexão. Tente novamente.");
+    } finally {
+        btn.disabled = false; btn.textContent = "CONFIRMAR 🔐";
+    }
 }
 
 init();
