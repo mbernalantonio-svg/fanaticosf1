@@ -515,6 +515,7 @@
 <div id="login-erro" style="display:none;color:var(--senna-yellow);font-size:0.8rem;margin-bottom:12px;text-align:center;"></div>
 <button class="btn btn-senna-green" onclick="fazerLogin()">ENTRAR 🏎️</button>
 <button type="button" class="link-btn" onclick="iniciarTrocaSenha()">🔑 Trocar minha senha</button>
+<button type="button" class="link-btn" onclick="abrirEsqueciSenha()" style="color:#E10600;">Esqueci minha senha</button>
 <div class="ou-sep"><span>ou</span></div>
 <button type="button" class="btn btn-gray" onclick="entrarVisitante()">👀 SOU VISITANTE</button>
 <div class="visitante-info">Navegue pelo bolão sem login. Os nomes dos participantes ficam ocultos e não é possível enviar palpites.</div>
@@ -535,6 +536,11 @@
 <h2 id="senha-titulo">Crie sua senha</h2>
 <p id="senha-texto">Este é seu primeiro acesso, <span id="senha-nome"></span>.<br/>Escolha uma senha só sua.</p>
 <div style="width:100%; max-width:320px;">
+<div class="form-group" id="campo-email-cadastro" style="display:none;">
+<label for="email-cadastro">Seu email <span style="color:#E10600;">*</span></label>
+<input type="email" id="email-cadastro" placeholder="seuemail@exemplo.com" autocomplete="email"/>
+<div style="font-size:0.68rem;color:var(--muted);margin-top:4px;">Usado para recuperar sua senha</div>
+</div>
 <div class="form-group">
 <label for="nova-senha">Nova senha</label>
 <input type="password" id="nova-senha" placeholder="Mínimo 4 caracteres" autocomplete="new-password"/>
@@ -750,6 +756,9 @@ function abrirTelaSenha(modo) {
         txt.append("Este é seu primeiro acesso, ", nome, ".", document.createElement("br"), "Escolha uma senha só sua.");
     }
     document.getElementById("btn-cancelar-troca").style.display = voluntario ? "block" : "none";
+    // Mostra campo email apenas no primeiro acesso
+    const campoEmail = document.getElementById("campo-email-cadastro");
+    if (campoEmail) campoEmail.style.display = voluntario ? "none" : "block";
     document.getElementById("nova-senha").value  = "";
     document.getElementById("nova-senha2").value = "";
     mostrarErro("senha-erro", "");
@@ -857,7 +866,17 @@ async function trocarSenha() {
     const btn = document.getElementById("btn-trocar");
     btn.disabled = true;
     try {
-        await authPost("trocar-senha", { nome: usuario, senha: senhaAtual, novaSenha: nova });
+        const emailCad = document.getElementById("email-cadastro")?.value?.trim() || "";
+        const endpoint = modoTroca === "primeiro" ? "cadastro" : "trocar-senha";
+        if (modoTroca === "primeiro" && !emailCad) {
+            mostrarErro("senha-erro", "Por favor, informe seu email para continuar.");
+            return;
+        }
+        if (modoTroca === "primeiro" && !emailCad.includes("@")) {
+            mostrarErro("senha-erro", "Email inválido.");
+            return;
+        }
+        await authPost(endpoint, { nome: usuario, senha: senhaAtual, novaSenha: nova, email: emailCad });
         senhaAtual = "";
         showToast(modoTroca === "voluntario" ? "Senha alterada! ✅" : "Senha criada! ✅");
         entrar();
