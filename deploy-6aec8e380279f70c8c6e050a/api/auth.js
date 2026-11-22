@@ -28,7 +28,7 @@ async function verificar(sql, nome, senha) {
 
 export default async function handler(req, res) {
   if (req.method !== "POST")
-    return res.status(405).json({ ok: false, erro: "Método não permitido" });
+    return res.status(405).json({ ok: false, erro: "Metodo nao permitido" });
 
   const sql = neon(process.env.DATABASE_URL);
   await sql`CREATE TABLE IF NOT EXISTS senhas (
@@ -40,8 +40,25 @@ export default async function handler(req, res) {
   const { nome, senha, novaSenha } = req.body || {};
   const acao = req.url.split("/").pop();
 
+  // Reset de senha - nao requer senha atual, apenas chave admin
+  if (acao === "reset-senha") {
+    const adminKey = req.headers["x-admin-key"] || "";
+    if (adminKey !== "f1bolao2027adminreset") {
+      return res.status(403).json({ ok: false, erro: "Acesso negado." });
+    }
+    const nomeReset = String(req.body?.nomeReset || "");
+    if (!nomeReset || !(nomeReset in SENHAS_INICIAIS)) {
+      return res.status(400).json({ ok: false, erro: "Participante invalido." });
+    }
+    await sql`DELETE FROM senhas WHERE nome = ${nomeReset}`;
+    return res.status(200).json({
+      ok: true,
+      mensagem: `Senha de ${nomeReset} resetada. Use a senha inicial para entrar.`
+    });
+  }
+
   if (!nome || !senha)
-    return res.status(400).json({ ok: false, erro: "Nome e senha são obrigatórios." });
+    return res.status(400).json({ ok: false, erro: "Nome e senha sao obrigatorios." });
 
   const v = await verificar(sql, String(nome), String(senha));
   if (!v.ok)
@@ -62,5 +79,5 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true });
   }
 
-  return res.status(404).json({ ok: false, erro: "Ação desconhecida." });
+  return res.status(404).json({ ok: false, erro: "Acao desconhecida." });
 }
