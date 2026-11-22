@@ -11,6 +11,18 @@
     {
       "source": "/api/auth/reset-senha",
       "destination": "/api/auth"
+    },
+    {
+      "source": "/api/auth/cadastro",
+      "destination": "/api/auth"
+    },
+    {
+      "source": "/api/auth/esqueci-senha",
+      "destination": "/api/auth"
+    },
+    {
+      "source": "/api/auth/verificar-codigo",
+      "destination": "/api/auth"
     }
   ]
 }
