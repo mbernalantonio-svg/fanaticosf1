@@ -1,77 +1,25 @@
 """
-F1 Agent V2 — Coleta de Resultados, Piloto do Dia e Standings (Mundial)
-Compatível com Linux (GitHub Actions) e Windows:
-  - Coleta Starting Grid, Corrida e Volta Mais Rápida via Ergast/Jolpica
-  - Web scraping oficial para Piloto do Dia (formula1.com)
-  - Coleta dinâmica dos Standings de Pilotos e Construtores (API + Scraping Fallback com separador de texto)
-  - Grava diretamente em resultados, standings_pilotos e standings_construtores no bolao.db
+f1_agent_v2.py — Coleta resultados F1 e sincroniza com PythonAnywhere
+Roda no GitHub Actions (sem restricao de proxy).
+Fontes:
+  - Jolpi.ca (Ergast): corrida, grid, volta rapida, standings
+  - F1.com scraping: piloto do dia
+Destino:
+  - API do PythonAnywhere via /api/sync/resultado e /api/sync/standings
 """
 
 import os
 import re
 import sys
-import sqlite3
 import unicodedata
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "bolao.db")
+# ── Configuracao ──────────────────────────────────────────────────────────────
+API_URL  = os.environ.get("API_URL",  "https://mbernalantonio.pythonanywhere.com")
+API_KEY  = os.environ.get("API_KEY",  "f1bolao2027secretkey")
 TEMPORADA = 2026
-
-PILOTOS_NORM = {
-    "andrea kimi antonelli": "Kimi Antonelli",
-    "kimi antonelli": "Kimi Antonelli",
-    "sergio perez": "Sergio Perez",
-    "sergio pérez": "Sergio Perez",
-    "nico hulkenberg": "Nico Hulkenberg",
-    "nico hülkenberg": "Nico Hulkenberg",
-    "carlos sainz jr": "Carlos Sainz",
-    "carlos sainz jr.": "Carlos Sainz",
-    "carlos sainz": "Carlos Sainz",
-    "guanyu zhou": "Zhou Guanyu",
-    "zhou guanyu": "Zhou Guanyu",
-    "alexander albon": "Alex Albon",
-    "alex albon": "Alex Albon",
-    "esteban ocon": "Esteban Ocon",
-    "rafael camara": "Rafael Camara",
-    "rafael câmara": "Rafael Camara",
-    "max verstappen": "Max Verstappen",
-    "lando norris": "Lando Norris",
-    "charles leclerc": "Charles Leclerc",
-    "lewis hamilton": "Lewis Hamilton",
-    "george russell": "George Russell",
-    "oscar piastri": "Oscar Piastri",
-    "fernando alonso": "Fernando Alonso",
-    "lance stroll": "Lance Stroll",
-    "yuki tsunoda": "Yuki Tsunoda",
-    "liam lawson": "Liam Lawson",
-    "isack hadjar": "Isack Hadjar",
-    "gabriel bortoleto": "Gabriel Bortoleto",
-    "oliver bearman": "Oliver Bearman",
-    "jack doohan": "Jack Doohan",
-    "valtteri bottas": "Valtteri Bottas",
-    "franco colapinto": "Franco Colapinto",
-    "pierre gasly": "Pierre Gasly"
-}
-
-EQUIPES_NORM = {
-    "mclaren": "McLaren",
-    "ferrari": "Ferrari",
-    "red bull": "Red Bull",
-    "red bull racing": "Red Bull",
-    "mercedes": "Mercedes",
-    "aston martin": "Aston Martin",
-    "alpine": "Alpine",
-    "haas": "Haas",
-    "haas f1 team": "Haas",
-    "rb": "RB",
-    "racing bulls": "RB",
-    "williams": "Williams",
-    "sauber": "Sauber",
-    "audi": "Audi"
-}
 
 HEADERS_SCRAPING = {
     "User-Agent": (
@@ -79,6 +27,68 @@ HEADERS_SCRAPING = {
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/120.0.0.0 Safari/537.36"
     )
+}
+
+HEADERS_API = {
+    "Content-Type": "application/json",
+    "X-API-Key": API_KEY
+}
+
+# ── Normalizacao ──────────────────────────────────────────────────────────────
+PILOTOS_NORM = {
+    "andrea kimi antonelli": "Kimi Antonelli",
+    "kimi antonelli":        "Kimi Antonelli",
+    "sergio perez":          "Sergio Perez",
+    "sergio pérez":          "Sergio Perez",
+    "nico hulkenberg":       "Nico Hulkenberg",
+    "nico hülkenberg":       "Nico Hulkenberg",
+    "carlos sainz jr":       "Carlos Sainz",
+    "carlos sainz jr.":      "Carlos Sainz",
+    "carlos sainz":          "Carlos Sainz",
+    "guanyu zhou":           "Zhou Guanyu",
+    "zhou guanyu":           "Zhou Guanyu",
+    "alexander albon":       "Alex Albon",
+    "alex albon":            "Alex Albon",
+    "esteban ocon":          "Esteban Ocon",
+    "rafael camara":         "Rafael Camara",
+    "rafael câmara":         "Rafael Camara",
+    "max verstappen":        "Max Verstappen",
+    "lando norris":          "Lando Norris",
+    "charles leclerc":       "Charles Leclerc",
+    "lewis hamilton":        "Lewis Hamilton",
+    "george russell":        "George Russell",
+    "oscar piastri":         "Oscar Piastri",
+    "fernando alonso":       "Fernando Alonso",
+    "lance stroll":          "Lance Stroll",
+    "yuki tsunoda":          "Yuki Tsunoda",
+    "liam lawson":           "Liam Lawson",
+    "isack hadjar":          "Isack Hadjar",
+    "gabriel bortoleto":     "Gabriel Bortoleto",
+    "oliver bearman":        "Oliver Bearman",
+    "jack doohan":           "Jack Doohan",
+    "valtteri bottas":       "Valtteri Bottas",
+    "franco colapinto":      "Franco Colapinto",
+    "pierre gasly":          "Pierre Gasly",
+}
+
+EQUIPES_NORM = {
+    "mercedes":          "Mercedes",
+    "ferrari":           "Ferrari",
+    "red bull":          "Red Bull",
+    "red bull racing":   "Red Bull",
+    "mclaren":           "McLaren",
+    "rb f1 team":        "Racing Bulls",
+    "racing bulls":      "Racing Bulls",
+    "alpine f1 team":    "Alpine",
+    "alpine":            "Alpine",
+    "haas f1 team":      "Haas",
+    "haas":              "Haas",
+    "audi":              "Audi",
+    "williams":          "Williams",
+    "aston martin":      "Aston Martin",
+    "cadillac":          "Cadillac",
+    "kick sauber":       "Sauber",
+    "sauber":            "Sauber",
 }
 
 def normalizar(texto):
@@ -90,277 +100,358 @@ def normalizar(texto):
     t = re.sub(r'\s+', ' ', t).strip()
     return t
 
-def formatar_nome_piloto(nome):
+def formatar_piloto(nome):
     if not nome: return ""
     norm = normalizar(nome)
     if norm in PILOTOS_NORM:
         return PILOTOS_NORM[norm]
     return " ".join(p.capitalize() for p in norm.split())
 
-def formatar_nome_equipe(equipe):
+def formatar_equipe(equipe):
     if not equipe: return ""
     norm = normalizar(equipe)
     if norm in EQUIPES_NORM:
         return EQUIPES_NORM[norm]
     return " ".join(p.capitalize() for p in norm.split())
 
-def limpar_nome_piloto_scraping(raw):
-    """Separa tags HTML aglutinadas e remove a sigla final de 3 letras da FIA (ex: VER, HAM, ANT)."""
+def limpar_piloto_scraping(raw):
+    """Remove sigla FIA (VER, HAM) e textos de UI (Chevron Dropdown)."""
     t = re.sub(r'\s+', ' ', str(raw)).strip()
     t = re.sub(r'\s+[A-Z]{3}$', '', t).strip()
-    return formatar_nome_piloto(t)
+    if not t or 'chevron' in t.lower() or 'dropdown' in t.lower() or len(t) < 4:
+        return ""
+    return formatar_piloto(t)
 
-def conectar_banco():
-    if not os.path.exists(DB_PATH):
-        alt_path = os.path.join(os.getcwd(), "bolao.db")
-        if os.path.exists(alt_path):
-            return sqlite3.connect(alt_path)
-    return sqlite3.connect(DB_PATH)
+# ── Ergast / Jolpi.ca ─────────────────────────────────────────────────────────
 
-# ── 1. Coleta de Resultados da Corrida e Grid ─────────────────────────────────
-
-def obter_resultados_ergast(temporada, round_num):
-    print(f"📡 Buscando resultados da corrida (Round {round_num})...")
-    url = f"https://api.jolpica.com/ergast/f1/{temporada}/{round_num}/results.json"
+def ergast_get(endpoint):
+    url = f"https://api.jolpi.ca/ergast/f1/{endpoint}.json"
     try:
-        r = requests.get(url, timeout=15).json()
-        races = r.get("MRData", {}).get("RaceTable", {}).get("Races", [])
-        if not races:
-            return None
-        race = races[0]
-        resultados = {}
-        for item in race.get("Results", []):
-            pos = item.get("position")
-            driver = formatar_nome_piloto(f"{item['Driver']['givenName']} {item['Driver']['familyName']}")
-            if pos and int(pos) <= 10:
-                resultados[f"corrida_p{pos}"] = driver
-            if item.get("FastestLap", {}).get("rank") == "1":
-                resultados["vr"] = driver
-        return resultados
+        r = requests.get(url, timeout=15)
+        r.raise_for_status()
+        return r.json()
     except Exception as e:
-        print(f"  ⚠️ Falha ao buscar resultados Ergast: {e}")
+        print(f"  ⚠️ Ergast {endpoint}: {e}")
         return None
 
-def obter_starting_grid_ergast(temporada, round_num):
-    print(f"📡 Buscando Starting Grid real (Round {round_num})...")
-    url = f"https://api.jolpica.com/ergast/f1/{temporada}/{round_num}/qualifying.json"
-    try:
-        r = requests.get(url, timeout=15).json()
-        races = r.get("MRData", {}).get("RaceTable", {}).get("Races", [])
-        if not races:
-            return {}
-        quali = races[0].get("QualifyingResults", [])
-        grid = {}
-        for item in quali:
-            pos = item.get("position")
-            driver = formatar_nome_piloto(f"{item['Driver']['givenName']} {item['Driver']['familyName']}")
-            if pos == "1": grid["grid_p1"] = driver
-            elif pos == "2": grid["grid_p2"] = driver
-            elif pos == "3": grid["grid_p3"] = driver
-        return grid
-    except Exception as e:
-        print(f"  ⚠️ Falha ao buscar Starting Grid: {e}")
-        return {}
+def get_ultima_corrida():
+    """Retorna a corrida mais recente disponivel no Ergast."""
+    data = ergast_get(f"{TEMPORADA}/results/1")
+    if not data:
+        return None
+    races = data["MRData"]["RaceTable"]["Races"]
+    if not races:
+        return None
+    ultima = races[-1]
+    return {
+        "round":    int(ultima["round"]),
+        "raceName": ultima["raceName"],
+        "date":     ultima["date"],
+    }
 
-def obter_piloto_do_dia_scraping(etapa_slug):
-    print("🕷️ Coletando Piloto do Dia oficial via web scraping...")
-    url = f"https://www.formula1.com/en/latest/article.driver-of-the-day-{etapa_slug}.html"
+def get_race_results(round_num):
+    data = ergast_get(f"{TEMPORADA}/{round_num}/results")
+    if not data:
+        return {}, ""
+    races = data["MRData"]["RaceTable"]["Races"]
+    if not races:
+        return {}, ""
+    resultados = {}
+    vr = ""
+    for item in races[0].get("Results", []):
+        pos = item.get("position")
+        driver = formatar_piloto(f"{item['Driver']['givenName']} {item['Driver']['familyName']}")
+        if pos and int(pos) <= 10:
+            resultados[f"corrida_p{pos}"] = driver
+        fl = item.get("FastestLap", {})
+        if fl.get("rank") == "1":
+            vr = driver
+    return resultados, vr
+
+def get_starting_grid(round_num):
+    data = ergast_get(f"{TEMPORADA}/{round_num}/qualifying")
+    if not data:
+        return {}
+    races = data["MRData"]["RaceTable"]["Races"]
+    if not races:
+        return {}
+    grid = {}
+    for item in races[0].get("QualifyingResults", []):
+        pos = item.get("position")
+        driver = formatar_piloto(f"{item['Driver']['givenName']} {item['Driver']['familyName']}")
+        if pos == "1": grid["grid_p1"] = driver
+        elif pos == "2": grid["grid_p2"] = driver
+        elif pos == "3": grid["grid_p3"] = driver
+    return grid
+
+def get_zebra(round_num, campeao_anterior="Lando Norris"):
+    """Lider do campeonato ANTES da corrida (standings round anterior)."""
+    round_ant = round_num - 1
+    if round_ant == 0:
+        return campeao_anterior
+    data = ergast_get(f"{TEMPORADA}/{round_ant}/driverStandings")
+    if not data:
+        return ""
+    lists = data["MRData"]["StandingsTable"]["StandingsLists"]
+    if not lists:
+        return ""
+    lider = lists[0]["DriverStandings"][0]["Driver"]
+    return formatar_piloto(f"{lider['givenName']} {lider['familyName']}")
+
+def get_standings():
+    """Standings atuais de pilotos e construtores."""
+    pilotos = []
+    construtores = []
+
+    data_p = ergast_get(f"{TEMPORADA}/driverStandings")
+    if data_p:
+        lists = data_p["MRData"]["StandingsTable"]["StandingsLists"]
+        if lists:
+            for s in lists[0]["DriverStandings"]:
+                d = s["Driver"]
+                eq = s["Constructors"][0]["name"] if s.get("Constructors") else ""
+                pilotos.append({
+                    "pos":    int(s["position"]),
+                    "nome":   formatar_piloto(f"{d['givenName']} {d['familyName']}"),
+                    "equipe": formatar_equipe(eq),
+                    "pts":    float(s["points"])
+                })
+
+    data_c = ergast_get(f"{TEMPORADA}/constructorStandings")
+    if data_c:
+        lists = data_c["MRData"]["StandingsTable"]["StandingsLists"]
+        if lists:
+            for s in lists[0]["ConstructorStandings"]:
+                construtores.append({
+                    "pos":    int(s["position"]),
+                    "equipe": formatar_equipe(s["Constructor"]["name"]),
+                    "pts":    float(s["points"])
+                })
+
+    return pilotos, construtores
+
+# ── Scraping F1.com — Piloto do Dia ──────────────────────────────────────────
+
+def get_piloto_do_dia(etapa_nome):
+    """Coleta o Piloto do Dia via scraping do F1.com."""
+    print("🕷️ Coletando Piloto do Dia via F1.com...")
+    url = f"https://www.formula1.com/en/results/{TEMPORADA}/awards/driver-of-the-day"
+
+    MAPA_GP = {
+        "australia": "australia", "china": "china", "japao": "japan",
+        "bahrein": "bahrain", "miami": "miami", "monaco": "monaco",
+        "espanha": "spain", "canada": "canada", "austria": "austria",
+        "inglaterra": "great britain", "gra bretanha": "great britain",
+        "hungria": "hungary", "belgica": "belgium", "holanda": "netherlands",
+        "italia": "italy", "azerbaijao": "azerbaijan", "singapura": "singapore",
+        "estados unidos": "united states", "mexico": "mexico",
+        "brasil": "brazil", "las vegas": "las vegas",
+        "catar": "qatar", "abu dhabi": "abu dhabi"
+    }
+    termo = MAPA_GP.get(normalizar(etapa_nome), normalizar(etapa_nome))
+
     try:
         r = requests.get(url, headers=HEADERS_SCRAPING, timeout=15)
-        if r.status_code == 200:
-            soup = BeautifulSoup(r.text, "html.parser")
-            h1 = soup.find("h1")
-            if h1:
-                texto_h1 = normalizar(h1.get_text(separator=" ", strip=True))
-                for k, v in PILOTOS_NORM.items():
-                    if k in texto_h1:
-                        print(f"  ✅ Piloto do Dia identificado: {v}")
-                        return v
+        if r.status_code != 200:
+            print(f"  ⚠️ F1.com retornou {r.status_code}")
+            return ""
+        soup = BeautifulSoup(r.text, "html.parser")
+        tabela = soup.find("table")
+        if not tabela:
+            print("  ⚠️ Tabela de PD não encontrada")
+            return ""
+
+        ultimo = None
+        for tr in tabela.find_all("tr")[1:]:
+            cols = [td.get_text(separator=" ", strip=True) for td in tr.find_all("td")]
+            if len(cols) < 2:
+                continue
+            gp_texto = normalizar(cols[0])
+            # Tenta cols[1], depois cols[2] se disponivel
+            piloto = limpar_piloto_scraping(cols[1])
+            if not piloto and len(cols) >= 3:
+                piloto = limpar_piloto_scraping(cols[2])
+            if not piloto:
+                continue
+            ultimo = piloto
+            if termo and termo in gp_texto:
+                print(f"  ✅ PD encontrado: {piloto} ({etapa_nome})")
+                return piloto
+
+        if ultimo:
+            print(f"  ✅ PD (ultima corrida): {ultimo}")
+            return ultimo
+
     except Exception as e:
-        print(f"  ⚠️ Falha no scraping do PD: {e}")
-    return None
+        print(f"  ⚠️ Erro no scraping do PD: {e}")
+    return ""
 
-# ── 2. Coleta Dinâmica de Standings (API + Scraping Oficial com Espaços) ───────
+# ── Sincronizacao com PythonAnywhere ─────────────────────────────────────────
 
-def coletar_standings_dinamico(temporada=TEMPORADA):
-    standings_pilotos = []
-    standings_construtores = []
-
-    # Camada 1: API Oficial Jolpica/Ergast
+def api_post(endpoint, payload):
     try:
-        print("📡 Buscando Standings oficiais via API...")
-        url_p = f"https://api.jolpica.com/ergast/f1/{temporada}/driverStandings.json"
-        rp = requests.get(url_p, timeout=12).json()
-        driver_lists = rp.get("MRData", {}).get("StandingsTable", {}).get("StandingsLists", [])
-        if driver_lists:
-            for item in driver_lists[0].get("DriverStandings", []):
-                nome = f"{item['Driver']['givenName']} {item['Driver']['familyName']}"
-                equipe = item["Constructors"][0]["name"] if item.get("Constructors") else ""
-                standings_pilotos.append({
-                    "pos": int(item["position"]),
-                    "nome": formatar_nome_piloto(nome),
-                    "equipe": formatar_nome_equipe(equipe),
-                    "pts": float(item["points"])
-                })
-
-        url_c = f"https://api.jolpica.com/ergast/f1/{temporada}/constructorStandings.json"
-        rc = requests.get(url_c, timeout=12).json()
-        const_lists = rc.get("MRData", {}).get("StandingsTable", {}).get("StandingsLists", [])
-        if const_lists:
-            for item in const_lists[0].get("ConstructorStandings", []):
-                standings_construtores.append({
-                    "pos": int(item["position"]),
-                    "equipe": formatar_nome_equipe(item["Constructor"]["name"]),
-                    "pts": float(item["points"])
-                })
-
-        if standings_pilotos and standings_construtores:
-            print(f"  ✅ Standings obtidos via API ({len(standings_pilotos)} pilotos, {len(standings_construtores)} equipes)")
-            return standings_pilotos, standings_construtores
+        r = requests.post(
+            f"{API_URL}{endpoint}",
+            json=payload,
+            headers=HEADERS_API,
+            timeout=30
+        )
+        return r.json()
     except Exception as e:
-        print(f"  ⚠️ API indisponível ou em processamento ({e}).")
+        print(f"  ❌ Erro API {endpoint}: {e}")
+        return None
 
-    # Camada 2: Fallback Dinâmico via Scraping Oficial da F1 (formula1.com)
-    print("🕷️ Acionando Fallback: Scraping oficial no formula1.com...")
+def sincronizar_resultado(etapa_nome, tipo, piloto):
+    """Envia um resultado para o PythonAnywhere."""
+    resp = api_post("/api/sync/resultado", {
+        "etapa":    etapa_nome,
+        "tipo":     tipo,
+        "piloto":   piloto,
+        "fonte":    "ergast",
+        "temporada": TEMPORADA
+    })
+    return resp and resp.get("sucesso")
+
+def sincronizar_standings(pilotos, construtores, round_num):
+    """Envia standings para o PythonAnywhere."""
+    resp = api_post("/api/sync/standings", {
+        "round":        round_num,
+        "temporada":    TEMPORADA,
+        "pilotos":      pilotos,
+        "construtores": construtores
+    })
+    return resp and resp.get("sucesso")
+
+def verificar_ja_atualizado(etapa_nome):
+    """Verifica se a etapa ja tem resultado no PythonAnywhere."""
     try:
-        # Drivers Standings com separator=" " para não aglutinar primeiro nome e sobrenome
-        r_p = requests.get(f"https://www.formula1.com/en/results/{temporada}/drivers", headers=HEADERS_SCRAPING, timeout=15)
-        soup_p = BeautifulSoup(r_p.text, "html.parser")
-        tabela_p = soup_p.find("table")
-        if tabela_p and tabela_p.tbody:
-            for tr in tabela_p.tbody.find_all("tr"):
-                cols = [td.get_text(separator=" ", strip=True) for td in tr.find_all("td")]
-                if len(cols) >= 5:
-                    pos = int(cols[0])
-                    nome_formatado = limpar_nome_piloto_scraping(cols[1])
-                    equipe_formatada = formatar_nome_equipe(cols[3])
-                    pts = float(cols[4].replace(",", "."))
-                    standings_pilotos.append({
-                        "pos": pos,
-                        "nome": nome_formatado,
-                        "equipe": equipe_formatada,
-                        "pts": pts
-                    })
+        r = requests.get(
+            f"{API_URL}/api/etapa_detalhe/{requests.utils.quote(etapa_nome)}",
+            headers={"X-API-Key": API_KEY},
+            timeout=15
+        )
+        if r.ok:
+            data = r.json()
+            res = data.get("resultados", {})
+            return bool(res.get("corrida_p1"))
+    except:
+        pass
+    return False
 
-        # Teams Standings
-        r_c = requests.get(f"https://www.formula1.com/en/results/{temporada}/team", headers=HEADERS_SCRAPING, timeout=15)
-        soup_c = BeautifulSoup(r_c.text, "html.parser")
-        tabela_c = soup_c.find("table")
-        if tabela_c and tabela_c.tbody:
-            for tr in tabela_c.tbody.find_all("tr"):
-                cols = [td.get_text(separator=" ", strip=True) for td in tr.find_all("td")]
-                if len(cols) >= 3:
-                    pos = int(cols[0])
-                    equipe = formatar_nome_equipe(cols[1])
-                    pts = float(cols[2].replace(",", "."))
-                    standings_construtores.append({
-                        "pos": pos,
-                        "equipe": equipe,
-                        "pts": pts
-                    })
+# ── Normalizacao de nome de etapa ─────────────────────────────────────────────
 
-        print(f"  ✅ Standings extraídos via Scraping Oficial ({len(standings_pilotos)} pilotos, {len(standings_construtores)} equipes)")
-    except Exception as e:
-        print(f"  ❌ Falha no scraping oficial de standings: {e}")
+def normalizar_etapa(race_name):
+    MAPA = {
+        "australian":    "Australia",
+        "chinese":       "China",
+        "japanese":      "Japao",
+        "miami":         "Miami",
+        "canadian":      "Canada",
+        "monaco":        "Monaco",
+        "barcelona":     "Barcelona",
+        "spanish":       "Espanha",
+        "austrian":      "Austria",
+        "british":       "Inglaterra",
+        "belgian":       "Belgica",
+        "hungarian":     "Hungria",
+        "dutch":         "Holanda",
+        "italian":       "Italia",
+        "azerbaijan":    "Azerbaijao",
+        "bahrain":       "Bahrein",
+        "singapore":     "Singapura",
+        "united states": "Estados Unidos",
+        "mexico city":   "Mexico",
+        "são paulo":     "Brasil",
+        "sao paulo":     "Brasil",
+        "las vegas":     "Las Vegas",
+        "qatar":         "Catar",
+        "abu dhabi":     "Abu Dhabi",
+    }
+    nome_lower = race_name.lower()
+    for key, val in MAPA.items():
+        if key in nome_lower:
+            return val
+    return race_name
 
-    return standings_pilotos, standings_construtores
-
-# ── 3. Persistência no SQLite bolao.db ─────────────────────────────────────────
-
-def salvar_resultados_no_banco(etapa_id, resultados_dict):
-    conn = conectar_banco()
-    cur = conn.cursor()
-    gravados = 0
-    for tipo, piloto in resultados_dict.items():
-        if piloto:
-            cur.execute("""
-                INSERT OR REPLACE INTO resultados (etapa_id, tipo, piloto, fonte)
-                VALUES (?, ?, ?, 'oficial')
-            """, (etapa_id, tipo, piloto))
-            gravados += 1
-    conn.commit()
-    conn.close()
-    print(f"  💾 {gravados} resultados oficiais gravados na etapa {etapa_id}!")
-
-def salvar_standings_no_banco(standings_pilotos, standings_construtores, round_num, temporada_id=1):
-    if not standings_pilotos and not standings_construtores:
-        print("  ⚠️ Nenhum standing para persistir.")
-        return
-
-    conn = conectar_banco()
-    cur = conn.cursor()
-    agora = datetime.now().isoformat()
-
-    for p in standings_pilotos:
-        cur.execute("""
-            INSERT OR REPLACE INTO standings_pilotos
-            (temporada_id, round, posicao, piloto, equipe, pontos, atualizado_em)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (temporada_id, round_num, p["pos"], p["nome"], p["equipe"], p["pts"], agora))
-
-    for c in standings_construtores:
-        cur.execute("""
-            INSERT OR REPLACE INTO standings_construtores
-            (temporada_id, round, posicao, equipe, pontos, atualizado_em)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (temporada_id, round_num, c["pos"], c["equipe"], c["pts"], agora))
-
-    conn.commit()
-    conn.close()
-    print(f"  💾 Standings oficiais persistidos no bolao.db para o Round {round_num}!")
-
-# ── Execução Principal ────────────────────────────────────────────────────────
+# ── Main ──────────────────────────────────────────────────────────────────────
 
 def run():
     print("\n" + "="*60)
-    print("  F1 AGENT V2 — Coleta de Resultados e Standings Dinâmicos")
+    print("  F1 AGENT V2 — GitHub Actions")
+    print(f"  Iniciado: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
     print("="*60 + "\n")
 
-    conn = conectar_banco()
-    cur = conn.cursor()
+    forcar      = os.environ.get("FORCAR", "false").lower() == "true"
+    etapa_manual = os.environ.get("ETAPA_MANUAL", "").strip()
 
-    cur.execute("""
-        SELECT e.id, e.nome, e.round, t.id
-        FROM etapas e
-        JOIN temporadas t ON t.id = e.temporada_id
-        WHERE t.ano = ?
-        ORDER BY e.round ASC
-    """, (TEMPORADA,))
-    etapas = cur.fetchall()
-    conn.close()
+    # 1. Descobre a ultima corrida
+    print("🔍 Buscando ultima corrida no Ergast...")
+    race_info = get_ultima_corrida()
+    if not race_info:
+        print("❌ Nenhuma corrida encontrada no Ergast.")
+        sys.exit(1)
 
-    if not etapas:
-        print("❌ Nenhuma etapa configurada no banco.")
-        return False
+    round_num  = race_info["round"]
+    race_name  = race_info["raceName"]
+    etapa_nome = etapa_manual if etapa_manual else normalizar_etapa(race_name)
+    print(f"  ✅ Ultima corrida: {race_name} → {etapa_nome} (Round {round_num})")
 
-    etapa_alvo = etapas[-1]
-    for e in etapas:
-        if normalizar(e[1]) == "brasil":
-            etapa_alvo = e
-            break
+    # 2. Verifica se ja foi atualizado (a menos que forcado)
+    if not forcar and verificar_ja_atualizado(etapa_nome):
+        print(f"\n  ℹ️ {etapa_nome} ja tem resultado no banco.")
+        print("  Use 'Forçar atualização = true' para sobrescrever.")
+        print("\n✅ Nada a fazer.")
+        return True
 
-    etapa_id, etapa_nome, round_num, temporada_id = etapa_alvo
-    print(f"🏁 Processando Etapa: {etapa_nome} (Round {round_num})")
+    # 3. Coleta dados
+    print("\n📡 Coletando dados via Ergast/Jolpi.ca...")
+    corrida, vr = get_race_results(round_num)
+    grid        = get_starting_grid(round_num)
+    zebra       = get_zebra(round_num)
+    pd          = get_piloto_do_dia(etapa_nome)
 
-    # 1. Resultados da Corrida e Starting Grid
-    res = obter_resultados_ergast(TEMPORADA, round_num) or {}
-    grid = obter_starting_grid_ergast(TEMPORADA, round_num)
-    res.update(grid)
+    print(f"  Corrida Top 10: {list(corrida.values())}")
+    print(f"  Grid Top 3:     {list(grid.values())}")
+    print(f"  VR:             {vr}")
+    print(f"  PD:             {pd}")
+    print(f"  Zebra:          {zebra}")
 
-    # 2. Piloto do Dia via Scraping
-    pd = obter_piloto_do_dia_scraping(normalizar(etapa_nome))
-    if pd:
-        res["pd"] = pd
+    # 4. Sincroniza resultados com PythonAnywhere
+    print("\n🌐 Sincronizando resultados com PythonAnywhere...")
+    enviados = 0
+    erros    = 0
 
-    # Salva resultados da corrida
-    salvar_resultados_no_banco(etapa_id, res)
+    todos_resultados = {}
+    todos_resultados.update(corrida)
+    todos_resultados.update(grid)
+    if vr:    todos_resultados["vr"]    = vr
+    if pd:    todos_resultados["pd"]    = pd
+    if zebra: todos_resultados["zebra"] = zebra
 
-    # 3. Coleta e Persistência Dinâmica dos Standings
-    pilotos_st, construtores_st = coletar_standings_dinamico(TEMPORADA)
-    salvar_standings_no_banco(pilotos_st, construtores_st, round_num, temporada_id)
+    for tipo, piloto in todos_resultados.items():
+        ok = sincronizar_resultado(etapa_nome, tipo, piloto)
+        if ok:
+            enviados += 1
+        else:
+            print(f"  ⚠️ Falha ao sincronizar {tipo}: {piloto}")
+            erros += 1
+
+    print(f"  ✅ {enviados} resultados sincronizados | ❌ {erros} erros")
+
+    # 5. Sincroniza standings
+    print("\n📊 Sincronizando standings...")
+    pilotos_st, construtores_st = get_standings()
+    if pilotos_st:
+        ok = sincronizar_standings(pilotos_st, construtores_st, round_num)
+        if ok:
+            print(f"  ✅ Standings sincronizados ({len(pilotos_st)} pilotos, {len(construtores_st)} equipes)")
+        else:
+            print("  ⚠️ Falha ao sincronizar standings")
+    else:
+        print("  ⚠️ Standings não disponíveis no Ergast ainda")
 
     print("\n" + "="*60)
-    print("  ✅ F1 Agent V2 concluído com sucesso!")
+    print("  ✅ F1 Agent V2 concluído!")
     print("="*60 + "\n")
     return True
 
