@@ -2,6 +2,15 @@ name: Apuracao e Sincronizacao Bolao F1 V2
 
 on:
   workflow_dispatch:
+    inputs:
+      forcar:
+        description: 'Forcar atualizacao mesmo se ja foi feita?'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
   schedule:
     - cron: '5 23 * * 0'
 
@@ -28,10 +37,17 @@ jobs:
           pip install -r scripts_v2/requirements.txt
 
       - name: 1. Coletar Palpites (V2)
+        env:
+          API_URL: https://mbernalantonio.pythonanywhere.com
+          API_KEY: f1bolao2027secretkey
         run: |
           python scripts_v2/f1_palpites_v2.py
 
       - name: 2. Coletar Resultados F1 (V2)
+        env:
+          API_URL: https://mbernalantonio.pythonanywhere.com
+          API_KEY: f1bolao2027secretkey
+          FORCAR: ${{ github.event.inputs.forcar || 'false' }}
         run: |
           python scripts_v2/f1_agent_v2.py
 
@@ -40,6 +56,9 @@ jobs:
           python scripts_v2/db_calcular.py
 
       - name: 4. Sincronizar Banco com o PythonAnywhere
+        env:
+          API_URL: https://mbernalantonio.pythonanywhere.com
+          API_KEY: f1bolao2027secretkey
         run: |
           python scripts_v2/sync_pythonanywhere.py
 
